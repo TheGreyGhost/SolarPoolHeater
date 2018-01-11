@@ -3,7 +3,15 @@
 #define REQUIRESALARMS false
 
 #include <OneWire.h> 
-#include <DallasTemperature.h>
+#include <DallasTemperatureErrorCodes.h>
+/********************************************************************/
+// define flags
+const char SPH_VERSION[] = "0.1";
+const bool DEBUG_TEMP = true;
+
+int assertFailureCode = 0;
+#define ASSERT_INVALID_SWITCH 1
+
 /********************************************************************/
 // Data wire is plugged into pin 2 on the Arduino 
 #define ONE_WIRE_BUS 2 
@@ -13,11 +21,10 @@
 OneWire oneWire(ONE_WIRE_BUS); 
 /********************************************************************/
 // Pass our oneWire reference to Dallas Temperature. 
-DallasTemperature sensors(&oneWire);
+DallasTemperatureErrorCodes sensors(&oneWire);
 /********************************************************************/ 
 
 uint8_t numberOfSensors;
-
 const int HX_HOT_INLET = 0;
 const int HX_HOT_OUTLET = 1;
 const int HX_COLD_INLET = 2;
@@ -26,7 +33,18 @@ const int LAST_PROBE_IDX = HX_COLD_OUTLET;
 const int NUMBER_OF_PROBES = LAST_PROBE_IDX + 1;
 const int BYTESPERADDRESS = 8;
 
-enum ProbeStatus {OK, NOT_FOUND, DISCONNECTED, CRC_FAIL, INFEASIBLE_VALUE};
+enum ProbeStatus {OK, NOT_FOUND, BUS_FAILURE, CRC_FAILURE, IMPLAUSIBLE_VALUE};
+
+unsigned long errorCountBusFailure = 0;
+unsigned long errorCountNotFound[NUMBER_OF_PROBES];
+unsigned long errorCountCRCFailure[NUMBER_OF_PROBES];
+unsigned long errorCountImplausibleValue[NUMBER_OF_PROBES];
+int16_t errorCountLastInfeasibleValueRaw[NUMBER_OF_PROBES];
+float errorCountLastInfeasibleValueC[NUMBER_OF_PROBES];
+
+// temperatures outside this range will be considered infeasible
+const float MIN_PLAUSIBLE_TEMPERATURE = -5.0;
+const float MAX_PLAUSIBLE_TEMPERATURE = 120.0;
 
 DeviceAddress probeAddresses[NUMBER_OF_PROBES] = 
    {{0x28, 0xFF, 0x19, 0xE6, 0x81, 0x17, 0x04, 0xAD},  // HX_HOT_INLET
@@ -139,28 +157,66 @@ void setup(void)
  bool success;
  success = enumerateProbes();
  Serial.println(success ? "OK" : "ERROR");
+ sensors.setResolution(TEMP_11_BIT); //11 bit is 0.125 C
+ sensors.setWaitForConversion(false);
 } 
+
+unsigned long temperatureSampleMillis = 0;
+
+const unsigned long TEMP_CONVERSION_DELAY = 1000; // milliseconds; wait for a suitable length of time (11 bits is 375 ms)
 
 void loop(void) 
 { 
-  // call sensors.requestTemperatures() to issue a global temperature 
-  // request to all devices on the bus 
-  /********************************************************************/
-  Serial.print("start-"); 
-  sensors.requestTemperatures(); // Send the command to get temperature readings 
-  Serial.println("done"); 
-  /********************************************************************/
-  int i;
-  for (i = 0; i < NUMBER_OF_PROBES; ++i) {
-    Serial.print(probeNames[i]);
-    Serial.print(":");
-    int16_t tempValue = sensors.getTemp(probeAddresses[i]);
-    if (tempValue == DEVICE_DISCONNECTED_RAW) {
-      Serial.println("DISCONNECTED");
-    } else {
-      Serial.println(sensors.rawToCelsius(tempValue));
+  unsigned long timeNow = millis();
+  if (timeNow - temperatureSampleMillis > TEMP_CONVERSION_DELAY) { // read values from sensors
+    int i;
+    for (i = 0; i < NUMBER_OF_PROBES; ++i) {
+      int16_t tempValue = sensors.getTemp(probeAddresses[i]);
+      float tempValueCelcius = sensors.rawToCelsius(tempValue);
+      if (tempValue == DEVICE_DISCONNECTED_RAW) {
+        switch(sensors.getLastErrorCode()) {
+          case CRC_FAIL: probeStatuses[i] = CRC_FAILURE; ++errorCountCRCFailure[i]; break;
+          case RESET_FAIL: probeStatuses[i] = BUS_FAILURE; ++errorCountBusFailure; break;
+          case DEVICE_NOT_FOUND: probeStatuses[i] = NOT_FOUND; ++errorCountNotFound; break;
+          default: assertFailureCode = ASSERT_INVALID_SWITCH; probeStatuses[i] = NOT_FOUND; ++errorCountNotFound; break; 
+        }
+      } else {
+        if (tempValueCelcius < MIN_PLAUSIBLE_TEMPERATURE || tempValueCelcius > MAX_PLAUSIBLE_TEMPERATURE) {
+          probeStatuses[i] = IMPLAUSIBLE_VALUE;
+          ++errorCountImplausibleValue[i]; 
+          errorCountLastInfeasibleValueRaw[i] = tempValue;
+          errorCountLastInfeasibleValueC[i] = tempValueCelcius;
+        } else {
+          probeStatuses[i] = OK;
+        }
+      }
+   
+      if (DEBUG_TEMP) {
+        Serial.print(probeNames[i]);
+        Serial.print(":");
+        if (probeStatuses[i] == OK) {
+          Serial.println(sensors.rawToCelsius(tempValue));
+        } else {
+          switch (probeStatuses[i]) {
+            case NOT_FOUND: Serial.println("Not found"); break;
+            case BUS_FAILURE: Serial.println("Bus failure"); break;
+            case CRC_FAILURE: Serial.println("CRC failure"); break;
+            case IMPLAUSIBLE_VALUE: Serial.println("Invalid status"); break;
+            default: Serial.println("Invalid status"); break;
+          }
+        }
+      }  // DEBUG_TEMP
+    }  // for i = 0 to NUMBER_OF_PROBES
+  } else if (timeNow - temperatureSampleMillis > TEMP_CONVERSION_DELAY) { // start next conversion
+    if (DEBUG_TEMP) {
+      Serial.print("temp start at "); 
+      Serial.println(timeNow);
     }
+    bool success = sensors.requestTemperatures(); // Send the command to get temperature readings 
+    temperatureSampleMillis = timeNow;
   }
+
+  /********************************************************************/
   delay(1000); 
 }
 
