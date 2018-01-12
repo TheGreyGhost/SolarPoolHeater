@@ -11,6 +11,7 @@ const bool DEBUG_TEMP = true;
 
 int assertFailureCode = 0;
 #define ASSERT_INVALID_SWITCH 1
+#define ASSERT_INDEX_OUT_OF_BOUNDS 2
 
 /********************************************************************/
 // Data wire is plugged into pin 2 on the Arduino 
@@ -39,8 +40,8 @@ unsigned long errorCountBusFailure = 0;
 unsigned long errorCountNotFound[NUMBER_OF_PROBES];
 unsigned long errorCountCRCFailure[NUMBER_OF_PROBES];
 unsigned long errorCountImplausibleValue[NUMBER_OF_PROBES];
-int16_t errorCountLastInfeasibleValueRaw[NUMBER_OF_PROBES];
-float errorCountLastInfeasibleValueC[NUMBER_OF_PROBES];
+int16_t errorLastImplausibleValueRaw[NUMBER_OF_PROBES];
+float errorLastImplausibleValueC[NUMBER_OF_PROBES];
 
 // temperatures outside this range will be considered infeasible
 const float MIN_PLAUSIBLE_TEMPERATURE = -5.0;
@@ -147,10 +148,69 @@ bool enumerateProbes() {
   return !failedToFind;
 }
 
+void printDebugInfo()
+{
+  Serial.print("Version:"); Serial.println(SPH_VERSION); 
+  Serial.print("Last Assert Error:"); Serial.println(assertFailureCode); 
+  Serial.print("errorCountBusFailure:"); Serial.println(errorCountBusFailure);
+  for (int i = 0; i < NUMBEROFPROBES; ++i) {
+    Serial.println(probeNames[i]);
+    Serial.print("  errorCountNotFound:"); Serial.println(errorCoutNotFound[i]);
+    Serial.print("  errorCountCRCFailure:"); Serial.println(errorCountCRCFailure[i]);
+    Serial.print("  errorCountImplausibleValue:"); Serial.println(errorCountImplausibleValue[i]);
+    Serial.print("    errorLastImplausibleValue:"); Serial.print(errorLastImplausibleValueRaw[i]);
+      Serial.print(" "); Serial.println(errorLastImplausibleValueC[i]);
+  }
+}
+
+const int MAX_COMMAND_LENGTH = 30;
+const int COMMAND_BUFFER_SIZE = MAX_COMMAND_LENGTH + 2;  // if buffer fills to max size, truncation occurs
+int commandBufferIdx = 0;
+char commandBuffer[COMMAND_BUFFER_SIZE];  
+const char COMMAND_START_CHAR = '!';
+
+// execute the command encoded in commandString.  Null-terminated
+void executeCommand(char command[]) 
+{
+  Serial.print("Execute command:"); Serial.println(command);  
+}
+
+// look for incoming serial input (commands); collect the command and execute it when the entire command has arrived.
+void processIncomingSerial()
+{
+  while (Serial.available()) {
+    if (commandBufferIdx < 0  || commandBufferIdx > COMMAND_BUFFER_SIZE) {
+      assertFailureCode = ASSERT_INDEX_OUT_OF_BOUNDS;
+      commandBufferIdx = 0;
+    }
+    int nextChar = Serial.read();
+    if (nextChar == COMMAND_START_CHAR) {
+      commandBufferIdx = 0;        
+    } else if (nextChar == '\n') {
+      if (commandBufferIdx > 0) {
+        if (commandBufferIdx > MAX_COMMAND_LENGTH) {
+          commandBuffer[MAX_COMMAND_LENGTH] = '\0';
+          Serial.print("Command too long:"); Serial.println(commandBuffer);
+        } else {
+          commandBuffer[commandBufferIdx++] = '\0';
+          executeCommand(commandBuffer);
+        } 
+        commandBufferIdx = 0; 
+      }
+    } else {
+      if (commandBufferIdx >= 0 && commandBufferIdx < COMMAND_BUFFER_SIZE) {
+        commandBuffer[commandBufferIdx++] = nextChar;
+      }
+    }
+  }
+}
+
 void setup(void) 
 { 
  // start serial port 
- Serial.begin(9600); 
+ Serial.begin(9600);
+ Serial.print("Version:");
+ Serial.println(SPH_VERSION); 
  Serial.println("Setting up"); 
  // Start up the library 
  sensors.begin(); 
@@ -216,6 +276,7 @@ void loop(void)
     temperatureSampleMillis = timeNow;
   }
 
+  processIncomingSerial();
   /********************************************************************/
   delay(1000); 
 }
