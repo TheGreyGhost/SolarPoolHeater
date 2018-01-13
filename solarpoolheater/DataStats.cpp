@@ -1,5 +1,5 @@
 #include "DataStats.h"
-#include <cfloat>
+#include <float.h>
 
 DataStats::DataStats()
 {

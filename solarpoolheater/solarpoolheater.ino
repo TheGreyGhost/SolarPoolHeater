@@ -4,6 +4,9 @@
 
 #include <OneWire.h> 
 #include <DallasTemperatureErrorCodes.h>
+#include "DataStats.h"
+#include "MovingAverage.h"
+
 /********************************************************************/
 // define flags
 const char SPH_VERSION[] = "0.1";
@@ -58,6 +61,14 @@ const uint8_t *HX_HOT_INLET_ADDRESS = probeAddresses[HX_HOT_INLET];
 const uint8_t *HX_HOT_OUTLET_ADDRESS = probeAddresses[HX_HOT_OUTLET];
 const uint8_t *HX_COLD_INLET_ADDRESS = probeAddresses[HX_COLD_INLET];
 const uint8_t *HX_COLD_OUTLET_ADDRESS = probeAddresses[HX_COLD_OUTLET];
+
+const float EWMA_TIME_CONSTANT = 10.0; // decay time in seconds (time to drop to 1/e)
+const float EWMA_ALPHA = 0.1;  // corresponds roughly to 10 seconds decay time 
+MovingAverage smoothedTemperatures[NUMBER_OF_PROBES] = 
+                 {MovingAverage(EWMA_ALPHA, EWMA_TIME_CONSTANT), MovingAverage(EWMA_ALPHA, EWMA_TIME_CONSTANT),
+                  MovingAverage(EWMA_ALPHA, EWMA_TIME_CONSTANT), MovingAverage(EWMA_ALPHA, EWMA_TIME_CONSTANT)};
+                  
+DataStats temperatureDataStats[NUMBER_OF_PROBES];
    
 enum ProbeStatus probeStatuses[NUMBER_OF_PROBES];
 const char* probeNames[] = {"HX_HOT_INLET", "HX_HOT_OUTLET", "HX_COLD_INLET", "HX_COLD_OUTLET"};
@@ -153,9 +164,9 @@ void printDebugInfo()
   Serial.print("Version:"); Serial.println(SPH_VERSION); 
   Serial.print("Last Assert Error:"); Serial.println(assertFailureCode); 
   Serial.print("errorCountBusFailure:"); Serial.println(errorCountBusFailure);
-  for (int i = 0; i < NUMBEROFPROBES; ++i) {
+  for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
     Serial.println(probeNames[i]);
-    Serial.print("  errorCountNotFound:"); Serial.println(errorCoutNotFound[i]);
+    Serial.print("  errorCountNotFound:"); Serial.println(errorCountNotFound[i]);
     Serial.print("  errorCountCRCFailure:"); Serial.println(errorCountCRCFailure[i]);
     Serial.print("  errorCountImplausibleValue:"); Serial.println(errorCountImplausibleValue[i]);
     Serial.print("    errorLastImplausibleValue:"); Serial.print(errorLastImplausibleValueRaw[i]);
@@ -172,7 +183,14 @@ const char COMMAND_START_CHAR = '!';
 // execute the command encoded in commandString.  Null-terminated
 void executeCommand(char command[]) 
 {
-  Serial.print("Execute command:"); Serial.println(command);  
+  //Serial.print("Execute command:"); Serial.println(command);  
+  switch (command[0]) {
+    case 'd': {printDebugInfo(); break;}
+    default: {
+      Serial.print("unknown command:");
+      Serial.println(command);
+    }
+  }
 }
 
 // look for incoming serial input (commands); collect the command and execute it when the entire command has arrived.
@@ -222,35 +240,39 @@ void setup(void)
 } 
 
 unsigned long temperatureSampleMillis = 0;
+bool unreadTemperatures = false;
 
-const unsigned long TEMP_CONVERSION_DELAY = 1000; // milliseconds; wait for a suitable length of time (11 bits is 375 ms)
+const unsigned long TEMP_CONVERSION_DELAY = 500; // milliseconds; wait for a suitable length of time (11 bits is 375 ms)
+const unsigned long TEMP_SAMPLE_PERIOD = 1000; // milliseconds.  Makes a temperature reading with this period.
 
 void loop(void) 
 { 
   unsigned long timeNow = millis();
-  if (timeNow - temperatureSampleMillis > TEMP_CONVERSION_DELAY) { // read values from sensors
+  if (unreadTemperatures && timeNow - temperatureSampleMillis > TEMP_CONVERSION_DELAY) { // read values from sensors
     int i;
     for (i = 0; i < NUMBER_OF_PROBES; ++i) {
       int16_t tempValue = sensors.getTemp(probeAddresses[i]);
       float tempValueCelcius = sensors.rawToCelsius(tempValue);
       if (tempValue == DEVICE_DISCONNECTED_RAW) {
-        switch(sensors.getLastErrorCode()) {
+        switch(sensors.getLastError()) {
           case CRC_FAIL: probeStatuses[i] = CRC_FAILURE; ++errorCountCRCFailure[i]; break;
           case RESET_FAIL: probeStatuses[i] = BUS_FAILURE; ++errorCountBusFailure; break;
-          case DEVICE_NOT_FOUND: probeStatuses[i] = NOT_FOUND; ++errorCountNotFound; break;
-          default: assertFailureCode = ASSERT_INVALID_SWITCH; probeStatuses[i] = NOT_FOUND; ++errorCountNotFound; break; 
+          case DEVICE_NOT_FOUND: probeStatuses[i] = NOT_FOUND; ++errorCountNotFound[i]; break;
+          default: assertFailureCode = ASSERT_INVALID_SWITCH; probeStatuses[i] = NOT_FOUND; ++errorCountNotFound[i]; break; 
         }
       } else {
         if (tempValueCelcius < MIN_PLAUSIBLE_TEMPERATURE || tempValueCelcius > MAX_PLAUSIBLE_TEMPERATURE) {
           probeStatuses[i] = IMPLAUSIBLE_VALUE;
           ++errorCountImplausibleValue[i]; 
-          errorCountLastInfeasibleValueRaw[i] = tempValue;
-          errorCountLastInfeasibleValueC[i] = tempValueCelcius;
+          errorLastImplausibleValueRaw[i] = tempValue;
+          errorLastImplausibleValueC[i] = tempValueCelcius;
         } else {
           probeStatuses[i] = OK;
+          temperatureDataStats[i].addDatapoint(tempValueCelcius);
+          smoothedTemperatures[i].addDatapoint(tempValueCelcius);
         }
       }
-   
+
       if (DEBUG_TEMP) {
         Serial.print(probeNames[i]);
         Serial.print(":");
@@ -267,17 +289,19 @@ void loop(void)
         }
       }  // DEBUG_TEMP
     }  // for i = 0 to NUMBER_OF_PROBES
-  } else if (timeNow - temperatureSampleMillis > TEMP_CONVERSION_DELAY) { // start next conversion
+    unreadTemperatures = false;
+  } else if (timeNow - temperatureSampleMillis >= TEMP_SAMPLE_PERIOD) { // start next conversion
     if (DEBUG_TEMP) {
       Serial.print("temp start at "); 
       Serial.println(timeNow);
     }
     bool success = sensors.requestTemperatures(); // Send the command to get temperature readings 
     temperatureSampleMillis = timeNow;
+    unreadTemperatures = true;
   }
 
   processIncomingSerial();
   /********************************************************************/
-  delay(1000); 
+
 }
 

@@ -31,7 +31,7 @@ class DataStats
     unsigned long numberOfPoints;
     float minValue;
     float maxValue;
-    float cumulativeSum 	
+    float cumulativeSum; 	
 };
 
 #endif
