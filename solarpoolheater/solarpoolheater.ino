@@ -189,7 +189,7 @@ void printDebugInfo()
 
 const int MAX_COMMAND_LENGTH = 30;
 const int COMMAND_BUFFER_SIZE = MAX_COMMAND_LENGTH + 2;  // if buffer fills to max size, truncation occurs
-int commandBufferIdx = 0;
+int commandBufferIdx = -1;
 char commandBuffer[COMMAND_BUFFER_SIZE];  
 const char COMMAND_START_CHAR = '!';
 
@@ -203,11 +203,11 @@ void executeCommand(char command[])
     case '?': {
       commandIsValid = true;
       Serial.println("commands (turn CR+LF on):");
-      Serial.println("d = print debug info");
-      Serial.println("t = toggle echo of probe readings");
-      Serial.println("le = erase log file");
-      Serial.println("li = log file info");
-      Serial.println("lr sample# count = read log data");
+      Serial.println("!d = print debug info");
+      Serial.println("!t = toggle echo of probe readings");
+      Serial.println("!le = erase log file");
+      Serial.println("!li = log file info");
+      Serial.println("!lr sample# count = read log data");
       break;
     }
     case 't': {
@@ -292,6 +292,7 @@ void executeCommand(char command[])
   if (!commandIsValid) {
     Serial.print("unknown command:");
     Serial.println(command);
+    Serial.println("use ? for help");
   }
 }
 
@@ -299,15 +300,17 @@ void executeCommand(char command[])
 void processIncomingSerial()
 {
   while (Serial.available()) {
-    if (commandBufferIdx < 0  || commandBufferIdx > COMMAND_BUFFER_SIZE) {
+    if (commandBufferIdx < -1  || commandBufferIdx > COMMAND_BUFFER_SIZE) {
       assertFailureCode = ASSERT_INDEX_OUT_OF_BOUNDS;
-      commandBufferIdx = 0;
+      commandBufferIdx = -1;
     }
     int nextChar = Serial.read();
     if (nextChar == COMMAND_START_CHAR) {
       commandBufferIdx = 0;        
     } else if (nextChar == '\n') {
-      if (commandBufferIdx > 0) {
+      if (commandBufferIdx == -1) {
+        Serial.println("Type !? for help");
+      } else if (commandBufferIdx > 0) {
         if (commandBufferIdx > MAX_COMMAND_LENGTH) {
           commandBuffer[MAX_COMMAND_LENGTH] = '\0';
           Serial.print("Command too long:"); Serial.println(commandBuffer);
@@ -315,7 +318,7 @@ void processIncomingSerial()
           commandBuffer[commandBufferIdx++] = '\0';
           executeCommand(commandBuffer);
         } 
-        commandBufferIdx = 0; 
+        commandBufferIdx = -1; 
       }
     } else {
       if (commandBufferIdx >= 0 && commandBufferIdx < COMMAND_BUFFER_SIZE) {
@@ -425,14 +428,13 @@ void loop(void)
   processIncomingSerial();
   /********************************************************************/
 
-  if (temperatureDataStats[0].getCount() >= 10) {
+  if (temperatureDataStats[0].getCount() >= 60) {
 //    loopEthernet();
 //    loopRTC();
-    String dataString = "test";
 
     // if the file is available, write to it:
     if (datalogfile) {  // don't forget to update DATALOG_BYTES_PER_SAMPLE
-      Serial.print("start datafile write:"); Serial.println(millis());
+//      Serial.print("start datafile write:"); Serial.println(millis());
       for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
         float temp[3];
         if (probeStatuses[i] == OK) {
@@ -445,11 +447,11 @@ void loop(void)
         datalogfile.write((byte *)temp, sizeof temp);
         temperatureDataStats[i].clear();
       }
-      Serial.print("start datafile flush:"); Serial.println(millis());
+//      Serial.print("start datafile flush:"); Serial.println(millis());
       datalogfile.flush();
-      Serial.print("end datafile flush:"); Serial.println(millis());
-      Serial.print("file size:");
-      Serial.println(datalogfile.size());
+//      Serial.print("end datafile flush:"); Serial.println(millis());
+//      Serial.print("file size:");
+//      Serial.println(datalogfile.size());
     }
   }
 }
