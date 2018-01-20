@@ -59,8 +59,8 @@ const float MAX_PLAUSIBLE_TEMPERATURE = 120.0;
 DeviceAddress probeAddresses[NUMBER_OF_PROBES] = 
    {{0x28, 0xFF, 0x19, 0xE6, 0x81, 0x17, 0x04, 0xAD},  // HX_HOT_INLET
     {0x28, 0xFF, 0x43, 0x03, 0x81, 0x17, 0x05, 0x13},  // HX_HOT_OUTLET
-    {0x28, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},  // HX_COLD_INLET
-    {0x28, 0xFF, 0x43, 0x03, 0x81, 0x00, 0x00, 0x00}   // HX_COLD_OUTLET
+    {0x28, 0xFF, 0x83, 0x04, 0x81, 0x17, 0x05, 0xB7},  // HX_COLD_INLET
+    {0x28, 0xFF, 0x90, 0x1A, 0x81, 0x17, 0x05, 0xA8}   // HX_COLD_OUTLET
    };
 
 const uint8_t *HX_HOT_INLET_ADDRESS = probeAddresses[HX_HOT_INLET];
@@ -425,14 +425,14 @@ void loop(void)
   processIncomingSerial();
   /********************************************************************/
 
-  if (temperatureDataStats[0].getCount() >= 10) {
+  if (temperatureDataStats[0].getCount() >= 60) {
 //    loopEthernet();
 //    loopRTC();
     String dataString = "test";
 
     // if the file is available, write to it:
     if (datalogfile) {  // don't forget to update DATALOG_BYTES_PER_SAMPLE
-      Serial.print("start datafile write:"); Serial.println(millis());
+//      Serial.print("start datafile write:"); Serial.println(millis());
       for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
         float temp[3];
         if (probeStatuses[i] == OK) {
@@ -445,11 +445,11 @@ void loop(void)
         datalogfile.write((byte *)temp, sizeof temp);
         temperatureDataStats[i].clear();
       }
-      Serial.print("start datafile flush:"); Serial.println(millis());
+//      Serial.print("start datafile flush:"); Serial.println(millis());
       datalogfile.flush();
-      Serial.print("end datafile flush:"); Serial.println(millis());
-      Serial.print("file size:");
-      Serial.println(datalogfile.size());
+//      Serial.print("end datafile flush:"); Serial.println(millis());
+//      Serial.print("file size:");
+//      Serial.println(datalogfile.size());
     }
   }
 }
