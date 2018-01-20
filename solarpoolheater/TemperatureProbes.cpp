@@ -172,6 +172,8 @@ void setupTemperatureProbes()
 
 void tickTemperatureProbes()
 {
+  // there is a bug here; the first logged sample for each probe says max is 85 C - is that the default of the sensor?
+  
     unsigned long timeNow = millis();
   if (unreadTemperatures && timeNow - temperatureSampleMillis > TEMP_CONVERSION_DELAY) { // read values from sensors
     int i;

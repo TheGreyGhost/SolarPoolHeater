@@ -70,7 +70,7 @@ void executeCommand(char command[])
                Serial.println(samplesInFile);
             } else {  
               datalogfile.seek(arg1 * DATALOG_BYTES_PER_SAMPLE);
-              long samplesToRead = min(arg2, min(24*60, samplesInFile - arg1));
+              long samplesToRead = min(arg2, min(24*60, samplesInFile - arg1));  // something wrong here?  asked for 2530 but only got 1420?
               for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
                 Serial.print(probeNames[i]); 
                 Serial.print(" min avg max ");
