@@ -1,9 +1,15 @@
 #ifndef COMMANDS_H   
 #define COMMANDS_H  
 #include <Arduino.h>
-extern int assertFailureCode;
 
-#define ASSERT_INVALID_SWITCH 1
-#define ASSERT_INDEX_OUT_OF_BOUNDS 2
+// prepare for receiving/executing commands
+void setupCommands();
+
+// start executing the given command
+void executeCommand(char command[]);
+
+//call at frequent intervals (eg 100 ms) to check for new commands or continue the processing of any command currently in progress
+void tickCommands();
+
 
 #endif

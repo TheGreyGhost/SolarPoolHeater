@@ -5,11 +5,17 @@ int commandBufferIdx = -1;
 char commandBuffer[COMMAND_BUFFER_SIZE];  
 const char COMMAND_START_CHAR = '!';
 
+// currently doesn't do anything in particular
+void setupCommands()
+{
+
+  
+}
+
 // execute the command encoded in commandString.  Null-terminated
 void executeCommand(char command[]) 
 {
   bool commandIsValid = false;
-  //Serial.print("Execute command:"); Serial.println(command);  
   switch (command[0]) {
     case 'd': {commandIsValid = true; printDebugInfo(); break;}
     case '?': {
@@ -109,7 +115,7 @@ void executeCommand(char command[])
 }
 
 // look for incoming serial input (commands); collect the command and execute it when the entire command has arrived.
-void processIncomingSerial()
+void tickCommands()
 {
   while (Serial.available()) {
     if (commandBufferIdx < -1  || commandBufferIdx > COMMAND_BUFFER_SIZE) {
