@@ -4,18 +4,18 @@
 #include <Ethernet.h>
 #include <Wire.h>
 
+#include "TemperatureProbes.h"
+
 const int SD_CHIPSELECT = 4;
 File datalogfile;
 const int DATALOG_BYTES_PER_SAMPLE = NUMBER_OF_PROBES * 3 * sizeof(float); // each sample has min, avg, max for each probe
 const char DATALOG_FILENAME[] = "datalog.txt";
 
-enum LogfileStatus {CARD_NOT_PRESENT = 0, FAILED_TO_OPEN = 1, WRITE_FAILED = 2, OK = 3}
-// Serial.println("Card failed, or not present");
-//    Serial.println("failed to open datafile for writing logged data");
-
-LogfileStatus logfileStatus;
+volatile LogfileStatus logfileStatus;
 
 const int LOG_PERIOD_SAMPLES = 60;
+
+void setupEthernet();
 
 void setupDatalog()
 {
@@ -23,7 +23,7 @@ void setupDatalog()
 
   // see if the card is present and can be initialized:
   if (!SD.begin(SD_CHIPSELECT)) {
-    logfileStatus = CARD_NOT_PRESENT;
+    logfileStatus = LFS_CARD_NOT_PRESENT;
     return;
   }
 //  Serial.println("card initialized.");
@@ -32,7 +32,7 @@ void setupDatalog()
   datalogfile = SD.open(DATALOG_FILENAME, FILE_WRITE);
 
   if (!datalogfile) {
-    logfileStatus = FAILED_TO_OPEN;
+    logfileStatus = LFS_FAILED_TO_OPEN;
   }
 }
 
@@ -45,7 +45,7 @@ void tickDatalog()
 //      Serial.print("start datafile write:"); Serial.println(millis());
       for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
         float temp[3];
-        if (probeStatuses[i] == OK) {
+        if (probeStatuses[i] == PS_OK) {
           temp[0] = temperatureDataStats[i].getMin();
           temp[1] = temperatureDataStats[i].getAverage();
           temp[2] = temperatureDataStats[i].getMax();
@@ -54,11 +54,61 @@ void tickDatalog()
         }
         size_t bytesWritten = datalogfile.write((byte *)temp, sizeof temp);
         if (bytesWritten != sizeof temp) {
-          logFileStatus = WRITE_FAILED;
+          logfileStatus = LFS_WRITE_FAILED;
         }
         temperatureDataStats[i].clear();
       }
       datalogfile.flush();
+    }
+  }
+}
+
+bool dataLogErase() 
+{
+  bool success;
+  datalogfile.close();
+  success = SD.remove(DATALOG_FILENAME);
+  if (success) {
+    datalogfile = SD.open(DATALOG_FILENAME, FILE_WRITE);
+    if (!datalogfile) {
+      success = false;
+    }
+  }
+  return success;
+}
+
+unsigned long dataLogNumberOfSamples() 
+{
+  return datalogfile.size() / DATALOG_BYTES_PER_SAMPLE;
+}
+
+void dataLogExtractEntries(Print &dest, long startidx, long numberOfEntries)
+{
+  unsigned long filesize = datalogfile.size();
+  unsigned long samplesInFile = filesize / DATALOG_BYTES_PER_SAMPLE;
+  if (startidx >= samplesInFile) {
+     dest.print("arg1 exceeds file size:");
+     dest.println(samplesInFile);
+  } else {  
+    datalogfile.seek(startidx * DATALOG_BYTES_PER_SAMPLE);
+    long samplesToRead = min(numberOfEntries, min(24*60, samplesInFile - startidx));  // something wrong here?  asked for 2530 but only got 1420?
+    for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
+      dest.print(probeNames[i]); 
+      dest.print(" min avg max ");
+    }
+    dest.println();
+    for (long i = 0; i < samplesToRead; ++i) {
+      for (int j = 0; j < NUMBER_OF_PROBES; ++j) {
+        float temp[3];
+        for (int k = 0; k < sizeof(temp); ++k) {
+          ((byte *)temp)[k] = datalogfile.read(); 
+        }
+        for (int k = 0; k < 3; ++k) {
+          dest.print(temp[k], 1); 
+          dest.print(" ");
+        }  
+      }
+      dest.println();
     }
   }
 }

@@ -17,15 +17,7 @@ DallasTemperatureErrorCodes sensors(&oneWire);
 /********************************************************************/ 
 
 uint8_t numberOfSensors;
-const int HX_HOT_INLET = 0;
-const int HX_HOT_OUTLET = 1;
-const int HX_COLD_INLET = 2;
-const int HX_COLD_OUTLET = 3;
-const int LAST_PROBE_IDX = HX_COLD_OUTLET;
-const int NUMBER_OF_PROBES = LAST_PROBE_IDX + 1;
 const int BYTESPERADDRESS = 8;
-
-enum ProbeStatus {OK, NOT_FOUND, BUS_FAILURE, CRC_FAILURE, IMPLAUSIBLE_VALUE};
 
 unsigned long errorCountBusFailure = 0;
 unsigned long errorCountNotFound[NUMBER_OF_PROBES];
@@ -58,7 +50,7 @@ MovingAverage smoothedTemperatures[NUMBER_OF_PROBES] =
                   
 DataStats temperatureDataStats[NUMBER_OF_PROBES];
    
-enum ProbeStatus probeStatuses[NUMBER_OF_PROBES];
+volatile enum ProbeStatus probeStatuses[NUMBER_OF_PROBES];
 const char* probeNames[NUMBER_OF_PROBES] = {"HX_HOT_INLET", "HX_HOT_OUTLET", "HX_COLD_INLET", "HX_COLD_OUTLET"};
 
 bool echoProbeReadings = false;
@@ -72,18 +64,18 @@ void copyProbeAddress(DeviceAddress dest, DeviceAddress source) {
 
 // prints a byte as two digit hex
 void printByteHex(uint8_t value) {
-  Serial.print(value >> 4, HEX);
-  Serial.print(value & 15, HEX);
+  console->print(value >> 4, HEX);
+  console->print(value & 15, HEX);
 }
 
 // prints a device address as hex bytes eg "0x35, 0xF3, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08"
 void printAddress(DeviceAddress address) {
   int j;
   for (j = 0; j < 8; ++j) {
-    Serial.print("0x");       
+    console->print("0x");       
     printByteHex(address[j]);
     if (j != 7) {
-      Serial.print(", ");
+      console->print(", ");
     }
   }  
 }
@@ -114,8 +106,8 @@ bool doesAddressMatch(DeviceAddress addr1, DeviceAddress addr2) {
 // returns true for success, or false if something unexpected occurred
 bool enumerateProbes() {
   int numberOfSensorsFound = sensors.getDeviceCount();
-  Serial.print("Number of sensors found:");
-  Serial.println(numberOfSensorsFound);
+  console->print("Number of sensors found:");
+  console->println(numberOfSensorsFound);
 
   DeviceAddress addressesFound[numberOfSensorsFound];
   int i;
@@ -123,25 +115,25 @@ bool enumerateProbes() {
   numberOfSensors = 0;
   for (i = 0; i < numberOfSensorsFound; ++i) {
     found = sensors.getAddress(addressesFound[i], i);
-    Serial.print("ID: ");
+    console->print("ID: ");
     if (found) {
       printAddress(addressesFound[i]); 
     } else {
-      Serial.print("error"); 
+      console->print("error"); 
     }
-    Serial.println();
+    console->println();
   }
 
   bool failedToFind = false;
   for (i = 0; i < NUMBER_OF_PROBES; ++i) {
-    Serial.print(probeNames[i]);
-    Serial.print(" expects ");
+    console->print(probeNames[i]);
+    console->print(" expects ");
     printAddress(probeAddresses[i]); 
     if (doesAddressMatchAny(probeAddresses[i], addressesFound, numberOfSensorsFound)) {
-      Serial.println(" (found) ");
+      console->println(" (found) ");
       probeStatuses[i] = OK;
     } else {
-      Serial.println(" (not found) ");
+      console->println(" (not found) ");
       probeStatuses[i] = NOT_FOUND;
       failedToFind = true;
     }
@@ -163,11 +155,9 @@ void setupTemperatureProbes()
  sensors.begin(); 
  bool success;
  success = enumerateProbes();
- Serial.println(success ? "OK" : "ERROR");
+ console->println(success ? "OK" : "ERROR");
  sensors.setResolution(TEMP_11_BIT); //11 bit is 0.125 C
  sensors.setWaitForConversion(false);
-
-
 }
 
 void tickTemperatureProbes()
@@ -182,36 +172,36 @@ void tickTemperatureProbes()
       float tempValueCelcius = sensors.rawToCelsius(tempValue);
       if (tempValue == DEVICE_DISCONNECTED_RAW) {
         switch(sensors.getLastError()) {
-          case CRC_FAIL: probeStatuses[i] = CRC_FAILURE; ++errorCountCRCFailure[i]; break;
-          case RESET_FAIL: probeStatuses[i] = BUS_FAILURE; ++errorCountBusFailure; break;
-          case DEVICE_NOT_FOUND: probeStatuses[i] = NOT_FOUND; ++errorCountNotFound[i]; break;
-          default: assertFailureCode = ASSERT_INVALID_SWITCH; probeStatuses[i] = NOT_FOUND; ++errorCountNotFound[i]; break; 
+          case CRC_FAIL: probeStatuses[i] = PS_CRC_FAILURE; ++errorCountCRCFailure[i]; break;
+          case RESET_FAIL: probeStatuses[i] = PS_BUS_FAILURE; ++errorCountBusFailure; break;
+          case DEVICE_NOT_FOUND: probeStatuses[i] = PS_NOT_FOUND; ++errorCountNotFound[i]; break;
+          default: assertFailureCode = ASSERT_INVALID_SWITCH; probeStatuses[i] = PS_NOT_FOUND; ++errorCountNotFound[i]; break; 
         }
       } else {
         if (tempValueCelcius < MIN_PLAUSIBLE_TEMPERATURE || tempValueCelcius > MAX_PLAUSIBLE_TEMPERATURE) {
-          probeStatuses[i] = IMPLAUSIBLE_VALUE;
+          probeStatuses[i] = PS_IMPLAUSIBLE_VALUE;
           ++errorCountImplausibleValue[i]; 
           errorLastImplausibleValueRaw[i] = tempValue;
           errorLastImplausibleValueC[i] = tempValueCelcius;
         } else {
-          probeStatuses[i] = OK;
+          probeStatuses[i] = PS_OK;
           temperatureDataStats[i].addDatapoint(tempValueCelcius);
           smoothedTemperatures[i].addDatapoint(tempValueCelcius);
         }
       }
 
       if (echoProbeReadings) {
-        Serial.print(probeNames[i]);
-        Serial.print(":");
-        if (probeStatuses[i] == OK) {
-          Serial.println(sensors.rawToCelsius(tempValue));
+        console->print(probeNames[i]);
+        console->print(":");
+        if (probeStatuses[i] == PS_OK) {
+          console->println(sensors.rawToCelsius(tempValue));
         } else {
           switch (probeStatuses[i]) {
-            case NOT_FOUND: Serial.println("Not found"); break;
-            case BUS_FAILURE: Serial.println("Bus failure"); break;
-            case CRC_FAILURE: Serial.println("CRC failure"); break;
-            case IMPLAUSIBLE_VALUE: Serial.println("Invalid status"); break;
-            default: Serial.println("Invalid status"); break;
+            case PS_NOT_FOUND: console->println("Not found"); break;
+            case PS_BUS_FAILURE: console->println("Bus failure"); break;
+            case PS_CRC_FAILURE: console->println("CRC failure"); break;
+            case PS_IMPLAUSIBLE_VALUE: console->println("Invalid status"); break;
+            default: console->println("Invalid status"); break;
           }
         }
       }  // echoProbeReadings
@@ -219,8 +209,8 @@ void tickTemperatureProbes()
     unreadTemperatures = false;
   } else if (timeNow - temperatureSampleMillis >= TEMP_SAMPLE_PERIOD) { // start next conversion
     if (DEBUG_TEMP) {
-      Serial.print("temp start at "); 
-      Serial.println(timeNow);
+      console->print("temp start at "); 
+      console->println(timeNow);
     }
     bool success = sensors.requestTemperatures(); // Send the command to get temperature readings 
     temperatureSampleMillis = timeNow;

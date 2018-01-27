@@ -11,7 +11,7 @@ void setupRTC(void){
   RTC.begin();
 }
 
-void loopRTC() {
+void tickRTC() {
   if (Serial.available() > 0) {
   int instruct = Serial.read();
   switch (instruct) {

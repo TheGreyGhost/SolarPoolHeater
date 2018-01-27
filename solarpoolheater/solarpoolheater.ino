@@ -15,9 +15,12 @@ void setup(void)
   Serial.print("Version:");
   Serial.println(SPH_VERSION); 
   Serial.println("Setting up"); 
- 
+
+  setupSystemStatus();
   setupTemperatureProbes();
   setupDatalog();
+  setupCommands();
+
 //  setupRTC();
 
 } 
@@ -25,10 +28,9 @@ void setup(void)
 void loop(void) 
 { 
   tickTemperatureProbes();
-  processIncomingSerial();
-  /********************************************************************/
+  tickCommands();
   tickDatalog();
-  
+  tickSystemStatus();
 }
 
 

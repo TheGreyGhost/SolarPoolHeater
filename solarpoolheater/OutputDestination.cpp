@@ -1,8 +1,8 @@
-#include "OutputDestinationSerial.h"
+#include "OutputDestination.h"
 
 void OutputDestinationSerial::begin()
 {
-  Serial.begin();
+  Serial.begin(9600);
 }
 
 size_t OutputDestinationSerial::write(uint8_t b)
