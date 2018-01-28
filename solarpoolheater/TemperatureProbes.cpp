@@ -80,6 +80,15 @@ void printAddress(DeviceAddress address) {
   }  
 }
 
+// compares the two device addresses - returns true if match, false otherwise
+bool doesAddressMatch(DeviceAddress addr1, DeviceAddress addr2) {
+  int i;
+  for (i = 0; i < BYTESPERADDRESS; ++i) {
+    if (addr1[i] != addr2[i]) return false;
+  }
+  return true;
+}
+
 // checks whether DeviceAddress addrToFind matches any of the addresses in addressesToSearch
 // returns true if found, false otherwise.
 // numOfAddresses is the number of addresses in addressesToSearch
@@ -91,15 +100,6 @@ bool doesAddressMatchAny(DeviceAddress addrToFind, DeviceAddress addressesToSear
     }
   }
   return false;
-}
-
-// compares the two device addresses - returns true if match, false otherwise
-bool doesAddressMatch(DeviceAddress addr1, DeviceAddress addr2) {
-  int i;
-  for (i = 0; i < BYTESPERADDRESS; ++i) {
-    if (addr1[i] != addr2[i]) return false;
-  }
-  return true;
 }
 
 // find all sensors on the bus, match them to the expected sensor addresses
@@ -131,10 +131,10 @@ bool enumerateProbes() {
     printAddress(probeAddresses[i]); 
     if (doesAddressMatchAny(probeAddresses[i], addressesFound, numberOfSensorsFound)) {
       console->println(" (found) ");
-      probeStatuses[i] = OK;
+      probeStatuses[i] = PS_OK;
     } else {
       console->println(" (not found) ");
-      probeStatuses[i] = NOT_FOUND;
+      probeStatuses[i] = PS_NOT_FOUND;
       failedToFind = true;
     }
   }

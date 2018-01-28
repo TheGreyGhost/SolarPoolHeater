@@ -1,12 +1,13 @@
 /********************************************************************/
+#include "SolarPoolHeater.h"
 #include "DataStats.h"
 #include "MovingAverage.h"
 #include "TemperatureProbes.h"
 #include "RealTimeClock.h"
+#include "Datalog.h"
+#include "Commands.h"
 
 /********************************************************************/
-
-const char SPH_VERSION[] = "0.2";
 
 void setup(void) 
 { 

@@ -13,7 +13,7 @@ void setupSystemStatus();
 
 void tickSystemStatus();
 
-void printDebugInfo(Print *dest);
+void printDebugInfo(Print &dest);
 
 // assign numbers for each error code
 const byte ERRORCODE_PROBE = 16;   // leave space for NUMBER_OF_PROBES, ie 16 = probe 0, 17 = probe 1, etc

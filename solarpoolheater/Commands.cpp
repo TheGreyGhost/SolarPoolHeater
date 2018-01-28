@@ -21,7 +21,7 @@ void executeCommand(char command[])
 {
   bool commandIsValid = false;
   switch (command[0]) {
-    case 'd': {commandIsValid = true; printDebugInfo(console); break;}
+    case 'd': {commandIsValid = true; printDebugInfo(*console); break;}
     case '?': {
       commandIsValid = true;
       console->println("commands (turn CR+LF on):");

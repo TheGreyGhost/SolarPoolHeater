@@ -1,25 +1,27 @@
 #include "SystemStatus.h"
 #include "WatchDog.h"
 #include "OutputDestination.h"
+#include "SolarPoolHeater.h"
+#include "TemperatureProbes.h"
+#include "Datalog.h"
 
-byte assertFailureCode = 0;
+volatile byte assertFailureCode = 0;
 
-const bool DEBUG_TEMP = false;
+Print *console;
+Stream *consoleInput;
 
-OutputDestination console;
-
-void printDebugInfo(Print *dest)
+void printDebugInfo(Print &dest)
 {
-  dest->print("Version:"); dest->println(SPH_VERSION); 
-  dest->print("Last Assert Error:"); dest->println(assertFailureCode); 
-  destial.print("errorCountBusFailure:"); dest->println(errorCountBusFailure);
+  dest.print("Version:"); dest.println(SPH_VERSION); 
+  dest.print("Last Assert Error:"); dest.println(assertFailureCode); 
+  dest.print("errorCountBusFailure:"); dest.println(errorCountBusFailure);
   for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
-    dest->println(probeNames[i]);
-    dest->print("  errorCountNotFound:"); dest->println(errorCountNotFound[i]);
-    dest->print("  errorCountCRCFailure:"); dest->println(errorCountCRCFailure[i]);
-    dest->print("  errorCountImplausibleValue:"); dest->println(errorCountImplausibleValue[i]);
-    dest->print("    errorLastImplausibleValue:"); dest->print(errorLastImplausibleValueRaw[i]);
-    dest->print(" "); dest->println(errorLastImplausibleValueC[i]);
+    dest.println(probeNames[i]);
+    dest.print("  errorCountNotFound:"); dest.println(errorCountNotFound[i]);
+    dest.print("  errorCountCRCFailure:"); dest.println(errorCountCRCFailure[i]);
+    dest.print("  errorCountImplausibleValue:"); dest.println(errorCountImplausibleValue[i]);
+    dest.print("    errorLastImplausibleValue:"); dest.print(errorLastImplausibleValueRaw[i]);
+    dest.print(" "); dest.println(errorLastImplausibleValueC[i]);
   }
 }
 
@@ -31,10 +33,12 @@ byte errorStackIdx;
 byte currentErrorBitpos;
 byte currentErrorForLED;
 
+void tickLEDstate();
+
 void setupSystemStatus()
 {
   console = new OutputDestinationSerial();
-  consoleInput = Serial;
+  consoleInput = &Serial;
   WatchDog::init(tickLEDstate);
   WatchDog::setPeriod(OVF_250MS);
   WatchDog::start();
@@ -49,14 +53,14 @@ void populateErrorStack()
 {
   errorStackIdx = 0;
   for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
-    if (probeStatuses[i] <> OK) {
+    if (probeStatuses[i] != PS_OK) {
       errorStack[errorStackIdx++] = ERRORCODE_PROBE | i;
     }
   }
-  if (logfileStatus != OK) {
+  if (logfileStatus != LFS_OK) {
     errorStack[errorStackIdx++] = ERRORCODE_DATALOG | logfileStatus;
   }
-  if (assertFailureCode <> 0) {
+  if (assertFailureCode != 0) {
     errorStack[errorStackIdx++] = ERRORCODE_ASSERT | assertFailureCode;
   }
 }
@@ -123,7 +127,7 @@ void tickLEDstate()
       case ERROR_STACK_BIT_OFF: {
         ledONOFF = LOW;   
         bool one = errorStack[whichErrorEntry] & (1 << whichBit);
-        if (numberOfTicks >= (one ? BIT_SPACING - ONE_BIT_LENGTH : BIT_SPACING - ZERO_BIT_LENGTH) {
+        if (numberOfTicks >= (one ? BIT_SPACING - ONE_BIT_LENGTH : BIT_SPACING - ZERO_BIT_LENGTH)) {
           if (whichBit == 0) {
             ++whichErrorEntry;
             if (whichErrorEntry >= errorStackIdx) {
