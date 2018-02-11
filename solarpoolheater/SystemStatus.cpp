@@ -1,4 +1,5 @@
 #include "SystemStatus.h"
+#include <DigitalIO.h>
 #include "WatchDog.h"
 #include "OutputDestination.h"
 #include "SolarPoolHeater.h"
@@ -25,6 +26,8 @@ void printDebugInfo(Print &dest)
   }
 }
 
+DigitalPin<LED_BUILTIN> pinStatusLED;
+
 const int MAX_ERROR_DEPTH = 16;
 bool errorLEDstate;
 long lastErrorLEDtime;
@@ -33,20 +36,23 @@ byte errorStackIdx;
 byte currentErrorBitpos;
 byte currentErrorForLED;
 
-void tickLEDstate();
+void updateStatusLEDisr();
 
 void setupSystemStatus()
 {
+  pinStatusLED.mode(OUTPUT);
   console = new OutputDestinationSerial();
   consoleInput = &Serial;
-  WatchDog::init(tickLEDstate);
+  WatchDog::init(updateStatusLEDisr);
   WatchDog::setPeriod(OVF_250MS);
   WatchDog::start();
 }
 
+void tickStatusLEDsequence();
+
 void tickSystemStatus()
 {
-  //  the error display LED is ticked by ISR
+  tickStatusLEDsequence();
 }
 
 void populateErrorStack()
@@ -76,79 +82,90 @@ byte numberOfTicks = 0;
 byte whichBit;
 byte whichErrorEntry;
 
-const int ledPin =  LED_BUILTIN;// the number of the LED pin
-int ledONOFF = LOW;             // ledState used to set the LED
+volatile unsigned long flashSequence;  // each bit corresponds to a 250 ms window: 1 = LED off, 0 = LED on.  shifted out MSB first.  When flashSequence == 0, ready for next one
 
-//ISR using the watchdog timer 
+// The ISR actually alters the LED.  This function writes a UL for the ISR to tick to the LED.  When the ISR is finished, it 
+//    writes the next one.
 
-void tickLEDstate()
+void tickStatusLEDsequence()
 {
-  LedState initialState;
-  ++numberOfTicks;
-  do {
-    initialState = ledState;
-    switch (ledState) {
-      case IDLE: {
-        populateErrorStack();
-        if (errorStackIdx == 0) {
-          ledState = OK_ON;
-        } else {
-          ledState = ERROR_STACK_BETWEEN_CODES;
-          whichErrorEntry = 0;
-        }
-        break;
-      }  
-      case OK_OFF: {
-        ledONOFF = LOW;      
-        if (numberOfTicks >= NO_ERROR_FLASH_LENGTH) ledState = IDLE;
-        break;
-      }
-      case OK_ON: {
-        ledONOFF = HIGH;      
-        if (numberOfTicks >= NO_ERROR_FLASH_LENGTH) ledState = OK_OFF;
-        break;
-      }
-      case ERROR_STACK_BETWEEN_CODES: {
-        ledONOFF = LOW;  
-        if (numberOfTicks >= PAUSE_BETWEEN_CODES) {
-          whichBit = 7;
-          ledState = ERROR_STACK_BIT_ON;
-        }
-        break;
-      }
-      case ERROR_STACK_BIT_ON: {
-        ledONOFF = HIGH;   
-        bool one = errorStack[whichErrorEntry] & (1 << whichBit);
-        if (numberOfTicks >= (one ? ONE_BIT_LENGTH : ZERO_BIT_LENGTH)) {
-          ledState = ERROR_STACK_BIT_OFF;
-        }
-        break;
-      }
-      case ERROR_STACK_BIT_OFF: {
-        ledONOFF = LOW;   
-        bool one = errorStack[whichErrorEntry] & (1 << whichBit);
-        if (numberOfTicks >= (one ? BIT_SPACING - ONE_BIT_LENGTH : BIT_SPACING - ZERO_BIT_LENGTH)) {
-          if (whichBit == 0) {
-            ++whichErrorEntry;
-            if (whichErrorEntry >= errorStackIdx) {
-              ledState = IDLE;
-            } else {
-             ledState = ERROR_STACK_BETWEEN_CODES;             
-            }
-          } else {
-            --whichBit;
-            ledState = ERROR_STACK_BIT_ON;  
-          }
-        }
-        break;
-      }
-      default: assertFailureCode = ASSERT_INVALID_SWITCH; break;
-    }
-    if (initialState != ledState) numberOfTicks = 0;
-  } while (initialState != ledState);
-  digitalWrite(ledPin, ledONOFF);
+  if (flashSequence) return;  // wait until ISR has finished
+
+  flashSequence = 0x0F1F3F7FUL;
+    
+//  LedState initialState;
+//  ++numberOfTicks;
+//  do {
+//    initialState = ledState;
+//    switch (ledState) {
+//      case IDLE: {
+//        populateErrorStack();
+//        if (errorStackIdx == 0) {
+//          ledState = OK_ON;
+//        } else {
+//          ledState = ERROR_STACK_BETWEEN_CODES;
+//          whichErrorEntry = 0;
+//        }
+//        break;
+//      }  
+//      case OK_OFF: {
+//        ledONOFF = LOW;      
+//        if (numberOfTicks >= NO_ERROR_FLASH_LENGTH) ledState = IDLE;
+//        break;
+//      }
+//      case OK_ON: {
+//        ledONOFF = HIGH;      
+//        if (numberOfTicks >= NO_ERROR_FLASH_LENGTH) ledState = OK_OFF;
+//        break;
+//      }
+//      case ERROR_STACK_BETWEEN_CODES: {
+//        ledONOFF = LOW;  
+//        if (numberOfTicks >= PAUSE_BETWEEN_CODES) {
+//          whichBit = 7;
+//          ledState = ERROR_STACK_BIT_ON;
+//        }
+//        break;
+//      }
+//      case ERROR_STACK_BIT_ON: {
+//        ledONOFF = HIGH;   
+//        bool one = errorStack[whichErrorEntry] & (1 << whichBit);
+//        if (numberOfTicks >= (one ? ONE_BIT_LENGTH : ZERO_BIT_LENGTH)) {
+//          ledState = ERROR_STACK_BIT_OFF;
+//        }
+//        break;
+//      }
+//      case ERROR_STACK_BIT_OFF: {
+//        ledONOFF = LOW;   
+//        bool one = errorStack[whichErrorEntry] & (1 << whichBit);
+//        if (numberOfTicks >= (one ? BIT_SPACING - ONE_BIT_LENGTH : BIT_SPACING - ZERO_BIT_LENGTH)) {
+//          if (whichBit == 0) {
+//            ++whichErrorEntry;
+//            if (whichErrorEntry >= errorStackIdx) {
+//              ledState = IDLE;
+//            } else {
+//             ledState = ERROR_STACK_BETWEEN_CODES;             
+//            }
+//          } else {
+//            --whichBit;
+//            ledState = ERROR_STACK_BIT_ON;  
+//          }
+//        }
+//        break;
+//      }
+//      default: assertFailureCode = ASSERT_INVALID_SWITCH; break;
+//    }
+//    if (initialState != ledState) numberOfTicks = 0;
+//  } while (initialState != ledState);
   
 }
+
+// ISR to update the LED state from a comms register
+void updateStatusLEDisr()
+{
+  pinStatusLED.write((flashSequence & 0x80000000UL)^0x80000000UL);
+  flashSequence <<= 1;
+}
+
 
 
 
