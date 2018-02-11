@@ -15,7 +15,7 @@
 
 /********************************************************************/
 // define flags
-const char SPH_VERSION[] = "0.1";
+const char SPH_VERSION[] = "0.2";
 const bool DEBUG_TEMP = false;
 
 int assertFailureCode = 0;
@@ -39,7 +39,9 @@ const int HX_HOT_INLET = 0;
 const int HX_HOT_OUTLET = 1;
 const int HX_COLD_INLET = 2;
 const int HX_COLD_OUTLET = 3;
-const int LAST_PROBE_IDX = HX_COLD_OUTLET;
+const int PANEL1_OUTLET = 4;
+const int AMBIENT = 5;
+const int LAST_PROBE_IDX = AMBIENT;
 const int NUMBER_OF_PROBES = LAST_PROBE_IDX + 1;
 const int BYTESPERADDRESS = 8;
 
@@ -60,24 +62,29 @@ DeviceAddress probeAddresses[NUMBER_OF_PROBES] =
    {{0x28, 0xFF, 0x19, 0xE6, 0x81, 0x17, 0x04, 0xAD},  // HX_HOT_INLET
     {0x28, 0xFF, 0x43, 0x03, 0x81, 0x17, 0x05, 0x13},  // HX_HOT_OUTLET
     {0x28, 0xFF, 0x83, 0x04, 0x81, 0x17, 0x05, 0xB7},  // HX_COLD_INLET
-    {0x28, 0xFF, 0x90, 0x1A, 0x81, 0x17, 0x05, 0xA8}   // HX_COLD_OUTLET
+    {0x28, 0xFF, 0x90, 0x1A, 0x81, 0x17, 0x05, 0xA8},  // HX_COLD_OUTLET
+    {0x28, 0xFF, 0x83, 0x04, 0x81, 0x17, 0x05, 0xB7},  // HX_PANEL1_OUTLET
+    {0x28, 0xFF, 0x90, 0x1A, 0x81, 0x17, 0x05, 0xA8}   // HX_AMBIENT
    };
 
 const uint8_t *HX_HOT_INLET_ADDRESS = probeAddresses[HX_HOT_INLET];
 const uint8_t *HX_HOT_OUTLET_ADDRESS = probeAddresses[HX_HOT_OUTLET];
 const uint8_t *HX_COLD_INLET_ADDRESS = probeAddresses[HX_COLD_INLET];
 const uint8_t *HX_COLD_OUTLET_ADDRESS = probeAddresses[HX_COLD_OUTLET];
+const uint8_t *PANEL1_OUTLET_ADDRESS = probeAddresses[PANEL1_OUTLET];
+const uint8_t *AMBIENT_ADDRESS = probeAddresses[AMBIENT];
 
 const float EWMA_TIME_CONSTANT = 10.0; // decay time in seconds (time to drop to 1/e)
 const float EWMA_ALPHA = 0.1;  // corresponds roughly to 10 seconds decay time 
 MovingAverage smoothedTemperatures[NUMBER_OF_PROBES] = 
                  {MovingAverage(EWMA_ALPHA, EWMA_TIME_CONSTANT), MovingAverage(EWMA_ALPHA, EWMA_TIME_CONSTANT),
+                  MovingAverage(EWMA_ALPHA, EWMA_TIME_CONSTANT), MovingAverage(EWMA_ALPHA, EWMA_TIME_CONSTANT),
                   MovingAverage(EWMA_ALPHA, EWMA_TIME_CONSTANT), MovingAverage(EWMA_ALPHA, EWMA_TIME_CONSTANT)};
                   
 DataStats temperatureDataStats[NUMBER_OF_PROBES];
    
 enum ProbeStatus probeStatuses[NUMBER_OF_PROBES];
-const char* probeNames[NUMBER_OF_PROBES] = {"HX_HOT_INLET", "HX_HOT_OUTLET", "HX_COLD_INLET", "HX_COLD_OUTLET"};
+const char* probeNames[NUMBER_OF_PROBES] = {"HX_HOT_INLET", "HX_HOT_OUTLET", "HX_COLD_INLET", "HX_COLD_OUTLET", "PANEL1_OUTLET", "AMBIENT"};
 
 bool echoProbeReadings = false;
 
