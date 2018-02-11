@@ -59,12 +59,12 @@ const float MIN_PLAUSIBLE_TEMPERATURE = -5.0;
 const float MAX_PLAUSIBLE_TEMPERATURE = 120.0;
 
 DeviceAddress probeAddresses[NUMBER_OF_PROBES] = 
-   {{0x28, 0xFF, 0x19, 0xE6, 0x81, 0x17, 0x04, 0xAD},  // HX_HOT_INLET
-    {0x28, 0xFF, 0x43, 0x03, 0x81, 0x17, 0x05, 0x13},  // HX_HOT_OUTLET
-    {0x28, 0xFF, 0x83, 0x04, 0x81, 0x17, 0x05, 0xB7},  // HX_COLD_INLET
-    {0x28, 0xFF, 0x90, 0x1A, 0x81, 0x17, 0x05, 0xA8},  // HX_COLD_OUTLET
-    {0x28, 0xFF, 0x83, 0x04, 0x81, 0x17, 0x05, 0xB7},  // HX_PANEL1_OUTLET
-    {0x28, 0xFF, 0x90, 0x1A, 0x81, 0x17, 0x05, 0xA8}   // HX_AMBIENT
+   {{0x28, 0xFF, 0xCC, 0x47, 0x71, 0x17, 0x03, 0x09},  // HX_HOT_INLET
+    {0x28, 0xFF, 0xE4, 0x9B, 0x81, 0x17, 0x04, 0xD2},  // HX_HOT_OUTLET
+    {0x28, 0xFF, 0x90, 0x1A, 0x81, 0x17, 0x05, 0xA8},  // HX_COLD_INLET
+    {0x28, 0xFF, 0x83, 0x04, 0x81, 0x17, 0x05, 0xB7},  // HX_COLD_OUTLET
+    {0x28, 0xFF, 0x19, 0xE6, 0x81, 0x17, 0x04, 0xAD},  // HX_PANEL1_OUTLET  CURRENTLY A SECOND AMBIENT
+    {0x28, 0xFF, 0x6B, 0x94, 0x81, 0x17, 0x04, 0xEC}   // HX_AMBIENT
    };
 
 const uint8_t *HX_HOT_INLET_ADDRESS = probeAddresses[HX_HOT_INLET];
@@ -344,6 +344,7 @@ void setup(void)
  bool success;
  success = enumerateProbes();
  Serial.println(success ? "OK" : "ERROR");
+
  sensors.setResolution(TEMP_11_BIT); //11 bit is 0.125 C
  sensors.setWaitForConversion(false);
 
@@ -356,7 +357,7 @@ void setup(void)
     return;
   }
   Serial.println("card initialized.");
-  setupEthernet();
+  setupEthernet();                 
 
   datalogfile = SD.open(DATALOG_FILENAME, FILE_WRITE);
 
@@ -494,10 +495,10 @@ EthernetServer server(80);
 
 void setupEthernet() {
   // Open serial communications and wait for port to open:
-  Serial.begin(9600);
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
+//  Serial.begin(9600);
+//  while (!Serial) {
+//    ; // wait for serial port to connect. Needed for native USB port only
+//  }
 
 
   // start the Ethernet connection and the server:

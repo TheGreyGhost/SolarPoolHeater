@@ -1,0 +1,58 @@
+.header-img {
+width:30px;
+margin-left:6px;
+margin-bottom:20px;
+}
+
+.mymax-actions img {
+width: 20px;
+}
+
+.rotate1 {
+  -webkit-transform: rotate(0deg) translate3d( 0, 0, 0);
+         -moz-transform: rotate(0deg);
+           -o-transform: rotate(0deg);
+          -ms-transform: rotate(0deg);
+                  transform: rotate(0deg);
+  -o-transition:.5s;
+  -ms-transition:.5s;
+  -moz-transition:.5s;
+  -webkit-transition:.5s;
+  transition:.5s;
+        filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=0);
+}
+
+.rotate2 {
+  -webkit-transform: rotate(-180deg) translate3d( 0, 0, 0);
+         -moz-transform: rotate(-180deg);
+           -o-transform: rotate(-180deg);
+          -ms-transform: rotate(-180deg);
+                  transform: rotate(-180deg);
+  -o-transition:.5s;
+  -ms-transition:.5s;
+  -moz-transition:.5s;
+  -webkit-transition:.5s;
+  transition:.5s;
+        filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2);
+}
+
+.info-icon {
+width:16px;
+margin-top:-3px;
+}
+
+#power { display:none; }
+#analog { display:none; }
+#interface { display:none; }
+#industries { display:none; }
+#digital { display:none; }
+#communications { display:none; }
+#automotive-and-transportation { display:none; }
+#communications-and-networking { display:none; }
+#computing { display:none; }
+#consumer-electronics { display:none; }
+#energy { display:none; }
+#industrial { display:none; }
+#medical { display:none; }
+#military { display:none; }
+
