@@ -19,18 +19,18 @@ void setupEthernet();
 
 void setupDatalog()
 {
-//  Serial.print("Initializing SD card...");
+  Serial.print("Initializing SD card..."); // todo comment out
 
   // see if the card is present and can be initialized:
   if (!SD.begin(SD_CHIPSELECT)) {
     logfileStatus = LFS_CARD_NOT_PRESENT;
     return;
   }
-//  Serial.println("card initialized.");
+  logfileStatus = LFS_OK;
+  Serial.println("card initialized.");  // todo comment out
   setupEthernet();
 
   datalogfile = SD.open(DATALOG_FILENAME, FILE_WRITE);
-
   if (!datalogfile) {
     logfileStatus = LFS_FAILED_TO_OPEN;
   }
@@ -146,11 +146,6 @@ EthernetServer server(80);
 
 void setupEthernet() {
   // Open serial communications and wait for port to open:
-  Serial.begin(9600);
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
-
 
   // start the Ethernet connection and the server:
   Ethernet.begin(mac, ip);
