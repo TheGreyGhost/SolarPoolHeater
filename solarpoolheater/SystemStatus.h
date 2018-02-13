@@ -21,6 +21,6 @@ const byte ERRORCODE_DATALOG = 32; // leave space for error codes
 const byte ERRORCODE_ASSERT = 48;
 
 // no error = steady on off     .#.#.#.#  
-// error patterns are msb first.  zero = short, one = long.  eg 0 0 1 1 is #... #... ##.. ##..
+// error patterns are msb first.  zero = short, one = long.  eg 0 0 1 1 is #... #... ###. ###.
 
 #endif
