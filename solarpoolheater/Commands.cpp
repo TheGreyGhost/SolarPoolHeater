@@ -35,6 +35,13 @@ void executeCommand(char command[])
     case 't': {
       commandIsValid = true; 
       echoProbeReadings = !echoProbeReadings;
+      if (echoProbeReadings) {
+        for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
+          console->print(probeNames[i]);
+          console->print(":");
+        }
+        console->println();
+      }  
       break;
     }
     case 'l': {

@@ -191,21 +191,23 @@ void tickTemperatureProbes()
       }
 
       if (echoProbeReadings) {
-        console->print(probeNames[i]);
-        console->print(":");
         if (probeStatuses[i] == PS_OK) {
-          console->println(sensors.rawToCelsius(tempValue));
+          console->print(sensors.rawToCelsius(tempValue));
         } else {
           switch (probeStatuses[i]) {
-            case PS_NOT_FOUND: console->println("Not found"); break;
-            case PS_BUS_FAILURE: console->println("Bus failure"); break;
-            case PS_CRC_FAILURE: console->println("CRC failure"); break;
-            case PS_IMPLAUSIBLE_VALUE: console->println("Invalid status"); break;
-            default: console->println("Invalid status"); break;
+            case PS_NOT_FOUND: console->print("Not found"); break;
+            case PS_BUS_FAILURE: console->print("Bus failure"); break;
+            case PS_CRC_FAILURE: console->print("CRC failure"); break;
+            case PS_IMPLAUSIBLE_VALUE: console->print("Invalid status"); break;
+            default: console->print("Invalid status"); break;
           }
         }
+        console->print(":");
       }  // echoProbeReadings
     }  // for i = 0 to NUMBER_OF_PROBES
+    if (echoProbeReadings) {
+      console->println();
+    }  
     unreadTemperatures = false;
   } else if (timeNow - temperatureSampleMillis >= TEMP_SAMPLE_PERIOD) { // start next conversion
     if (DEBUG_TEMP) {
