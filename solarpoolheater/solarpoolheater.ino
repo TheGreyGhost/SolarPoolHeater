@@ -220,6 +220,13 @@ void executeCommand(char command[])
     case 't': {
       commandIsValid = true; 
       echoProbeReadings = !echoProbeReadings;
+      if (echoProbeReadings) {
+        for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
+          Serial.print(probeNames[i]);
+          Serial.print(":");
+        }
+        Serial.println();
+      }
       break;
     }
     case 'l': {
@@ -404,21 +411,23 @@ void loop(void)
       }
 
       if (echoProbeReadings) {
-        Serial.print(probeNames[i]);
-        Serial.print(":");
         if (probeStatuses[i] == OK) {
-          Serial.println(sensors.rawToCelsius(tempValue));
+          Serial.print(sensors.rawToCelsius(tempValue));
         } else {
           switch (probeStatuses[i]) {
-            case NOT_FOUND: Serial.println("Not found"); break;
-            case BUS_FAILURE: Serial.println("Bus failure"); break;
-            case CRC_FAILURE: Serial.println("CRC failure"); break;
-            case IMPLAUSIBLE_VALUE: Serial.println("Invalid status"); break;
-            default: Serial.println("Invalid status"); break;
+            case NOT_FOUND: Serial.print("Not found"); break;
+            case BUS_FAILURE: Serial.print("Bus failure"); break;
+            case CRC_FAILURE: Serial.print("CRC failure"); break;
+            case IMPLAUSIBLE_VALUE: Serial.print("Invalid status"); break;
+            default: Serial.print("Invalid status"); break;
           }
         }
+        Serial.print(":");
       }  // echoProbeReadings
     }  // for i = 0 to NUMBER_OF_PROBES
+    if (echoProbeReadings) {
+      Serial.println();
+    }
     unreadTemperatures = false;
   } else if (timeNow - temperatureSampleMillis >= TEMP_SAMPLE_PERIOD) { // start next conversion
     if (DEBUG_TEMP) {
