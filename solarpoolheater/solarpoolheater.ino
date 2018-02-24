@@ -22,12 +22,13 @@ void setup(void)
   setupDatalog();
   setupCommands();
 
-//  setupRTC();
+  setupRTC();
 
 } 
 
 void loop(void) 
 { 
+  tickRTC();
   tickTemperatureProbes();
   tickCommands();
   tickDatalog();

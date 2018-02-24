@@ -1,6 +1,7 @@
 #include "Commands.h"
 #include "SystemStatus.h"
 #include "Datalog.h"
+#include "RealTimeClock.h"
 #include "TemperatureProbes.h"
 
 const int MAX_COMMAND_LENGTH = 30;
@@ -27,6 +28,8 @@ void executeCommand(char command[])
       console->println("commands (turn CR+LF on):");
       console->println("!d = print debug info");
       console->println("!t = toggle echo of probe readings");
+      console->println("!cr = read clock date+time");
+      console->println("!cs Dec 26 2009 12:34:56 = set clock date + time (capitalisation, character count, and spacings must match exactly)");
       console->println("!le = erase log file");
       console->println("!li = log file info");
       console->println("!lr sample# count = read log data");
@@ -42,6 +45,28 @@ void executeCommand(char command[])
         }
         console->println();
       }  
+      break;
+    }
+    case 'c': {
+      switch (command[1]) {
+        case 'r': {
+          commandIsValid = true;
+          if (realTimeClockStatus) {
+            printDateTime(*console, currentTime);
+          } else {
+            console->println("real time clock is not running");  
+          }
+          break;
+        }
+        case 's': {
+          commandIsValid = true;
+          DateTime newTime(command+3, command+3 + 12);
+          console->print("setting date+time to ");
+          printDateTime(*console, newTime);
+          setDateTime(command+3);
+          break;
+        }
+      }
       break;
     }
     case 'l': {

@@ -5,8 +5,9 @@
 #include "SolarPoolHeater.h"
 #include "TemperatureProbes.h"
 #include "Datalog.h"
+#include "RealTimeClock.h"
 
-volatile byte assertFailureCode = 0;
+byte assertFailureCode = 0;
 
 Print *console;
 Stream *consoleInput;
@@ -24,6 +25,13 @@ void printDebugInfo(Print &dest)
     dest.print("    errorLastImplausibleValue:"); dest.print(errorLastImplausibleValueRaw[i]);
     dest.print(" "); dest.println(errorLastImplausibleValueC[i]);
   }
+  dest.print("real time clock is running:"); dest.print(realTimeClockStatus);
+  dest.print("log file status:");
+  if (logfileStatus >= 0 && logfileStatus <= LFS_OK) {
+    dest.println(logfileStatusText[logfileStatus]);
+  } else {
+    dest.println(logfileStatus);
+  }  
 }
 
 DigitalPin<LED_BUILTIN> pinStatusLED;
@@ -64,6 +72,9 @@ void populateErrorStack()
   }
   if (assertFailureCode != 0) {
     errorStack[errorStackIdx++] = ERRORCODE_ASSERT | assertFailureCode;
+  }
+  if (!realTimeClockStatus) {
+    errorStack[errorStackIdx++] = ERRORCODE_RTC;
   }
 
 }

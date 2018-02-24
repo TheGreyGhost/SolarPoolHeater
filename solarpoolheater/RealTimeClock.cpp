@@ -1,29 +1,21 @@
 #include "RealTimeClock.h"
 #include <Wire.h>
 
-void printDateTime(DateTime dateTime);
-
-RTC_DS1307 RTC;
+RTC_DS1307 realTimeClock;
+DateTime currentTime;
+bool realTimeClockStatus;
 
 void setupRTC(void){
   Wire.begin();
-  RTC.begin();
+  realTimeClock.begin();
+  currentTime = realTimeClock.now();
 }
 
 void tickRTC() {
-//  if (Serial.available() > 0) {
-//  int instruct = Serial.read();
-//  switch (instruct) {
-//    case 'D': {
-//      DateTime now = RTC.now();
-//      printDateTime(now);
-//      break;
-//    } case 'S':
-//      RTC.set(RTC_MONTH, 6);
-//      RTC.set(RTC_HOUR, 16);
-//      break;
-//    }
-//  }
+  realTimeClockStatus = realTimeClock.isrunning();
+  if (realTimeClockStatus) {
+    currentTime = realTimeClock.now();
+  }
 }
 
 void printDateTime(Print &dest, DateTime dateTime) {
@@ -40,3 +32,12 @@ void printDateTime(Print &dest, DateTime dateTime) {
   dest.print(dateTime.second(), DEC);
   dest.println();
 }
+
+// "Dec 26 2009 12:34:56"
+void setDateTime(const char newDateTime[])
+{
+  DateTime newTime(newDateTime, newDateTime + 12);
+  realTimeClock.adjust(newTime);
+}
+
+

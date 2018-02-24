@@ -11,7 +11,9 @@ File datalogfile;
 const int DATALOG_BYTES_PER_SAMPLE = NUMBER_OF_PROBES * 3 * sizeof(float); // each sample has min, avg, max for each probe
 const char DATALOG_FILENAME[] = "datalog.txt";
 
-volatile LogfileStatus logfileStatus;
+const char* logfileStatusText[4] = {"Card not present", "Failed to open", "Write failed", "OK"};
+
+LogfileStatus logfileStatus;
 
 const int LOG_PERIOD_SAMPLES = 60;
 
