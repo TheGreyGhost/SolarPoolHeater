@@ -207,7 +207,7 @@ void tickTemperatureProbes()
             default: console->print("Invalid status"); break;
           }
         }
-        console->print(":");
+        console->print(" : ");
       }  // echoProbeReadings
     }  // for i = 0 to NUMBER_OF_PROBES
     if (echoProbeReadings) {

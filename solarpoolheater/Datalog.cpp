@@ -43,6 +43,8 @@ void tickDatalog()
     // if the file is available, write to it:
     if (datalogfile) {  // don't forget to update DATALOG_BYTES_PER_SAMPLE
 //      Serial.print("start datafile write:"); Serial.println(millis());
+      datalogfile.seek(datalogfile.size());
+
       for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
         float temp[3];
         if (probeStatuses[i] == PS_OK) {
