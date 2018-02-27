@@ -33,6 +33,7 @@ void executeCommand(char command[])
       console->println("!le = erase log file");
       console->println("!li = log file info");
       console->println("!lr sample# count = read log data");
+      console->println("!lv sample# count = view log data (more readable than lr)");
       break;
     }
     case 't': {
@@ -88,6 +89,7 @@ void executeCommand(char command[])
           console->println(" samples");
           break;
         }
+        case 'v':      //lv sample# numberOfSamples - read
         case 'r': {    //lr sample# numberOfSamples - read
           commandIsValid = true;
           char *nextnumber;
@@ -97,7 +99,7 @@ void executeCommand(char command[])
           if (arg1 < 0 || arg2 <= 0) {
             console->println("invalid arguments");
           } else {
-            dataLogExtractEntries(*console, arg1, arg2);
+            dataLogExtractEntries(*console, arg1, arg2, (command[1] == 'r' ? "" : ": "));
           }
           break;
         }

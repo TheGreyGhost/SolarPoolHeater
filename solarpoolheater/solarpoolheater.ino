@@ -6,6 +6,7 @@
 #include "RealTimeClock.h"
 #include "Datalog.h"
 #include "Commands.h"
+#include "PumpControl.h"
 
 /********************************************************************/
 
@@ -18,21 +19,23 @@ void setup(void)
   Serial.println("Setting up"); 
 
   setupSystemStatus();
+  setupRTC();
+  setupPumpControl();
   setupTemperatureProbes();
   setupDatalog();
   setupCommands();
-
-  setupRTC();
-
+  setupSolarIntensity();
 } 
 
 void loop(void) 
 { 
   tickRTC();
   tickTemperatureProbes();
+  tickPumpControl();
   tickCommands();
   tickDatalog();
   tickSystemStatus();
+  tickSolarIntensity();
 }
 
 

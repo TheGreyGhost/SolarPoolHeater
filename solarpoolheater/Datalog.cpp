@@ -8,7 +8,8 @@
 
 const int SD_CHIPSELECT = 4;
 File datalogfile;
-const int DATALOG_BYTES_PER_SAMPLE = NUMBER_OF_PROBES * 3 * sizeof(float); // each sample has min, avg, max for each probe
+// each sample has timestamp; min, avg, max for each temp probe; cumulative insolation; cumulative pump runtime (s)
+const int DATALOG_BYTES_PER_SAMPLE = sizeof(long) + NUMBER_OF_PROBES * 3 * sizeof(float) + sizeof(float) + sizeof(float); 
 const char DATALOG_FILENAME[] = "datalog.txt";
 
 const char* logfileStatusText[4] = {"Card not present", "Failed to open", "Write failed", "OK"};
@@ -47,6 +48,14 @@ void tickDatalog()
 //      Serial.print("start datafile write:"); Serial.println(millis());
       datalogfile.seek(datalogfile.size());
 
+      size_t totalBytesWritten = 0;
+      long timestamp = currenttime.secondstime();
+      size_t bytesWritten = datalogfile.write((byte *)timestamp, sizeof timestamp);
+      if (bytesWritten != sizeof timestamp) {
+        logfileStatus = LFS_WRITE_FAILED;
+      }
+      totalBytesWritten += bytesWritten;
+      
       for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
         float temp[3];
         if (probeStatuses[i] == PS_OK) {
@@ -56,11 +65,27 @@ void tickDatalog()
         } else {
           temp[0] = 0.0; temp[1] = 0.0; temp[2] = 0.0;  
         }
-        size_t bytesWritten = datalogfile.write((byte *)temp, sizeof temp);
+        bytesWritten = datalogfile.write((byte *)temp, sizeof temp);
         if (bytesWritten != sizeof temp) {
           logfileStatus = LFS_WRITE_FAILED;
         }
+        totalBytesWritten += bytesWritten;
         temperatureDataStats[i].clear();
+      }
+
+      bytesWritten = datalogfile.write((byte *)cumulativeInsolation, sizeof cumulativeInsolation);
+      if (bytesWritten != sizeof cumulativeInsolation) {
+        logfileStatus = LFS_WRITE_FAILED;
+      }
+      totalBytesWritten += bytesWritten;
+
+      bytesWritten = datalogfile.write((byte *)pumpRuntimeSeconds, sizeof pumpRuntimeSeconds);
+      if (bytesWritten != sizeof pumpRuntimeSeconds) {
+        logfileStatus = LFS_WRITE_FAILED;
+      }
+      totalBytesWritten += bytesWritten;
+      if (totalBytesWritten != DATALOG_BYTES_PER_SAMPLE) {
+        logfileStatus = LFS_WRITE_FAILED;
       }
       datalogfile.flush();
     }
@@ -86,7 +111,7 @@ unsigned long dataLogNumberOfSamples()
   return datalogfile.size() / DATALOG_BYTES_PER_SAMPLE;
 }
 
-void dataLogExtractEntries(Print &dest, long startidx, long numberOfEntries)
+void dataLogExtractEntries(Print &dest, long startidx, long numberOfEntries, const char probeSeparator[])
 {
   unsigned long filesize = datalogfile.size();
   unsigned long samplesInFile = filesize / DATALOG_BYTES_PER_SAMPLE;
@@ -95,23 +120,41 @@ void dataLogExtractEntries(Print &dest, long startidx, long numberOfEntries)
      dest.println(samplesInFile);
   } else {  
     datalogfile.seek(startidx * DATALOG_BYTES_PER_SAMPLE);
-    long samplesToRead = min(numberOfEntries, min(24*60, samplesInFile - startidx));  // something wrong here?  asked for 2530 but only got 1420?
+    long samplesToRead = min(numberOfEntries, min(24*60, samplesInFile - startidx));  // no more than one day at a time
+    dest.print("timestamp(s) "); dest.print(probeSeparator);
     for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
       dest.print(probeNames[i]); 
       dest.print(" min avg max ");
+      dest.print(probeSeparator);
     }
+
+    dest.print("cumul. insolation "); dest.print(probeSeparator);
+    dest.print("cumul. pump runtime(s) "); dest.print(probeSeparator);
     dest.println();
+    
     for (long i = 0; i < samplesToRead; ++i) {
+      long timestamp;
+      float cumulativeInsolation;
+      float pumpRuntime;
+      datalogfile.readBytes((byte *)timestamp, sizeof(timestamp));
+      dest.print(timestamp); dest.print(" "); dest.print(probeSeparator);
+      
       for (int j = 0; j < NUMBER_OF_PROBES; ++j) {
         float temp[3];
-        for (int k = 0; k < sizeof(temp); ++k) {
-          ((byte *)temp)[k] = datalogfile.read(); 
-        }
+        datalogfile.readBytes((byte *)temp, sizeof(temp));
         for (int k = 0; k < 3; ++k) {
           dest.print(temp[k], 1); 
           dest.print(" ");
         }  
+        dest.print(probeSeparator);
       }
+      
+      datalogfile.readBytes((byte *)cumulativeInsolation, sizeof(cumulativeInsolation));
+      dest.print(cumulativeInsolation, 0); dest.print(" "); dest.print(probeSeparator);
+      
+      datalogfile.readBytes((byte *)pumpRuntime, sizeof(pumpRuntime));
+      dest.print(pumpRuntime, 0); dest.print(" "); // dest.print(probeSeparator);
+     
       dest.println();
     }
   }

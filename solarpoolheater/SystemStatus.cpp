@@ -25,13 +25,18 @@ void printDebugInfo(Print &dest)
     dest.print("    errorLastImplausibleValue:"); dest.print(errorLastImplausibleValueRaw[i]);
     dest.print(" "); dest.println(errorLastImplausibleValueC[i]);
   }
-  dest.print("real time clock is running:"); dest.print(realTimeClockStatus);
+  dest.print("real time clock is running:"); dest.println(realTimeClockStatus);
   dest.print("log file status:");
   if (logfileStatus >= 0 && logfileStatus <= LFS_OK) {
     dest.println(logfileStatusText[logfileStatus]);
   } else {
     dest.println(logfileStatus);
   }  
+  dest.print("solar intensity sensor status:");
+  dest.print(solarInsolarIntensityReadingInvalid ? "INVALID " : "OK");
+  dest.print(" with lastInvalidReading:");
+  dest.println(lastInvalidReading);
+ 
 }
 
 DigitalPin<LED_BUILTIN> pinStatusLED;
@@ -76,7 +81,9 @@ void populateErrorStack()
   if (!realTimeClockStatus) {
     errorStack[errorStackIdx++] = ERRORCODE_RTC;
   }
-
+  if (solarIntensityReadingInvalid) {
+    errorStack[errorStackIdx++] = ERRORCODE_SOLAR_SENSOR;
+  }
 }
 
 const byte PAUSE_BETWEEN_CODES = 8; // intervals of 250 ms

@@ -1,0 +1,40 @@
+function baseName(url){
+	var i;
+	var c;
+	for(i = url.length - 1; i >= 0; i--){
+		c = url.charAt(i);
+		// check for forward or backward slashes because microsoft
+		// uses backslashes in URLs and Netscale uses forward.
+		if ((c == "\\") || (c == "/")){
+			return(url.substring(i+1, url.length));
+		}
+	}
+	return(url);
+}
+
+function writeLink(name, url){
+	if (baseName(document.URL) == baseName(url)){
+		document.write("<bold>" + name + "</bold>     ");
+	}else{
+		document.write("<a href=" + url + ">" + name + "</a>    ");
+	}
+}
+
+function writeHeader(){
+	document.write("<IMG SRC=\'http://chuck-wright.com/graphics/greencgw3_700_emb.jpg\' BORDER=0><br><br>");
+	document.write("<BODY BGCOLOR=\'#FFFFD8\' TEXT=\'#000000\' LINK=\'#4000e0\' VLINK=\'#0000FF\' ALINK=\'#FF0000\'>");
+	document.write("<table width=700><tr><td>");
+}
+
+function writeFooter(){
+	document.write("<p><A HREF=\'mailto:webct08 at chuck-wright.com\'>To contact me...</A>");
+	document.write("<hr><center>");
+	writeLink("home", "http://chuck-wright.com/index.html");
+	writeLink("dataloggers", "http://chuck-wright.com/wcs/index.php");
+	writeLink("calculators", "http://chuck-wright.com/calculator_home.html");
+	writeLink("renewables info", "http://chuck-wright.com/general_renewable.html");
+	writeLink("solar projects", "http://chuck-wright.com/projects.html");
+	writeLink("hobbies", "http://chuck-wright.com/hobby_home.html");
+	document.write("</center></td></tr></table>");
+}
+
