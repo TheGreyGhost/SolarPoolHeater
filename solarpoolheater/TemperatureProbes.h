@@ -16,8 +16,7 @@ const int HX_HOT_INLET = 0;
 const int HX_HOT_OUTLET = 1;
 const int HX_COLD_INLET = 2;
 const int HX_COLD_OUTLET = 3;
-const int PANEL1_OUTLET = 4;
-const int AMBIENT = 5;
+const int AMBIENT = 4;
 const int LAST_PROBE_IDX = AMBIENT;
 const int NUMBER_OF_PROBES = LAST_PROBE_IDX + 1;
 

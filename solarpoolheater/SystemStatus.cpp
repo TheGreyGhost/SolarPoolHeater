@@ -6,6 +6,7 @@
 #include "TemperatureProbes.h"
 #include "Datalog.h"
 #include "RealTimeClock.h"
+#include "SolarIntensity.h"
 
 byte assertFailureCode = 0;
 
@@ -33,7 +34,7 @@ void printDebugInfo(Print &dest)
     dest.println(logfileStatus);
   }  
   dest.print("solar intensity sensor status:");
-  dest.print(solarInsolarIntensityReadingInvalid ? "INVALID " : "OK");
+  dest.print(solarIntensityReadingInvalid ? "INVALID " : "OK");
   dest.print(" with lastInvalidReading:");
   dest.println(lastInvalidReading);
  

@@ -1,4 +1,6 @@
+#include <Arduino.h>
 #include "PumpControl.h"
+#include "RealTimeClock.h"
 
 // rules:
 // 1) If time is before pump start time, or after pump stop time, turn off
@@ -24,8 +26,8 @@ bool pumpIsRunning;
 
 float pumpRuntimeSeconds;
 
-unsigned long lastMillis;
-uint8_t lastDay;
+unsigned long lastMillisPC;
+uint8_t lastDayPC;
 const int SAMPLE_PERIOD_MS = 1000;
 
 const int PUMP_PIN = 3;
@@ -36,25 +38,25 @@ void setupPumpControl()
 
   pumpRuntimeSeconds = 0;
   pumpIsRunning = false;
-  lastDay = currentTime.day();    
+  lastDayPC = currentTime.day();    
 }
 
 void tickPumpControl()
 {
   unsigned long timeNow = millis();
-  if (timeNow - lastMillis < SAMPLE_PERIOD_MS) return;
+  if (timeNow - lastMillisPC < SAMPLE_PERIOD_MS) return;
 
   if (pumpIsRunning) {
-    pumpRuntimeSeconds += (timeNow - lastMillis) / 1000.0;
+    pumpRuntimeSeconds += (timeNow - lastMillisPC) / 1000.0;
   }  
 
-  if (currentTime.day() != lastDay) {
-    lastDay = currentTime.day();
+  if (currentTime.day() != lastDayPC) {
+    lastDayPC = currentTime.day();
     pumpRuntimeSeconds = 0;
   }
 
   digitalWrite(PUMP_PIN, pumpIsRunning ? HIGH : LOW);
 
-  lastMillis = timeNow;
+  lastMillisPC = timeNow;
 }
 

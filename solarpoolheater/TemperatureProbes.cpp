@@ -35,7 +35,6 @@ DeviceAddress probeAddresses[NUMBER_OF_PROBES] =
     {0x28, 0xFF, 0xE4, 0x9B, 0x81, 0x17, 0x04, 0xD2},  // HX_HOT_OUTLET
     {0x28, 0xFF, 0x90, 0x1A, 0x81, 0x17, 0x05, 0xA8},  // HX_COLD_INLET
     {0x28, 0xFF, 0x83, 0x04, 0x81, 0x17, 0x05, 0xB7},  // HX_COLD_OUTLET
-    {0x28, 0xFF, 0x19, 0xE6, 0x81, 0x17, 0x04, 0xAD},  // HX_PANEL1_OUTLET  CURRENTLY A SECOND AMBIENT
     {0x28, 0xFF, 0x6B, 0x94, 0x81, 0x17, 0x04, 0xEC}   // HX_AMBIENT
    };
 
@@ -43,7 +42,6 @@ const uint8_t *HX_HOT_INLET_ADDRESS = probeAddresses[HX_HOT_INLET];
 const uint8_t *HX_HOT_OUTLET_ADDRESS = probeAddresses[HX_HOT_OUTLET];
 const uint8_t *HX_COLD_INLET_ADDRESS = probeAddresses[HX_COLD_INLET];
 const uint8_t *HX_COLD_OUTLET_ADDRESS = probeAddresses[HX_COLD_OUTLET];
-const uint8_t *PANEL1_OUTLET_ADDRESS = probeAddresses[PANEL1_OUTLET];
 const uint8_t *AMBIENT_ADDRESS = probeAddresses[AMBIENT];
 
 const float EWMA_TIME_CONSTANT = 10.0; // decay time in seconds (time to drop to 1/e) assuming 1 Hz sampling frequency
@@ -51,12 +49,12 @@ const float EWMA_ALPHA = 0.1;  // corresponds roughly to 10 seconds decay time a
 MovingAverage smoothedTemperatures[NUMBER_OF_PROBES] = 
                  {MovingAverage(EWMA_ALPHA, EWMA_TIME_CONSTANT), MovingAverage(EWMA_ALPHA, EWMA_TIME_CONSTANT),
                   MovingAverage(EWMA_ALPHA, EWMA_TIME_CONSTANT), MovingAverage(EWMA_ALPHA, EWMA_TIME_CONSTANT),
-                  MovingAverage(EWMA_ALPHA, EWMA_TIME_CONSTANT), MovingAverage(EWMA_ALPHA, EWMA_TIME_CONSTANT)};
+                  MovingAverage(EWMA_ALPHA, EWMA_TIME_CONSTANT)};
                   
 DataStats temperatureDataStats[NUMBER_OF_PROBES];
    
 volatile enum ProbeStatus probeStatuses[NUMBER_OF_PROBES];
-const char* probeNames[NUMBER_OF_PROBES] = {"HX_HOT_INLET", "HX_HOT_OUTLET", "HX_COLD_INLET", "HX_COLD_OUTLET", "PANEL1_OUTLET", "AMBIENT"};
+const char* probeNames[NUMBER_OF_PROBES] = {"HX_HOT_INLET", "HX_HOT_OUTLET", "HX_COLD_INLET", "HX_COLD_OUTLET", "AMBIENT"};
 
 bool echoProbeReadings = false;
 

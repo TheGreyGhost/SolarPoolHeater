@@ -7,6 +7,7 @@
 #include "Datalog.h"
 #include "Commands.h"
 #include "PumpControl.h"
+#include "SolarIntensity.h"
 
 /********************************************************************/
 

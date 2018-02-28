@@ -4,6 +4,9 @@
 #include <Ethernet.h>
 #include <Wire.h>
 
+#include "RealTimeClock.h"
+#include "SolarIntensity.h"
+#include "PumpControl.h"
 #include "TemperatureProbes.h"
 
 const int SD_CHIPSELECT = 4;
@@ -49,8 +52,8 @@ void tickDatalog()
       datalogfile.seek(datalogfile.size());
 
       size_t totalBytesWritten = 0;
-      long timestamp = currenttime.secondstime();
-      size_t bytesWritten = datalogfile.write((byte *)timestamp, sizeof timestamp);
+      long timestamp = currentTime.secondstime();
+      size_t bytesWritten = datalogfile.write((byte *)&timestamp, sizeof timestamp);
       if (bytesWritten != sizeof timestamp) {
         logfileStatus = LFS_WRITE_FAILED;
       }
@@ -73,13 +76,13 @@ void tickDatalog()
         temperatureDataStats[i].clear();
       }
 
-      bytesWritten = datalogfile.write((byte *)cumulativeInsolation, sizeof cumulativeInsolation);
+      bytesWritten = datalogfile.write((byte *)&cumulativeInsolation, sizeof cumulativeInsolation);
       if (bytesWritten != sizeof cumulativeInsolation) {
         logfileStatus = LFS_WRITE_FAILED;
       }
       totalBytesWritten += bytesWritten;
 
-      bytesWritten = datalogfile.write((byte *)pumpRuntimeSeconds, sizeof pumpRuntimeSeconds);
+      bytesWritten = datalogfile.write((byte *)&pumpRuntimeSeconds, sizeof pumpRuntimeSeconds);
       if (bytesWritten != sizeof pumpRuntimeSeconds) {
         logfileStatus = LFS_WRITE_FAILED;
       }
@@ -136,7 +139,7 @@ void dataLogExtractEntries(Print &dest, long startidx, long numberOfEntries, con
       long timestamp;
       float cumulativeInsolation;
       float pumpRuntime;
-      datalogfile.readBytes((byte *)timestamp, sizeof(timestamp));
+      datalogfile.readBytes((byte *)&timestamp, sizeof(timestamp));
       dest.print(timestamp); dest.print(" "); dest.print(probeSeparator);
       
       for (int j = 0; j < NUMBER_OF_PROBES; ++j) {
@@ -149,10 +152,10 @@ void dataLogExtractEntries(Print &dest, long startidx, long numberOfEntries, con
         dest.print(probeSeparator);
       }
       
-      datalogfile.readBytes((byte *)cumulativeInsolation, sizeof(cumulativeInsolation));
+      datalogfile.readBytes((byte *)&cumulativeInsolation, sizeof(cumulativeInsolation));
       dest.print(cumulativeInsolation, 0); dest.print(" "); dest.print(probeSeparator);
       
-      datalogfile.readBytes((byte *)pumpRuntime, sizeof(pumpRuntime));
+      datalogfile.readBytes((byte *)&pumpRuntime, sizeof(pumpRuntime));
       dest.print(pumpRuntime, 0); dest.print(" "); // dest.print(probeSeparator);
      
       dest.println();

@@ -3,6 +3,8 @@
 #include "Datalog.h"
 #include "RealTimeClock.h"
 #include "TemperatureProbes.h"
+#include "SolarIntensity.h"
+#include "PumpControl.h"
 
 const int MAX_COMMAND_LENGTH = 30;
 const int COMMAND_BUFFER_SIZE = MAX_COMMAND_LENGTH + 2;  // if buffer fills to max size, truncation occurs
@@ -26,14 +28,15 @@ void executeCommand(char command[])
     case '?': {
       commandIsValid = true;
       console->println("commands (turn CR+LF on):");
-      console->println("!d = print debug info");
-      console->println("!t = toggle echo of probe readings");
       console->println("!cr = read clock date+time");
       console->println("!cs Dec 26 2009 12:34:56 = set clock date + time (capitalisation, character count, and spacings must match exactly)");
+      console->println("!d = print debug info");
       console->println("!le = erase log file");
       console->println("!li = log file info");
       console->println("!lr sample# count = read log data");
       console->println("!lv sample# count = view log data (more readable than lr)");
+      console->println("!s = display solar readings and pump runtime");
+      console->println("!t = toggle echo of temp probe readings");
       break;
     }
     case 't': {
@@ -46,6 +49,18 @@ void executeCommand(char command[])
         }
         console->println();
       }  
+      break;
+    }
+    case 's': {
+      commandIsValid = true;
+      console->print("solar intensity:"); 
+        if (solarIntensityReadingInvalid) {
+          console->println("INVALID");
+        } else {
+          console->println(smoothedSolarIntensity.getEWMA());
+        }
+      console->print("cumulative insolation:"); console->println(cumulativeInsolation);
+      console->print("cumulative pump runtime (s):"); console->println(pumpRuntimeSeconds);
       break;
     }
     case 'c': {
