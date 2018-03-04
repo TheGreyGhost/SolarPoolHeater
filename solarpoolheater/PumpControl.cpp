@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include "PumpControl.h"
 #include "RealTimeClock.h"
+#include "SystemStatus.h"
+#include "TemperatureProbes.h"
 
 // rules:
 // 1) If time is before pump start time, or after pump stop time, turn off
@@ -22,9 +24,24 @@
 // 4) insolation threshold
 // 5) pumprunout time (time to keep running after conditions are unfavourable.
 
+const float onTimeHours = 8.0;             // before this time (hours), turn off
+const float offTimeHours = 19.0;           // after this time (hours), turn off
+const float temperatureSetpoint = 28.0;  // target pool temperature
+const float solarIntensityThreshold = 20.0;             // ignore solar intensity below this threshold 
+const float solarInsolationThreshold = 20.0 * 10 * 60;  // if we receive this much insolation, start the pump
+const float insolationTriggerRunSeconds = 180.0;        // time to run the pump once insolation trigger reached, before watching HotInlet minus ColdInlet
+const float minimumHotInletMinusColdInlet = 2.0;        // minimum difference between hot inlet and cold inlet to keep running pump
+const float belowMinimumTimeoutSeconds = 180.0;         // once the deltaT is below minimumHotInletMinusColdInlet, run for this timeout then stop
+
+const float hotInletAlarm = 60.0;
+const float coldOutletAlarm = 45.0; 
+
 bool pumpIsRunning;
+bool permanentShutdown;
 
 float pumpRuntimeSeconds;
+
+enum PumpState {PS_OFF_TIME, PS_OFF_ERRORS, PS_OFF_REACHED_SETPOINT, PS_OFF_WAITING_FOR_SUN, PS_ON, PS_ON_TIME};
 
 unsigned long lastMillisPC;
 uint8_t lastDayPC;
@@ -38,6 +55,7 @@ void setupPumpControl()
 
   pumpRuntimeSeconds = 0;
   pumpIsRunning = false;
+  permanentShutdown = false;
   lastDayPC = currentTime.day();    
 }
 
@@ -53,6 +71,28 @@ void tickPumpControl()
   if (currentTime.day() != lastDayPC) {
     lastDayPC = currentTime.day();
     pumpRuntimeSeconds = 0;
+  }
+
+  if (shutdownErrorsPresent || permanentShutdown) {
+    pumpIsRunning = false;
+  } else if (currentTime.hour() < onTimeHours) {
+    pumpIsRunning = false;
+  } else if (currentTime.hour() > offTimeHours) {
+    pumpIsRunning = false;
+  } else if (!smoothedTemperatures[HX_COLD_INLET].isValid() || 
+              smoothedTemperatures[HX_COLD_INLET].getEWMA() > temperatureSetpoint) {
+    pumpIsRunning = false;              
+    permanentShutdown = true;
+  } else if (temperatureDataStats[HX_COLD_OUTLET].getCount() >= 1 && 
+             temperatureDataStats[HX_COLD_OUTLET].getMax() > coldOutletAlarm) {
+    pumpIsRunning = false;              
+    permanentShutdown = true;
+  } else if (temperatureDataStats[HX_HOT_INLET].getCount() >= 1 && 
+             temperatureDataStats[HX_HOT_INLET].getMax() > hotInletAlarm) {
+    pumpIsRunning = false;              
+    permanentShutdown = true;
+  } else {
+    pumpIsRunning = true;
   }
 
   digitalWrite(PUMP_PIN, pumpIsRunning ? HIGH : LOW);

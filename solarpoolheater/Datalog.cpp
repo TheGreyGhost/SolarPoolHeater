@@ -1,4 +1,5 @@
 #include "Datalog.h"
+#include <Arduino.h>
 #include <SPI.h>
 #include <SD.h>
 #include <Ethernet.h>
@@ -34,7 +35,7 @@ void setupDatalog()
   }
   logfileStatus = LFS_OK;
   Serial.println("card initialized.");  // todo comment out
-  setupEthernet();
+//  setupEthernet();
 
   datalogfile = SD.open(DATALOG_FILENAME, FILE_WRITE);
   if (!datalogfile) {

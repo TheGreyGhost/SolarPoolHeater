@@ -1,4 +1,5 @@
 #include "DataStats.h"
+#include <Arduino.h>
 #include <float.h>
 
 DataStats::DataStats()

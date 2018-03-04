@@ -65,6 +65,29 @@ void tickSystemStatus()
   tickStatusLEDsequence();
 }
 
+bool shutdownErrorsPresent()
+{
+  for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
+    if (probeStatuses[i] != PS_OK) {
+      return true;
+    }
+  }
+  if (logfileStatus != LFS_OK) {
+    return true;
+  }
+  if (assertFailureCode != 0) {
+    return true;
+  }
+  if (!realTimeClockStatus) {
+    return true;
+  }
+//  if (solarIntensityReadingInvalid) {
+//    return true;
+//  }
+
+  return false;
+}
+
 void populateErrorStack()
 {
   errorStackIdx = 0;

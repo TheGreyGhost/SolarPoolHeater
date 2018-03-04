@@ -15,6 +15,9 @@ void tickSystemStatus();
 
 void printDebugInfo(Print &dest);
 
+// returns true if there are any errors which should shut down the pump
+bool shutdownErrorsPresent();
+
 // assign numbers for each error code
 const byte ERRORCODE_PROBE = 16;   // leave space for NUMBER_OF_PROBES, ie 16 = probe 0, 17 = probe 1, etc
 const byte ERRORCODE_DATALOG = 32; // leave space for error codes

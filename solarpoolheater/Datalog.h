@@ -12,6 +12,7 @@ void tickDatalog();
 
 bool dataLogErase();
 unsigned long dataLogNumberOfSamples();
+
 // print the given entries to dest, in the format 
 // probe1 min max avg {probeSeparator} probe2 min max avg etc
 void dataLogExtractEntries(Print &dest, long startidx, long numberOfEntries, const char probeSeparator[]);
