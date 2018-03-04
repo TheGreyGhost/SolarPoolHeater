@@ -17,4 +17,8 @@ void setDateTime(const char newDateTime[]);
 extern DateTime currentTime; // the current time
 extern bool realTimeClockStatus;  // true if ok
 
+const int DATETIMEFORMAT_DATELENGTH = 11; // "Dec 04 2018"
+const int DATETIMEFORMAT_TIMELENGTH = 8; // "12:34:56"
+const int DATETIMEFORMAT_TIME_STARTPOS = DATETIMEFORMAT_DATELENGTH + 1; // includes space
+const int DATETIMEFORMAT_TOTALLENGTH = DATETIMEFORMAT_TIME_STARTPOS + DATETIMEFORMAT_TIMELENGTH;
 #endif

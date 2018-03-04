@@ -74,12 +74,16 @@ void executeCommand(char command[])
           }
           break;
         }
-        case 's': {
+        case 's': {  //todo there is a bug in here eg Mar 04 2018 06:00:00 doesn't set time correctly.  !cs doesn't complain at all even if no args
           commandIsValid = true;
-          DateTime newTime(command+3, command+3 + 12);
-          console->print("setting date+time to ");
-          printDateTime(*console, newTime);
-          setDateTime(command+3);
+          if (strlen(command) < 3 + DATETIMEFORMAT_TOTALLENGTH) {
+            console->println("syntax error.  !cs Dec 26 2009 12:34:56 (capitalisation, character count, and spacings must match exactly)");
+          } else {
+            DateTime newTime(command+3, command+3 + DATETIMEFORMAT_TIME_STARTPOS);
+            console->print("setting date+time to ");
+            printDateTime(*console, newTime);
+            setDateTime(command+3); 
+          } 
           break;
         }
       }

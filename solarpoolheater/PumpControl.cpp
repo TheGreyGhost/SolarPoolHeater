@@ -24,7 +24,7 @@
 // 4) insolation threshold
 // 5) pumprunout time (time to keep running after conditions are unfavourable.
 
-const float onTimeHours = 8.0;             // before this time (hours), turn off
+const float onTimeHours = 9.0;             // before this time (hours), turn off
 const float offTimeHours = 19.0;           // after this time (hours), turn off
 const float temperatureSetpoint = 28.0;  // target pool temperature
 const float solarIntensityThreshold = 20.0;             // ignore solar intensity below this threshold 
@@ -73,26 +73,36 @@ void tickPumpControl()
     pumpRuntimeSeconds = 0;
   }
 
-  if (shutdownErrorsPresent || permanentShutdown) {
+  float currentHours = currentTime.hour() + currentTime.day() / 60.0;
+  if (shutdownErrorsPresent() || permanentShutdown) {
     pumpIsRunning = false;
-  } else if (currentTime.hour() < onTimeHours) {
+//    Serial.println("A"); // todo remove
+  } else if (currentHours < onTimeHours) {
     pumpIsRunning = false;
-  } else if (currentTime.hour() > offTimeHours) {
+//    Serial.println("B"); // todo remove
+  } else if (currentHours > offTimeHours) {
     pumpIsRunning = false;
-  } else if (!smoothedTemperatures[HX_COLD_INLET].isValid() || 
-              smoothedTemperatures[HX_COLD_INLET].getEWMA() > temperatureSetpoint) {
+//    Serial.println("C"); // todo remove
+  } else if (!smoothedTemperatures[HX_COLD_INLET].isValid()) {
+    pumpIsRunning = false;              
+//    Serial.println("D1"); // todo remove
+  } else if (smoothedTemperatures[HX_COLD_INLET].getEWMA() > temperatureSetpoint) {
     pumpIsRunning = false;              
     permanentShutdown = true;
+//    Serial.println("D2"); // todo remove
   } else if (temperatureDataStats[HX_COLD_OUTLET].getCount() >= 1 && 
              temperatureDataStats[HX_COLD_OUTLET].getMax() > coldOutletAlarm) {
     pumpIsRunning = false;              
     permanentShutdown = true;
+//    Serial.println("E"); // todo remove
   } else if (temperatureDataStats[HX_HOT_INLET].getCount() >= 1 && 
              temperatureDataStats[HX_HOT_INLET].getMax() > hotInletAlarm) {
     pumpIsRunning = false;              
     permanentShutdown = true;
+//    Serial.println("F"); // todo remove
   } else {
     pumpIsRunning = true;
+//    Serial.println("G"); // todo remove
   }
 
   digitalWrite(PUMP_PIN, pumpIsRunning ? HIGH : LOW);
