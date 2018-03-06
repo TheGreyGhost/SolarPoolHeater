@@ -11,4 +11,6 @@ extern MovingAverage smoothedSolarIntensity;
 extern bool solarIntensityReadingInvalid;  
 extern int lastInvalidReading;
 
+const float SOLAR_INTENSITY_FULL = 1000.0;
+const float SOLAR_INTENSITY_10pc = SOLAR_INTENSITY_FULL * 0.1;
 #endif

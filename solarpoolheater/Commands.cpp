@@ -37,6 +37,9 @@ void executeCommand(char command[])
       console->println("!lv sample# count = view log data (more readable than lr)");
       console->println("!s = display solar readings and pump runtime");
       console->println("!t = toggle echo of temp probe readings");
+      ps parameter set
+      pr parameter read
+      dw debug write
       break;
     }
     case 't': {

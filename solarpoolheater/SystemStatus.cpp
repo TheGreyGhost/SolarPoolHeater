@@ -7,6 +7,7 @@
 #include "Datalog.h"
 #include "RealTimeClock.h"
 #include "SolarIntensity.h"
+#include "PumpControl.h"
 
 byte assertFailureCode = 0;
 
@@ -37,7 +38,7 @@ void printDebugInfo(Print &dest)
   dest.print(solarIntensityReadingInvalid ? "INVALID " : "OK");
   dest.print(" with lastInvalidReading:");
   dest.println(lastInvalidReading);
- 
+  dest.print
 }
 
 DigitalPin<LED_BUILTIN> pinStatusLED;
@@ -69,20 +70,20 @@ bool shutdownErrorsPresent()
 {
   for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
     if (probeStatuses[i] != PS_OK) {
-      Serial.print("p"); Serial.print(i); // todo remove
+//      Serial.print("p"); Serial.print(i); // todo remove
       return true;
     }
   }
   if (logfileStatus != LFS_OK) {
-      Serial.print("r"); Serial.print(logfileStatus); // todo remove
+//      Serial.print("r"); Serial.print(logfileStatus); // todo remove
     return true;
   }
   if (assertFailureCode != 0) {
-      Serial.print("s"); Serial.print(assertFailureCode); // todo remove
+//      Serial.print("s"); Serial.print(assertFailureCode); // todo remove
     return true;
   }
   if (!realTimeClockStatus) {
-      Serial.print("t"); // todo remove
+//      Serial.print("t"); // todo remove
     return true;
   }
 //  if (solarIntensityReadingInvalid) {
