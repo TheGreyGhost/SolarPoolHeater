@@ -15,6 +15,9 @@ extern PumpState pumpState;
 // returns a text description of the current pump state
 const char *getCurrentPumpStateLabel();
 
+// return the current state of the pump
+PumpState getPumpState(); 
+
 // returns true if the pump is currently running
 bool isPumpRunning();
 

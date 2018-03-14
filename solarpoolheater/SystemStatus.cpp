@@ -38,7 +38,9 @@ void printDebugInfo(Print &dest)
   dest.print(solarIntensityReadingInvalid ? "INVALID " : "OK");
   dest.print(" with lastInvalidReading:");
   dest.println(lastInvalidReading);
-  dest.print
+  dest.print("pump state:");
+  dest.print(getPumpStateLabel());
+  dest.print("["); dest.print(getPumpState()); dest.println("]");
 }
 
 DigitalPin<LED_BUILTIN> pinStatusLED;

@@ -3,6 +3,7 @@
 #include "RealTimeClock.h"
 #include "SystemStatus.h"
 #include "TemperatureProbes.h"
+#include "Settings.h"
 
 // rules:
 // 1) If time is before pump start time, or after pump stop time, turn off
@@ -27,19 +28,18 @@
 // 4) insolation threshold
 // 5) pumprunout time (time to keep running after conditions are unfavourable.
 
-const float onTimeHours = 9.0;             // before this time (hours), turn off
-const float offTimeHours = 19.0;           // after this time (hours), turn off
-const float temperatureSetpoint = 28.0;  // target pool temperature
-const float temperatureSetpointHysteresis = 1.0; // once target temp setpoint is reached, stay off until below setpoint - hysteresis
-const float solarIntensityThreshold = SOLAR_INTENSITY_10pc;             // start the pump once the solar intensity is above this threshold 
-//const float solarInsolationThreshold = 20.0 * 10 * 60;  // if we receive this much insolation, start the pump
-//const float insolationTriggerRunSeconds = 180.0;        // time to run the pump once insolation trigger reached, before watching HotInlet minus ColdInlet
-const float minimumHotInletMinusColdInlet = 1.0;        // minimum difference between hot inlet and cold inlet to keep running pump
-const float belowMinimumTimeoutSeconds = 180.0;         // once the deltaT is below minimumHotInletMinusColdInlet, run for this timeout then stop
-const int maxDailySystemErrorCount = 5;  // if we get more than this number of system errors in one day, stop the pump permanently.
-const float hotInletAlarm = 60.0;
-const float coldOutletAlarm = 45.0; 
-
+//const float onTimeHours = 9.0;             // before this time (hours), turn off
+//const float offTimeHours = 19.0;           // after this time (hours), turn off
+//const float temperatureSetpoint = 28.0;  // target pool temperature
+//const float temperatureSetpointHysteresis = 1.0; // once target temp setpoint is reached, stay off until below setpoint - hysteresis
+//const float solarIntensityThreshold = SOLAR_INTENSITY_10pc;             // start the pump once the solar intensity is above this threshold 
+////const float solarInsolationThreshold = 20.0 * 10 * 60;  // if we receive this much insolation, start the pump
+////const float insolationTriggerRunSeconds = 180.0;        // time to run the pump once insolation trigger reached, before watching HotInlet minus ColdInlet
+//const float minimumHotInletMinusColdInlet = 1.0;        // minimum difference between hot inlet and cold inlet to keep running pump
+//const float belowMinimumTimeoutSeconds = 180.0;         // once the deltaT is below minimumHotInletMinusColdInlet, run for this timeout then stop
+//const int maxDailySystemErrorCount = 5;  // if we get more than this number of system errors in one day, stop the pump permanently.
+//const float hotInletAlarm = 60.0;
+//const float coldOutletAlarm = 45.0; 
 
 bool pumpIsRunning;
 PumpState pumpState;
@@ -53,7 +53,10 @@ const int SAMPLE_PERIOD_MS = 1000;
 
 const int PUMP_PIN = 3;
 
-const char* pumpStateLabels[NUMBER_OF_PUMP_STATES] = {};
+const char* pumpStateLabels[NUMBER_OF_PUMP_STATES] = {"OFF(TIME)", "OFF(>SETPT)", "OFF(NO_SUN)", "OFF(ERRORS)", "OFF(TOO_MANY_ERRORS)", "OFF(OVERTEMP_HOT_INLET)", "OFF(OVERTEMP_COLD_OUTLET)", "ON", "ON(TIMING_OUT)"};
+
+int pumpTurnOnCount;
+unsigned long firstPumpTurnOnMillis;
 
 // returns a text description of the current pump state
 const char *getCurrentPumpStateLabel()
@@ -77,6 +80,11 @@ bool isPumpInError()
   return (pumpState & 0x20);
 }
 
+PumpState getPumpState()
+{
+  return pumpState;
+}
+
 void setupPumpControl()
 {
   pinMode(PUMP_PIN, OUTPUT);
@@ -86,10 +94,12 @@ void setupPumpControl()
   pumpState = PS_OFF_WAITING_FOR_SUN;
   lastDayPC = currentTime.day();    
   systemErrorCountToday = 0;
+  pumpTurnOnCount = 0
 }
 
 void tickPumpControl()
 {
+  bool initialPumpIsRunning = pumpIsRunning;
   unsigned long timeNow = millis();
   if (timeNow - lastMillisPC < SAMPLE_PERIOD_MS) return;
 
@@ -101,11 +111,10 @@ void tickPumpControl()
     lastDayPC = currentTime.day();
     pumpRuntimeSeconds = 0;
     systemErrorCountToday = 0;
+    pumpTurnOnCount = 0;
   }
 
   float currentHours = currentTime.hour() + currentTime.day() / 60.0;
-
-enum PumpState {PS_OFF_TIME=0x00, PS_OFF_REACHED_SETPOINT=0x01, PS_OFF_WAITING_FOR_SUN=0x02, PS_OFF_ERRORS=0x23, PS_OFF_EXCESSIVE_ERRORS=0x24, PS_OFF_OVERTEMP_HOT_INLET=0x25, PS_OFF_OVERTEMP_COLD_OUTLET=0x26, PS_ON=0x17, PS_ON_TIMING_OUT=0x18};
 
   switch (pumpState) {
     case PS_OFF_EXCESSIVE_ERRORS:
@@ -116,7 +125,7 @@ enum PumpState {PS_OFF_TIME=0x00, PS_OFF_REACHED_SETPOINT=0x01, PS_OFF_WAITING_F
     }
 
     case PS_OFF_ERRORS: {
-      if (systemErrorCountToday >=  maxDailySystemErrorCount) {
+      if (systemErrorCountToday >=  getSetting(SET_maxDailySystemErrorCount)) {
         pumpState = PS_OFF_EXCESSIVE_ERRORS;
       }
       if (!shutdownErrorsPresent()) {
@@ -146,6 +155,21 @@ enum PumpState {PS_OFF_TIME=0x00, PS_OFF_REACHED_SETPOINT=0x01, PS_OFF_WAITING_F
   digitalWrite(PUMP_PIN, pumpIsRunning ? HIGH : LOW);
 
   lastMillisPC = timeNow;
+
+  // check to see if pump is turning on and off too often (logic error somewhere) --> if so, disable it to prevent damage
+  if (pumpIsRunning && !initialPumpIsRunning) {
+    if (pumpTurnOnCount == 0) {
+      firstPumpTurnOnMillis = timeNow;
+    } 
+    ++pumpTurnOnCount;
+    if (pumpTurnOnCount >= 4) {
+      pumpTurnOnCount = 0;
+      if (timeNow - firstPumpTurnOnMillis < getSetting(SET_minSecondsPerFourPumpOns)) {
+        pumpState = PS_OFF_EXCESSIVE_ERRORS;              
+      }
+    }
+  }
+  
 }
 
 PumpState checkForPumpStateTransition()
@@ -153,27 +177,27 @@ PumpState checkForPumpStateTransition()
   // look for conditions which always turn the pump off
   if (shutdownErrorsPresent()) {
     return PS_OFF_ERRORS;
-  } else if (currentHours < onTimeHours || currentHours > offTimeHours) {
+  } else if (currentHours < getSetting(SET_onTimeHours) || currentHours > getSetting(SET_offTimeHours)) {
     return PS_OFF_TIME;
   } else if (temperatureDataStats[HX_COLD_OUTLET].getCount() >= 1 && 
-             temperatureDataStats[HX_COLD_OUTLET].getMax() > coldOutletAlarm) {
+             temperatureDataStats[HX_COLD_OUTLET].getMax() > getSetting(SET_coldOutletAlarm)) {
     return PS_OFF_OVERTEMP_COLD_OUTLET;
   } else if (temperatureDataStats[HX_HOT_INLET].getCount() >= 1 && 
-             temperatureDataStats[HX_HOT_INLET].getMax() > hotInletAlarm) {
+             temperatureDataStats[HX_HOT_INLET].getMax() > getSetting(SET_hotInletAlarm)) {
     return PS_OFF_OVERTEMP_HOT_INLET;
   } else if (!smoothedTemperatures[HX_COLD_INLET].isValid()) {
     return PS_OFF_WAITING_FOR_SUN;            
   } else if (smoothedTemperatures[HX_COLD_INLET].getEWMA() > 
-               temperatureSetpoint - (pumpState == PS_OFF_REACHED_SETPOINT ? temperatureSetpointHysteresis : 0)) {
+               getSetting(SET_temperatureSetpoint) - (pumpState == PS_OFF_REACHED_SETPOINT ? getSetting(SET_temperatureSetpointHysteresis) : 0)) {
     return PS_OFF_REACHED_SETPOINT;            
   } 
 
+  bool sunIsShining = !solarIntensityReadingInvalid && smoothedSolarIntensity.isValid() &&
+                      smoothedSolarIntensity.getEWMA() >= getSetting(SET_solarIntensityThreshold);
+  bool heatAvailable = smoothedTemperatures[HX_HOT_INLET].getEWMA() - smoothedTemperatures[HX_COLD_INLET].getEWMA()) 
+                         >= getSetting(SET_minimumHotInletMinusColdInlet);
   // look for other conditions
   switch (pumpState) {
-    bool sunIsShining = !solarIntensityReadingInvalid && smoothedSolarIntensity.isValid() &&
-                        smoothedSolarIntensity.getEWMA() >= solarIntensityThreshold;
-    bool heatAvailable = smoothedTemperatures[HX_HOT_INLET].getEWMA() - smoothedTemperatures[HX_COLD_INLET].getEWMA()) 
-                           >= minimumHotInletMinusColdInlet;
     case PS_OFF_REACHED_SETPOINT:
     case PS_OFF_TIME: {
       return PS_OFF_WAITING_FOR_SUN;
@@ -193,7 +217,7 @@ PumpState checkForPumpStateTransition()
       break;
     }
     case PS_ON_TIMING_OUT: {
-      if (!sunIsShining && !heatAvailable && (timeNow - timeoutStartMillis) > belowMinimumTimeoutSeconds)) {
+      if (!sunIsShining && !heatAvailable && (timeNow - timeoutStartMillis) > getSetting(SET_belowMinimumTimeoutSeconds))) {
         return PS_OFF_WAITING_FOR_SUN;
       }
       break;

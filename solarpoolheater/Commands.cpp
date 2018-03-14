@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include "Commands.h"
 #include "SystemStatus.h"
 #include "Datalog.h"
@@ -19,6 +20,32 @@ void setupCommands()
   
 }
 
+// parse a long from the given string, returns in retval.  Also returns the ptr to the next character which wasn't parsed
+// returns false if no valid number found (without altering retval)
+bool parseLongFromString(const char *buffer, char * &nextUnparsedChar, long &retval)
+{
+  while (isspace(*buffer)) {
+    ++buffer;
+  }
+  nextUnparsedChar = buffer;
+  if (!isdigit(*buffer)) return false;
+  retval = strtol(buffer, &nextUnparsedChar, 10);
+  return true;
+}
+
+// parse a long from the given string, returns in retval.  Also returns the ptr to the next character which wasn't parsed
+// returns false if no valid number found (without altering retval)
+bool parseFloatFromString(const char *buffer, char * &nextUnparsedChar, float &retval)
+{
+  while (isspace(*buffer)) {
+    ++buffer;
+  }
+  nextUnparsedChar = buffer;
+  if (!isdigit(*buffer)) return false;
+  retval = (float)strtod(buffer, &nextUnparsedChar, 10);
+  return true;
+}
+
 // execute the command encoded in commandString.  Null-terminated
 void executeCommand(char command[]) 
 {
@@ -31,15 +58,90 @@ void executeCommand(char command[])
       console->println("!cr = read clock date+time");
       console->println("!cs Dec 26 2009 12:34:56 = set clock date + time (capitalisation, character count, and spacings must match exactly)");
       console->println("!d = print debug info");
+      console->println("!dw variable# value = simulate variable# with value");
+      console->println("!dc = cancel all simulations");
       console->println("!le = erase log file");
       console->println("!li = log file info");
       console->println("!lr sample# count = read log data");
       console->println("!lv sample# count = view log data (more readable than lr)");
+      console->println("!pr param# value = read EEPROM parameter");
+      console->println("!ps param# value = set EEPROM parameter.  if value = d, use default");
+      console->println("!pd = set all EEPROM parameter back to default");
+      console->println("!p? = list EEPROM parameter names");
       console->println("!s = display solar readings and pump runtime");
       console->println("!t = toggle echo of temp probe readings");
-      ps parameter set
-      pr parameter read
-      dw debug write
+      break;
+    }
+    case 'd': {
+      commandIsValid = true; 
+      console->println("Not implemented yet.");
+      break;
+    }
+    case 'p': {
+      switch (command[1]) {
+        case 'd': {
+          commandIsValid = true;
+          setSettingDefaultAll();
+          EEPROMsettings i;
+          for (i = SET_START; i < SET_INVALID; ++i) {
+            console->print("The value of ");
+            console->print(getEEPROMSettingLabel(i));
+            console->print(" was set to ");
+            console->println(getSetting(i));
+          }  
+          break;
+        }
+        case 'r':{
+          char *nextnumber;
+          long param; 
+          float value;
+          if (!parseLongFromString(command + 2, &nextnumber, &param) {
+            break;
+          }
+          if (!parseFloatFromString(nextnumber, &nextnumber, &value) {
+            break;
+          }
+          commandIsValid = true;
+          value = getSetting(param);
+          console->print("The value of ");
+          console->print(getEEPROMSettingLabel(param));
+          console->print(" is ");
+          console->println(value);
+          break;
+        }
+        case 's':{
+          char *nextnumber;
+          long param; 
+          float value;
+          if (!parseLongFromString(command + 2, &nextnumber, &param) {
+            break;
+          }
+          if (!parseFloatFromString(nextnumber, &nextnumber, &value) {
+            if (*nextnumber != 'd') {
+              break;
+            }
+            value = setSettingDefault(param);
+          } else {
+            value = setSetting(param);
+          }
+          console->print("The value of ");
+          console->print(getEEPROMSettingLabel(param));
+          console->print(" was set to ");
+          console->println(value);         
+          commandIsValid = true;
+          break;
+        }
+        case '?':{
+          commandIsValid = true;
+          EEPROMSettings i;
+          for (i = SET_FIRST; i < SET_INVALID; ++i) {
+            console->print((int)i);
+            console->print(" = ");
+            console->println(getEEPROMSettingLabel(i));
+          }
+          break;
+        }
+      }
       break;
     }
     case 't': {

@@ -12,8 +12,8 @@
 
 const int SD_CHIPSELECT = 4;
 File datalogfile;
-// each sample has timestamp; min, avg, max for each temp probe; cumulative insolation; cumulative pump runtime (s)
-const int DATALOG_BYTES_PER_SAMPLE = sizeof(long) + NUMBER_OF_PROBES * 3 * sizeof(float) + sizeof(float) + sizeof(float); 
+// each sample has timestamp; min, avg, max for each temp probe; cumulative insolation; cumulative pump runtime (s); pumpState
+const unsigned long DATALOG_BYTES_PER_SAMPLE = sizeof(long) + NUMBER_OF_PROBES * 3 * sizeof(float) + sizeof(float) + sizeof(float) + sizeof(PumpState); 
 const char DATALOG_FILENAME[] = "datalog.txt";
 
 const char* logfileStatusText[4] = {"Card not present", "Failed to open", "Write failed", "OK"};
@@ -88,6 +88,14 @@ void tickDatalog()
         logfileStatus = LFS_WRITE_FAILED;
       }
       totalBytesWritten += bytesWritten;
+
+      PumpState pumpState = getPumpState();
+      bytesWritten = datalogfile.write((byte *)&pumpState, sizeof pumpState);
+      if (bytesWritten != sizeof pumpState) {
+        logfileStatus = LFS_WRITE_FAILED;
+      }
+      totalBytesWritten += bytesWritten;
+      
       if (totalBytesWritten != DATALOG_BYTES_PER_SAMPLE) {
         logfileStatus = LFS_WRITE_FAILED;
       }
@@ -158,6 +166,10 @@ void dataLogExtractEntries(Print &dest, long startidx, long numberOfEntries, con
       
       datalogfile.readBytes((byte *)&pumpRuntime, sizeof(pumpRuntime));
       dest.print(pumpRuntime, 0); dest.print(" "); // dest.print(probeSeparator);
+
+      PumpState pumpState = getPumpState();
+      datalogfile.readBytes((byte *)&pumpState, sizeof(pumpState));
+      dest.print(pumpState, 0); dest.print(" "); // dest.print(probeSeparator);
      
       dest.println();
     }
