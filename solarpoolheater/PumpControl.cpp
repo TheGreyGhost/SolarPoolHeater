@@ -3,6 +3,7 @@
 #include "RealTimeClock.h"
 #include "SystemStatus.h"
 #include "TemperatureProbes.h"
+#include "SolarIntensity.h"
 #include "Settings.h"
 
 // rules:
@@ -53,7 +54,7 @@ const int SAMPLE_PERIOD_MS = 1000;
 
 const int PUMP_PIN = 3;
 
-const char* pumpStateLabels[NUMBER_OF_PUMP_STATES] = {"OFF(TIME)", "OFF(>SETPT)", "OFF(NO_SUN)", "OFF(ERRORS)", "OFF(TOO_MANY_ERRORS)", "OFF(OVERTEMP_HOT_INLET)", "OFF(OVERTEMP_COLD_OUTLET)", "ON", "ON(TIMING_OUT)"};
+const char* pumpStateLabels[NUMBER_OF_PUMP_STATES] = {"OFF(TIME)", "OFF(>SETPT)", "OFF(NO_SUN)", "OFF(ERRORS)", "OFF(TOO_MANY_ERRORS)", "OFF(OVERTEMP_HOT_INLET)", "OFF(OVERTEMP_COLD_OUTLET)", "ON", "ON(TIMING_OUT)", "OFF(DISABLED)"};
 
 int pumpTurnOnCount;
 unsigned long firstPumpTurnOnMillis;
@@ -94,8 +95,10 @@ void setupPumpControl()
   pumpState = PS_OFF_WAITING_FOR_SUN;
   lastDayPC = currentTime.day();    
   systemErrorCountToday = 0;
-  pumpTurnOnCount = 0
+  pumpTurnOnCount = 0;
 }
+
+PumpState checkForPumpStateTransition(float currentHours, unsigned long timeNow);
 
 void tickPumpControl()
 {
@@ -134,13 +137,14 @@ void tickPumpControl()
       }  
       break;  
     }
-    
+
+    case PS_OFF_DISABLED:
     case PS_OFF_TIME:
     case PS_OFF_REACHED_SETPOINT:
     case PS_OFF_WAITING_FOR_SUN:
     case PS_ON:
     case PS_ON_TIMING_OUT: {
-      pumpState = checkForPumpStateTransition();
+      pumpState = checkForPumpStateTransition(currentHours, timeNow);
       break;
     }
 
@@ -172,11 +176,13 @@ void tickPumpControl()
   
 }
 
-PumpState checkForPumpStateTransition()
+PumpState checkForPumpStateTransition(float currentHours, unsigned long timeNow)
 {
   // look for conditions which always turn the pump off
   if (shutdownErrorsPresent()) {
     return PS_OFF_ERRORS;
+  } else if (fabs(getSetting(SET_dontRunPump)) > 0.5) {
+    return PS_OFF_DISABLED;
   } else if (currentHours < getSetting(SET_onTimeHours) || currentHours > getSetting(SET_offTimeHours)) {
     return PS_OFF_TIME;
   } else if (temperatureDataStats[HX_COLD_OUTLET].getCount() >= 1 && 
@@ -194,7 +200,7 @@ PumpState checkForPumpStateTransition()
 
   bool sunIsShining = !solarIntensityReadingInvalid && smoothedSolarIntensity.isValid() &&
                       smoothedSolarIntensity.getEWMA() >= getSetting(SET_solarIntensityThreshold);
-  bool heatAvailable = smoothedTemperatures[HX_HOT_INLET].getEWMA() - smoothedTemperatures[HX_COLD_INLET].getEWMA()) 
+  bool heatAvailable = smoothedTemperatures[HX_HOT_INLET].getEWMA() - smoothedTemperatures[HX_COLD_INLET].getEWMA() 
                          >= getSetting(SET_minimumHotInletMinusColdInlet);
   // look for other conditions
   switch (pumpState) {
@@ -217,7 +223,7 @@ PumpState checkForPumpStateTransition()
       break;
     }
     case PS_ON_TIMING_OUT: {
-      if (!sunIsShining && !heatAvailable && (timeNow - timeoutStartMillis) > getSetting(SET_belowMinimumTimeoutSeconds))) {
+      if (!sunIsShining && !heatAvailable && (timeNow - timeoutStartMillis) > getSetting(SET_belowMinimumTimeoutSeconds)) {
         return PS_OFF_WAITING_FOR_SUN;
       }
       break;

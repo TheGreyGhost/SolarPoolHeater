@@ -6,6 +6,8 @@
 #include "TemperatureProbes.h"
 #include "SolarIntensity.h"
 #include "PumpControl.h"
+#include "Simulate.h"
+#include "Settings.h"
 
 const int MAX_COMMAND_LENGTH = 30;
 const int COMMAND_BUFFER_SIZE = MAX_COMMAND_LENGTH + 2;  // if buffer fills to max size, truncation occurs
@@ -22,28 +24,174 @@ void setupCommands()
 
 // parse a long from the given string, returns in retval.  Also returns the ptr to the next character which wasn't parsed
 // returns false if no valid number found (without altering retval)
-bool parseLongFromString(const char *buffer, char * &nextUnparsedChar, long &retval)
+bool parseLongFromString(const char *buffer, const char * &nextUnparsedChar, long &retval)
 {
   while (isspace(*buffer)) {
     ++buffer;
   }
   nextUnparsedChar = buffer;
   if (!isdigit(*buffer)) return false;
-  retval = strtol(buffer, &nextUnparsedChar, 10);
+  char *forceNonConst = (char *)nextUnparsedChar;
+  retval = strtol(buffer, &forceNonConst, 10);
+  nextUnparsedChar = (const char *)forceNonConst;
   return true;
 }
 
 // parse a long from the given string, returns in retval.  Also returns the ptr to the next character which wasn't parsed
 // returns false if no valid number found (without altering retval)
-bool parseFloatFromString(const char *buffer, char * &nextUnparsedChar, float &retval)
+bool parseFloatFromString(const char *buffer, const char * &nextUnparsedChar, float &retval)
 {
   while (isspace(*buffer)) {
     ++buffer;
   }
   nextUnparsedChar = buffer;
   if (!isdigit(*buffer)) return false;
-  retval = (float)strtod(buffer, &nextUnparsedChar, 10);
+  char *forceNonConst = (char *)nextUnparsedChar;
+  retval = (float)strtod(buffer, &forceNonConst);
+  nextUnparsedChar = (const char *)forceNonConst;
   return true;
+}
+
+//      console->println("!d = print debug info");
+//      console->println("!ds variable# value = simulate variable# with value");
+//      console->println("!dc variable# = cancel simulation for variable #, if variable# = a then cancel all");
+bool firstLetterD(const char *command) 
+{
+  bool commandIsValid;
+    
+  if (command[1] == '\0' || isspace(command[1])) {
+    commandIsValid = true; 
+    printDebugInfo(*console); 
+  } else {
+    switch (command[1])    {
+      case 's': {
+        const char *nextnumber;
+        long variable; 
+        float value;
+        if (!parseLongFromString(command + 2, nextnumber, variable)) {
+          break;
+        }
+        if (!parseFloatFromString(nextnumber, nextnumber, value)) {
+          break;
+        }
+        commandIsValid = true;
+        setSimulatedValue((SimVariables)variable, value);
+        console->print("Simulating ");
+        console->print(getSimulationLabel((SimVariables)variable));
+        console->print(" with ");
+        console->println(getSimulatedValue((SimVariables)variable, -1.0));
+        break;
+      }
+      case 'c': {
+        const char *nextnumber;
+        long variable; 
+        float value;
+        if (!parseLongFromString(command + 2, nextnumber, variable)) {
+          if (*nextnumber == 'a') {
+            stopSimulatingAll();
+            console->println("stopped simulating all");
+            commandIsValid = true;
+          }
+          break;
+        }
+        commandIsValid = true;
+        stopSimulating((SimVariables)variable);
+        console->print("Stopped simulating ");
+        console->println(getSimulationLabel((SimVariables)variable));
+        break;
+      }
+    }
+  }  
+  return commandIsValid;
+}
+
+//      console->println("!pr param# value = read EEPROM parameter");
+//      console->println("!ps param# value = set EEPROM parameter.  if value = d, use default");
+//      console->println("!pd = set all EEPROM parameter back to default");
+//      console->println("!pa = read all EEPROM parameters");
+//      console->println("!p? = list EEPROM parameter names");
+bool firstLetterP(const char *command) 
+{
+  bool commandIsValid;
+  switch (command[1]) {
+    case 'd': {
+      commandIsValid = true;
+      setSettingDefaultAll();
+      EEPROMSettings i;
+      for (i = SET_FIRST; i < SET_INVALID; i = (EEPROMSettings)((int)i + 1)) {
+        console->print("The value of ");
+        console->print(getEEPROMSettingLabel(i));
+        console->print(" was set to ");
+        console->println(getSetting(i));
+      }  
+      break;
+    }
+    case 'a': {
+      EEPROMSettings i;
+      for (i = SET_FIRST; i < SET_INVALID; i = (EEPROMSettings)((int)i + 1)) {
+        console->print(i);
+        console->print(": ");            
+        console->print(getEEPROMSettingLabel(i));
+        console->print(": ");
+        console->println(getSetting(i));
+      }  
+      break;
+    }
+    case 'r':{
+      const char *nextnumber;
+      long param; 
+      float value;
+      if (!parseLongFromString(command + 2, nextnumber, param)) {
+        break;
+      }
+      if (!parseFloatFromString(nextnumber, nextnumber, value)) {
+        break;
+      }
+      commandIsValid = true;
+      EEPROMSettings whichSetting = (EEPROMSettings)param;
+      value = getSetting(whichSetting);
+      console->print("The value of ");
+      console->print(getEEPROMSettingLabel(whichSetting));
+      console->print(" is ");
+      console->println(value);
+      break;
+    }
+    case 's':{
+      const char *nextnumber;
+      long param; 
+      float value;
+      if (!parseLongFromString(command + 2, nextnumber, param)) {
+        break;
+      }
+      EEPROMSettings whichSetting = (EEPROMSettings)param;
+      if (!parseFloatFromString(nextnumber, nextnumber, value)) {
+        if (*nextnumber != 'd') {
+          break;
+        }
+        value = setSettingDefault(whichSetting);
+      } else {
+        value = setSetting(whichSetting, value);
+      }
+      console->print("The value of ");
+      console->print(getEEPROMSettingLabel(whichSetting));
+      console->print(" was set to ");
+      console->println(value);         
+      commandIsValid = true;
+      break;
+    }
+    case '?':{
+      commandIsValid = true;
+      EEPROMSettings i;
+      for (i = SET_FIRST; i < SET_INVALID; (EEPROMSettings)((int)i + 1)) {
+        console->print((int)i);
+        console->print(" = ");
+        console->println(getEEPROMSettingLabel(i));
+      }
+      break;
+    }
+  }
+
+  return commandIsValid;
 }
 
 // execute the command encoded in commandString.  Null-terminated
@@ -51,15 +199,14 @@ void executeCommand(char command[])
 {
   bool commandIsValid = false;
   switch (command[0]) {
-    case 'd': {commandIsValid = true; printDebugInfo(*console); break;}
     case '?': {
       commandIsValid = true;
       console->println("commands (turn CR+LF on):");
       console->println("!cr = read clock date+time");
       console->println("!cs Dec 26 2009 12:34:56 = set clock date + time (capitalisation, character count, and spacings must match exactly)");
       console->println("!d = print debug info");
-      console->println("!dw variable# value = simulate variable# with value");
-      console->println("!dc = cancel all simulations");
+      console->println("!ds variable# value = simulate variable# with value");
+      console->println("!dc variable# = cancel simulation for variable #, if variable# = a then cancel all");
       console->println("!le = erase log file");
       console->println("!li = log file info");
       console->println("!lr sample# count = read log data");
@@ -67,81 +214,18 @@ void executeCommand(char command[])
       console->println("!pr param# value = read EEPROM parameter");
       console->println("!ps param# value = set EEPROM parameter.  if value = d, use default");
       console->println("!pd = set all EEPROM parameter back to default");
+      console->println("!pa = read all EEPROM parameters");
       console->println("!p? = list EEPROM parameter names");
       console->println("!s = display solar readings and pump runtime");
       console->println("!t = toggle echo of temp probe readings");
       break;
     }
     case 'd': {
-      commandIsValid = true; 
-      console->println("Not implemented yet.");
+      commandIsValid = firstLetterD(command);
       break;
     }
     case 'p': {
-      switch (command[1]) {
-        case 'd': {
-          commandIsValid = true;
-          setSettingDefaultAll();
-          EEPROMsettings i;
-          for (i = SET_START; i < SET_INVALID; ++i) {
-            console->print("The value of ");
-            console->print(getEEPROMSettingLabel(i));
-            console->print(" was set to ");
-            console->println(getSetting(i));
-          }  
-          break;
-        }
-        case 'r':{
-          char *nextnumber;
-          long param; 
-          float value;
-          if (!parseLongFromString(command + 2, &nextnumber, &param) {
-            break;
-          }
-          if (!parseFloatFromString(nextnumber, &nextnumber, &value) {
-            break;
-          }
-          commandIsValid = true;
-          value = getSetting(param);
-          console->print("The value of ");
-          console->print(getEEPROMSettingLabel(param));
-          console->print(" is ");
-          console->println(value);
-          break;
-        }
-        case 's':{
-          char *nextnumber;
-          long param; 
-          float value;
-          if (!parseLongFromString(command + 2, &nextnumber, &param) {
-            break;
-          }
-          if (!parseFloatFromString(nextnumber, &nextnumber, &value) {
-            if (*nextnumber != 'd') {
-              break;
-            }
-            value = setSettingDefault(param);
-          } else {
-            value = setSetting(param);
-          }
-          console->print("The value of ");
-          console->print(getEEPROMSettingLabel(param));
-          console->print(" was set to ");
-          console->println(value);         
-          commandIsValid = true;
-          break;
-        }
-        case '?':{
-          commandIsValid = true;
-          EEPROMSettings i;
-          for (i = SET_FIRST; i < SET_INVALID; ++i) {
-            console->print((int)i);
-            console->print(" = ");
-            console->println(getEEPROMSettingLabel(i));
-          }
-          break;
-        }
-      }
+      commandIsValid = firstLetterP(command);
       break;
     }
     case 't': {

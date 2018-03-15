@@ -3,6 +3,7 @@
 
 #define REQUIRESALARMS false // Don't need the temp probe alarms
 #include <DallasTemperatureErrorCodes.h>
+#include "Simulate.h"
 
 /********************************************************************/
 // Data wire is plugged into pin 2 on the Arduino 
@@ -173,6 +174,8 @@ void tickTemperatureProbes()
     for (i = 0; i < NUMBER_OF_PROBES; ++i) {
       int16_t tempValue = sensors.getTemp(probeAddresses[i]);
       float tempValueCelcius = sensors.rawToCelsius(tempValue);
+      tempValueCelcius = getSimulatedValue((SimVariables)i, tempValueCelcius);
+      
       if (tempValue == DEVICE_DISCONNECTED_RAW) {
         switch(sensors.getLastError()) {
           case CRC_FAIL: probeStatuses[i] = PS_CRC_FAILURE; ++errorCountCRCFailure[i]; break;

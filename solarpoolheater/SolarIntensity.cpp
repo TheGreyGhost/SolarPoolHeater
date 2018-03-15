@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "SolarIntensity.h"
 #include "RealTimeClock.h"
+#include "Simulate.h"
 
 const int SOLAR_INTENSITY_PIN = A4;
 
@@ -37,7 +38,8 @@ void tickSolarIntensity()
   if (timeNow - lastMillis < SAMPLE_PERIOD_MS) return;
   
   int value = analogRead(SOLAR_INTENSITY_PIN);
-
+  value = (int)getSimulatedValue(SIM_SOLAR_INTENSITY, value);
+  
   solarIntensityReadingInvalid = false;
   if (value < MINIMUM_VALID_READING) {
     solarIntensityReadingInvalid = true;

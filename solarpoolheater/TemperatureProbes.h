@@ -12,6 +12,7 @@ extern bool echoProbeReadings;
 
 const bool DEBUG_TEMP = false;
 
+// these values must match Simulate::SimVariables
 const int HX_HOT_INLET = 0;
 const int HX_HOT_OUTLET = 1;
 const int HX_COLD_INLET = 2;

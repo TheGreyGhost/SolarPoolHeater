@@ -39,7 +39,7 @@ void printDebugInfo(Print &dest)
   dest.print(" with lastInvalidReading:");
   dest.println(lastInvalidReading);
   dest.print("pump state:");
-  dest.print(getPumpStateLabel());
+  dest.print(getCurrentPumpStateLabel());
   dest.print("["); dest.print(getPumpState()); dest.println("]");
 }
 

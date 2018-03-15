@@ -8,6 +8,7 @@
 #include "Commands.h"
 #include "PumpControl.h"
 #include "SolarIntensity.h"
+#include "Simulate.h"
 
 /********************************************************************/
 
@@ -20,6 +21,7 @@ void setup(void)
   Serial.println("Setting up"); 
 
   setupSystemStatus();
+  setupSimulate();
   setupRTC();
   setupPumpControl();
   setupTemperatureProbes();
@@ -37,6 +39,7 @@ void loop(void)
   tickDatalog();
   tickSystemStatus();
   tickSolarIntensity();
+  tickSimulate();
 }
 
 
