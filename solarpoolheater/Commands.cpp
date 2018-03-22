@@ -30,7 +30,7 @@ bool parseLongFromString(const char *buffer, const char * &nextUnparsedChar, lon
     ++buffer;
   }
   nextUnparsedChar = buffer;
-  if (!isdigit(*buffer)) return false;
+  if (!isdigit(*buffer) && *buffer != '-') return false;
   char *forceNonConst = (char *)nextUnparsedChar;
   retval = strtol(buffer, &forceNonConst, 10);
   nextUnparsedChar = (const char *)forceNonConst;
@@ -45,7 +45,7 @@ bool parseFloatFromString(const char *buffer, const char * &nextUnparsedChar, fl
     ++buffer;
   }
   nextUnparsedChar = buffer;
-  if (!isdigit(*buffer)) return false;
+  if (!isdigit(*buffer) && *buffer != '-') return false;
   char *forceNonConst = (char *)nextUnparsedChar;
   retval = (float)strtod(buffer, &forceNonConst);
   nextUnparsedChar = (const char *)forceNonConst;
@@ -57,7 +57,7 @@ bool parseFloatFromString(const char *buffer, const char * &nextUnparsedChar, fl
 //      console->println("!dc variable# = cancel simulation for variable #, if variable# = a then cancel all");
 bool firstLetterD(const char *command) 
 {
-  bool commandIsValid;
+  bool commandIsValid = false;
     
   if (command[1] == '\0' || isspace(command[1])) {
     commandIsValid = true; 
@@ -112,7 +112,8 @@ bool firstLetterD(const char *command)
 //      console->println("!p? = list EEPROM parameter names");
 bool firstLetterP(const char *command) 
 {
-  bool commandIsValid;
+  bool commandIsValid = false;
+ 
   switch (command[1]) {
     case 'd': {
       commandIsValid = true;
@@ -121,12 +122,15 @@ bool firstLetterP(const char *command)
       for (i = SET_FIRST; i < SET_INVALID; i = (EEPROMSettings)((int)i + 1)) {
         console->print("The value of ");
         console->print(getEEPROMSettingLabel(i));
-        console->print(" was set to ");
+        console->print("[");  
+        console->print(i);
+        console->print("] was set to ");
         console->println(getSetting(i));
       }  
       break;
     }
     case 'a': {
+      commandIsValid = true;
       EEPROMSettings i;
       for (i = SET_FIRST; i < SET_INVALID; i = (EEPROMSettings)((int)i + 1)) {
         console->print(i);
@@ -144,15 +148,14 @@ bool firstLetterP(const char *command)
       if (!parseLongFromString(command + 2, nextnumber, param)) {
         break;
       }
-      if (!parseFloatFromString(nextnumber, nextnumber, value)) {
-        break;
-      }
       commandIsValid = true;
       EEPROMSettings whichSetting = (EEPROMSettings)param;
       value = getSetting(whichSetting);
       console->print("The value of ");
       console->print(getEEPROMSettingLabel(whichSetting));
-      console->print(" is ");
+      console->print("[");  
+      console->print(whichSetting);
+      console->print("] is ");
       console->println(value);
       break;
     }
@@ -174,7 +177,9 @@ bool firstLetterP(const char *command)
       }
       console->print("The value of ");
       console->print(getEEPROMSettingLabel(whichSetting));
-      console->print(" was set to ");
+      console->print("[");  
+      console->print(whichSetting);
+      console->print("] was set to ");
       console->println(value);         
       commandIsValid = true;
       break;
@@ -182,7 +187,7 @@ bool firstLetterP(const char *command)
     case '?':{
       commandIsValid = true;
       EEPROMSettings i;
-      for (i = SET_FIRST; i < SET_INVALID; (EEPROMSettings)((int)i + 1)) {
+      for (i = SET_FIRST; i < SET_INVALID; i = (EEPROMSettings)((int)i + 1)) {
         console->print((int)i);
         console->print(" = ");
         console->println(getEEPROMSettingLabel(i));
@@ -190,7 +195,6 @@ bool firstLetterP(const char *command)
       break;
     }
   }
-
   return commandIsValid;
 }
 
@@ -211,7 +215,7 @@ void executeCommand(char command[])
       console->println("!li = log file info");
       console->println("!lr sample# count = read log data");
       console->println("!lv sample# count = view log data (more readable than lr)");
-      console->println("!pr param# value = read EEPROM parameter");
+      console->println("!pr param# = read EEPROM parameter");
       console->println("!ps param# value = set EEPROM parameter.  if value = d, use default");
       console->println("!pd = set all EEPROM parameter back to default");
       console->println("!pa = read all EEPROM parameters");
