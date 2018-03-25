@@ -4,7 +4,7 @@
 
 const float defaults[] = {9.0, 19.0, 28.0, 1.0, 
 					100.0, 1.0, 180.0,
-					5.0, 60.0, 45.0, 4.0, 0.0, 0.0};
+					5.0, 60.0, 45.0, 240.0, 0.0, 0.0};
 
 const char* settingLabels[NUMBER_OF_EEPROM_SETTINGS] = {"onTimeHours", "offTimeHours", "temperatureSetpoint", "temperatureSetpointHysteresis",
 										 "solarIntensityThreshold", "minimumHotInletMinusColdInlet", "belowMinimumTimeoutSeconds",

@@ -253,6 +253,10 @@ void executeCommand(char command[])
           console->println(smoothedSolarIntensity.getEWMA());
         }
       console->print("cumulative insolation:"); console->println(cumulativeInsolation);
+      console->print("surge tank level:"); console->println(surgeTankLevelOK ? "OK" : "LOW");
+      console->print("pump state:");
+      console->print(getCurrentPumpStateLabel());
+      console->print("["); console->print(getPumpState()); console->println("]");
       console->print("cumulative pump runtime (s):"); console->println(pumpRuntimeSeconds);
       break;
     }

@@ -11,6 +11,12 @@ float getSimulatedValue(SimVariables whichVariable, float actualValue)
   return simulationActive[whichVariable] ? simulationValues[whichVariable] : actualValue;
 }
 
+bool isBeingSimulated(SimVariables whichVariable)
+{
+  if (whichVariable < SIM_FIRST || whichVariable >= SIM_LAST_PLUS_ONE) return false;
+  return simulationActive[whichVariable];
+}
+
 // changes the given setting to its default value
 // returns: the new value.
 void setSimulatedValue(SimVariables whichVariable, float simulationValue)
@@ -35,7 +41,7 @@ void stopSimulatingAll()
   }
 }
 
-const char* simulationLabels[NUMBER_OF_SIM_VARIABLES] = {"HX_HOT_INLET", "HX_HOT_OUTLET", "HX_COLD_INLET", "HX_COLD_OUTLET", "AMBIENT", "SOLAR_INTENSITY"};
+const char* simulationLabels[NUMBER_OF_SIM_VARIABLES] = {"HX_HOT_INLET", "HX_HOT_OUTLET", "HX_COLD_INLET", "HX_COLD_OUTLET", "AMBIENT", "SOLAR_INTENSITY", "SURGE_TANK_LEVEL_OK"};
 
 const char *getSimulationLabel(SimVariables whichVariable)
 {

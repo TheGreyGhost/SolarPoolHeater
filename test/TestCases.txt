@@ -1,0 +1,12 @@
+Pump control:
+pump disabled setting - turn off and on 
+
+change on time and off time:
+a) while pump is off, change to be on
+b) while pump is on, change to be off
+c) test fractions of an hour
+d) set the on/off time and wait until clock reaches it
+
+*Too many errors in one day (toggle T probe sim on & off)
+passed 25 Mar 2018
+

@@ -5,10 +5,12 @@
 #include "TemperatureProbes.h"
 #include "SolarIntensity.h"
 #include "Settings.h"
+#include "Simulate.h"
 
 // rules:
 // 1) If time is before pump start time, or after pump stop time, turn off
-// 2) If there are system errors, do not run pump.  If system errors show up multiple times in one day, shut off permanently
+// 2) If there are system errors, do not run pump.  If system errors show up too many times in one day, shut off permanently
+// 2b) If the surge tank level goes low, permanently shut off
 // 3) if cold inlet is above target, do not run pump
 // 4) if the solar insolation is above a threshold, start the pump or keep it running.
 // 5) If the pump is running and the hot inlet is warmer than the cold inlet by at least threshold, keep running.  Otherwise, run for X minutes then stop.
@@ -42,6 +44,9 @@
 //const float hotInletAlarm = 60.0;
 //const float coldOutletAlarm = 45.0; 
 
+bool surgeTankLevelOK;
+const int SURGE_TANK_LEVEL_PIN = 4;
+
 bool pumpIsRunning;
 PumpState pumpState;
 int systemErrorCountToday;
@@ -54,7 +59,7 @@ const int SAMPLE_PERIOD_MS = 1000;
 
 const int PUMP_PIN = 3;
 
-const char* pumpStateLabels[NUMBER_OF_PUMP_STATES] = {"OFF(TIME)", "OFF(>SETPT)", "OFF(NO_SUN)", "OFF(ERRORS)", "OFF(TOO_MANY_ERRORS)", "OFF(OVERTEMP_HOT_INLET)", "OFF(OVERTEMP_COLD_OUTLET)", "ON", "ON(TIMING_OUT)", "OFF(DISABLED)"};
+const char* pumpStateLabels[NUMBER_OF_PUMP_STATES] = {"OFF(TIME)", "OFF(>SETPT)", "OFF(NO_SUN)", "OFF(ERRORS)", "OFF(TOO_MANY_ERRORS)", "OFF(OVERTEMP_HOT_INLET)", "OFF(OVERTEMP_COLD_OUTLET)", "ON", "ON(TIMING_OUT)", "OFF(DISABLED), OFF(SURGE_TANK_LEVEL_LOW)"};
 
 int pumpTurnOnCount;
 unsigned long firstPumpTurnOnMillis;
@@ -81,6 +86,12 @@ bool isPumpInError()
   return (pumpState & 0x20);
 }
 
+byte getPumpErrorCode()
+{
+  if (!isPumpInError()) return 0;
+  return (byte)(pumpState & 0x0f);
+}
+
 PumpState getPumpState()
 {
   return pumpState;
@@ -88,6 +99,7 @@ PumpState getPumpState()
 
 void setupPumpControl()
 {
+  pinMode(SURGE_TANK_LEVEL_PIN, INPUT_PULLUP);
   pinMode(PUMP_PIN, OUTPUT);
 
   pumpRuntimeSeconds = 0;
@@ -102,6 +114,11 @@ PumpState checkForPumpStateTransition(float currentHours, unsigned long timeNow)
 
 void tickPumpControl()
 {
+  surgeTankLevelOK = (digitalRead(SURGE_TANK_LEVEL_PIN) == HIGH);
+  if (isBeingSimulated(SIM_SURGE_TANK_LEVEL)) {
+    surgeTankLevelOK = fabs(getSimulatedValue(SIM_SURGE_TANK_LEVEL, 0)) >= 0.5;
+  }
+  
   bool initialPumpIsRunning = pumpIsRunning;
   unsigned long timeNow = millis();
   if (timeNow - lastMillisPC < SAMPLE_PERIOD_MS) return;
@@ -120,6 +137,7 @@ void tickPumpControl()
   float currentHours = currentTime.hour() + currentTime.day() / 60.0;
 
   switch (pumpState) {
+    case PS_OFF_SURGE_TANK_LEVEL_LOW:
     case PS_OFF_EXCESSIVE_ERRORS:
     case PS_OFF_OVERTEMP_HOT_INLET:
     case PS_OFF_OVERTEMP_COLD_OUTLET: {
@@ -130,8 +148,7 @@ void tickPumpControl()
     case PS_OFF_ERRORS: {
       if (systemErrorCountToday >=  getSetting(SET_maxDailySystemErrorCount)) {
         pumpState = PS_OFF_EXCESSIVE_ERRORS;
-      }
-      if (!shutdownErrorsPresent()) {
+      } else if (!shutdownErrorsPresent()) {
         pumpState = PS_OFF_WAITING_FOR_SUN;
         ++systemErrorCountToday;
       }  
@@ -150,6 +167,8 @@ void tickPumpControl()
 
     default: {
       assertFailureCode = ASSERT_INVALID_SWITCH;
+      console->print("Invalid Switch tickPumpControl::pumpState:");
+      console->println(pumpState);
       pumpState = PS_OFF_EXCESSIVE_ERRORS;
     }
   }
@@ -181,6 +200,8 @@ PumpState checkForPumpStateTransition(float currentHours, unsigned long timeNow)
   // look for conditions which always turn the pump off
   if (shutdownErrorsPresent()) {
     return PS_OFF_ERRORS;
+  } else if (!surgeTankLevelOK) {
+    return PS_OFF_SURGE_TANK_LEVEL_LOW;
   } else if (fabs(getSetting(SET_dontRunPump)) > 0.5) {
     return PS_OFF_DISABLED;
   } else if (currentHours < getSetting(SET_onTimeHours) || currentHours > getSetting(SET_offTimeHours)) {
@@ -204,6 +225,7 @@ PumpState checkForPumpStateTransition(float currentHours, unsigned long timeNow)
                          >= getSetting(SET_minimumHotInletMinusColdInlet);
   // look for other conditions
   switch (pumpState) {
+    case PS_OFF_DISABLED:
     case PS_OFF_REACHED_SETPOINT:
     case PS_OFF_TIME: {
       return PS_OFF_WAITING_FOR_SUN;
@@ -231,6 +253,8 @@ PumpState checkForPumpStateTransition(float currentHours, unsigned long timeNow)
      
     default: {
       assertFailureCode = ASSERT_INVALID_SWITCH;
+      console->print("Invalid Switch checkForPumpStateTransition::pumpState:");
+      console->println(pumpState);
       return PS_OFF_EXCESSIVE_ERRORS;
     }
   }  

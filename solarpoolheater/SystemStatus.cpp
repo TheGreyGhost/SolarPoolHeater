@@ -38,9 +38,6 @@ void printDebugInfo(Print &dest)
   dest.print(solarIntensityReadingInvalid ? "INVALID " : "OK");
   dest.print(" with lastInvalidReading:");
   dest.println(lastInvalidReading);
-  dest.print("pump state:");
-  dest.print(getCurrentPumpStateLabel());
-  dest.print("["); dest.print(getPumpState()); dest.println("]");
 }
 
 DigitalPin<LED_BUILTIN> pinStatusLED;
@@ -115,6 +112,9 @@ void populateErrorStack()
   if (solarIntensityReadingInvalid) {
     errorStack[errorStackIdx++] = ERRORCODE_SOLAR_SENSOR;
   }
+  if (isPumpInError()) {
+    errorStack[errorStackIdx++] = ERRORCODE_PUMP_CONTROL | getPumpErrorCode();
+  }  
 }
 
 const byte PAUSE_BETWEEN_CODES = 8; // intervals of 250 ms

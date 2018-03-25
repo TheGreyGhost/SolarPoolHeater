@@ -159,7 +159,7 @@ void setupTemperatureProbes()
  sensors.begin(); 
  bool success;
  success = enumerateProbes();
- console->println(success ? "OK" : "ERROR");
+ console->println(success ? "All Temperature Probes OK" : "Temperature Probe ERROR");
  sensors.setResolution(TEMP_11_BIT); //11 bit is 0.125 C
  sensors.setWaitForConversion(false);
 }
@@ -176,7 +176,7 @@ void tickTemperatureProbes()
       float tempValueCelcius = sensors.rawToCelsius(tempValue);
       tempValueCelcius = getSimulatedValue((SimVariables)i, tempValueCelcius);
       
-      if (tempValue == DEVICE_DISCONNECTED_RAW) {
+      if (!isBeingSimulated((SimVariables)i) && tempValue == DEVICE_DISCONNECTED_RAW) {
         switch(sensors.getLastError()) {
           case CRC_FAIL: probeStatuses[i] = PS_CRC_FAILURE; ++errorCountCRCFailure[i]; break;
           case RESET_FAIL: probeStatuses[i] = PS_BUS_FAILURE; ++errorCountBusFailure; break;
@@ -198,7 +198,7 @@ void tickTemperatureProbes()
 
       if (echoProbeReadings) {
         if (probeStatuses[i] == PS_OK) {
-          console->print(sensors.rawToCelsius(tempValue));
+          console->print(tempValueCelcius);
         } else {
           switch (probeStatuses[i]) {
             case PS_NOT_FOUND: console->print("Not found"); break;
