@@ -59,7 +59,7 @@ const int SAMPLE_PERIOD_MS = 1000;
 
 const int PUMP_PIN = 3;
 
-const char* pumpStateLabels[NUMBER_OF_PUMP_STATES] = {"OFF(TIME)", "OFF(>SETPT)", "OFF(NO_SUN)", "OFF(ERRORS)", "OFF(TOO_MANY_ERRORS)", "OFF(OVERTEMP_HOT_INLET)", "OFF(OVERTEMP_COLD_OUTLET)", "ON", "ON(TIMING_OUT)", "OFF(DISABLED), OFF(SURGE_TANK_LEVEL_LOW)"};
+const char* pumpStateLabels[NUMBER_OF_PUMP_STATES] = {"OFF(TIME)", "OFF(>SETPT)", "OFF(NO_SUN)", "OFF(ERRORS)", "OFF(TOO_MANY_ERRORS)", "OFF(OVERTEMP_HOT_INLET)", "OFF(OVERTEMP_COLD_OUTLET)", "ON", "ON(TIMING_OUT)", "OFF(DISABLED)", "OFF(SURGE_TANK_LEVEL_LOW)"};
 
 int pumpTurnOnCount;
 unsigned long firstPumpTurnOnMillis;
@@ -134,7 +134,7 @@ void tickPumpControl()
     pumpTurnOnCount = 0;
   }
 
-  float currentHours = currentTime.hour() + currentTime.day() / 60.0;
+  float currentHours = currentTime.hour() + currentTime.minute() / 60.0;
 
   switch (pumpState) {
     case PS_OFF_SURGE_TANK_LEVEL_LOW:
@@ -187,7 +187,7 @@ void tickPumpControl()
     ++pumpTurnOnCount;
     if (pumpTurnOnCount >= 4) {
       pumpTurnOnCount = 0;
-      if (timeNow - firstPumpTurnOnMillis < getSetting(SET_minSecondsPerFourPumpOns)) {
+      if (timeNow - firstPumpTurnOnMillis < getSetting(SET_minSecondsPerFourPumpOns) * 1000) {
         pumpState = PS_OFF_EXCESSIVE_ERRORS;              
       }
     }
@@ -198,6 +198,14 @@ void tickPumpControl()
 PumpState checkForPumpStateTransition(float currentHours, unsigned long timeNow)
 {
   // look for conditions which always turn the pump off
+//  console->print("currentHours:");
+//  console->print(currentHours);
+//
+//    console->print(" OnTime:");
+//  console->print(getSetting(SET_onTimeHours));
+//    console->print(" OffTime:");
+//  console->println(getSetting(SET_offTimeHours));
+
   if (shutdownErrorsPresent()) {
     return PS_OFF_ERRORS;
   } else if (!surgeTankLevelOK) {
@@ -245,7 +253,7 @@ PumpState checkForPumpStateTransition(float currentHours, unsigned long timeNow)
       break;
     }
     case PS_ON_TIMING_OUT: {
-      if (!sunIsShining && !heatAvailable && (timeNow - timeoutStartMillis) > getSetting(SET_belowMinimumTimeoutSeconds)) {
+      if (!sunIsShining && !heatAvailable && (timeNow - timeoutStartMillis) > getSetting(SET_belowMinimumTimeoutSeconds) * 1000) {
         return PS_OFF_WAITING_FOR_SUN;
       }
       break;
