@@ -1,0 +1,374 @@
+
+<!-- saved from url=(0048)http://chuck-wright.com/projects/pv-measure.html -->
+<html data-foxclocks-statusbar-vertical-position="bottom"><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+
+<meta http-equiv="keywords" content="renewable energy, solar energy, solar, calculators, energy,
+renewable energy consulting, figure skating, skate sharpening">
+<meta name="Author" content="Chuck Wright">
+<meta name="Description" content="Measuring Solar Radiation">
+
+<title>Measuring Solar Radiation</title>
+</head>
+
+<body bgcolor="#FFFFD8" text="#000000" link="#4000e0" vlink="#0000FF" alink="#FF0000">
+
+<!-- Following include includes container formatting for page --->
+<script language="JavaScript" src="./Measuring Solar Radiation_files/format.js.download"></script>
+<script language="JavaScript">
+writeHeader();
+</script><img src="./Measuring Solar Radiation_files/greencgw3_700_emb.jpg" border="0"><br><br><table width="700"><tbody><tr><td>
+
+<table cellpadding="0" cellspacing="0" width="600" border="0">
+<tbody><tr>
+	<td>
+<h1>Measuring Solar Radiation</h1>
+
+<h2>Introduction</h2>
+
+<p>Industrial grade devices for measuring solar radiation are
+delicate and expensive. The "pyranometer" is basically a flat
+plate (covered with a transparent dome) that is
+coated with an extremely absorptive surface. As the sun strikes
+it, the surface gets hot. The temperature of the surface is
+measured with a thermopile, giving an output voltage related
+to the amount of solar radiation striking the surface.
+
+</p><p>You can build a "poor man's" pyranometer that works pretty well
+out of inexpensive and readily available components. Although it
+will not be of laboratory quality, it will suffice for comparative
+measurements and educational purposes.
+
+</p><h2>Making the Meter</h2>
+
+<p>The obvious component to consider as the basis for our
+meter is a silicon photovoltaic cell. When sunlight strikes
+it, it produces electricity, and the more sunlight strikes
+it, the more electricity it produces.
+
+</p><p>At first glance, you might think that you could just hook a
+voltmeter up to it and measure the output voltage. Unfortunately,
+if you do this, you will get very erroneous results (visit the
+Appendix if you want to understand why).
+
+</p><p>Instead, you will need to measure the cell's output current.
+If you short out (hook a perfect wire between) the positive and
+negative terminals of your cell, a current flows through that
+wire. That is the current that you would like to measure. It
+varies linearly with the amount of sunlight striking the surface
+of the cell. This
+is actually a little trickier than one might think, for reasons
+that are explained in the Appendix. 
+
+</p><p>You can measure the cell's current by measuring the voltage
+across a very small resistor. Here we show how to do this with
+a digital panel meter or digital VOM. This is shown in the following
+schematic:<br><br>
+
+</p><p></p><center>
+<img src="./Measuring Solar Radiation_files/pyranometer.gif" alt="Schematic Diagram of Meter" border="0">
+</center>
+
+<p>PV represents the PV cell, and M represents the voltmeter.
+Rsh is the resistor through which most of the current from the
+PV flows, and across which we will measure the voltage.
+
+</p><p>Following are the steps in making the meter.
+</p><ul>
+
+<li>Our goal is to make full sunlight give a 100 mVolt reading
+on the digital meter (full sunlight is about 1000 watts per square
+meter), so our meter will read 1 mVolt per 10 Watts/m2. 
+
+</li><li>Get a 3 1/2 digit digital panel meter (try 
+<a href="http://www.mpja.com/">Marlin P. Jones</a>,
+which sells such things for about $7...they do require a battery)
+that has a 0-199.9 mVolt scale (this is a common item). Or, just
+plan on using a digital multimeter on the 0-200 mVolt scale.
+
+</li><li>First, estimate how much current your cell will produce in
+full sunlight. A good first assumption is that your cell puts
+out about 0.025 amps per square centimeter. So measure your cell,
+calculate its area, and multiply by 0.025. For example,
+if your cell is 8 cm square, guess that your full sunlight cell current is
+8 * 8 * 0.025 = 1.6 amps.
+
+</li><li>Calculate the resistance that is required to give 100 mVolt
+drop when I is flowing through it. Ohms law says that R = V / I,
+or 0.1 volt / I. For our example, this is 0.1 Volts / 1.6 Amp, 
+or 0.0625 ohms.
+
+</li><li>Make the resistor. For very small resistors like this, a
+good way is to use a length of small wire. I used number 30
+wire wrap wire. Appendix B shows the resistance per foot for
+various small copper wire sizes. Number 30 wire has a resistance
+of about 0.121 ohms per foot. So, to make a 0.0625 ohm resistor,
+only requires 0.52 feet, or 6.2 inches!
+
+</li><li>Connect your resistor across the PV cell. You will need to
+solder it, because of the very low resistances involved. And,
+bear in mind that wiring connected to the cell also has resistance,
+so either account for it or cut it short.
+
+</li></ul>
+
+<p>At this point, you should be able to connect your digital meter
+across the terminals. It should be configured for 200 millivolts
+full scale. Note that because the meter is measuring voltage now,
+the length of your meter wires is not too important. If you take
+your apparatus out into full sunlight, you will hopefully see
+a reading on your meter that is not too far from 100 mVolts.
+
+</p><p>At this point, you will want to calibrate your meter. The
+best way is to have a calibrated instrument of some sort.
+Lacking this, you do a fair job by finding a
+time when the sun is high (noon on a summer day) on a
+very clear day. Then assume that the solar radiation is
+1000 watts per square meter.
+
+</p><p>The following steps show how to calibrate the meter by
+altering your resistor. It will assume that you are calibrating
+without a reference. If you have an actual reference instrument,
+then use whatever value it supplies instead of 1000.
+
+</p><ul>
+<li>In full sunlight, note the reading of your meter. We would
+like for it to be exactly 100 mVolts. It is probably something 
+different. 
+</li><li>We are going to make a new resistor wire of the proper length to
+make the meter read 100 mVolts.
+</li><li>Calculate Lnew = L0 * 100 / reading. (L0 is the original length of
+the resistor wire). For example if my original wire was 6.2
+inches, and my meter reads 88, I need a new resistor wire of
+length Lnew = 6.2 * 100 / 88 = 7.05 inches.
+</li><li>Cut a new resistor wire and replace your original.
+</li></ul>
+
+<p>At this point, your silicon solar
+cell and digital voltmeter should be doing a fair job
+of measuring solar radiation.
+
+</p><h2>Things to do With Your Meter</h2>
+
+<p>Here are some interesting experiments to do using your
+meter.
+
+</p><ul>
+<li>Check the effect of angle of incidence. Point the cell directly
+at the sun and measure output. Then turn the cell at various
+angles, and see how the "angle of incidence" affects output.
+Theory says that direct radiation striking the surface is proportional
+to the cosine of the angle of incidence.
+
+</li><li>Experiment with measuring direct versus diffuse radiation. 
+
+<p>Sunshine consists of the rays that come straight from
+the sun (direct radiation) plus light that has been reflected
+from air molecules, dust in the atmosphere, etc.
+</p><ul>
+<li>Set the PV cell on a horizontal surface. You are measuring
+Global Horizontal radiation.
+</li><li>While the cell is sitting on a horizontal surface, cast a shadow
+on in with your hand, held several feet away. You have shaded
+the direct radiation, and what is left is the diffuse radiation.
+Compare this to the global horizontal.
+
+</li><li>Get a mailing tube mount the PV cell to it, so that
+the cell's surface is perpendicular to the length of the tube.
+Point the assembly at the sun. You are measuring "direct"
+solar radiation.
+
+</li></ul>
+
+</li><li>measure the energy striking the outside of a window.
+
+</li><li>Put the cell flat against the inside of a window.
+<ul>
+	<li>How does the radiation measured here compare to that
+measured on the outside of the window.
+	</li><li>You are measuring radiant energy that will warm your house.
+In the winter, this is free heat. In the summer, you don't want
+it. 
+	</li><li>Compare the results for different windows of your house,
+and consider the relationship between this radiant gain and
+the amount of sky that your window sees.
+</li></ul>
+
+</li><li>measure the effectiveness of shade cloth
+<ul>
+	<li>measure how much radiation is transmitted through the
+shade cloth.
+	</li><li>Turn the cell upside down, hold it above the shade cloth,
+and measure the amount of
+radiation reflected back from the shade cloth.
+	</li><li>Do the same experiment with black and with white
+	shade cloth. Which is likely to result in a cooler patio?
+</li></ul>
+</li><li>Investigate the effects of surface reflectance on road,
+sidewalk, and driveway heating.
+<ul>
+<li>Using the upside down cell, measure the amount of reflected
+radiation from various surfaces.
+</li><li>How does this compare with the temperature of the surface?
+</li></ul>
+</li><li>Compare sunlight to strong artificial light.
+</li><li>Compare the reading some distance from an incandescant light
+to that of a compact flourescent light of the same lumens
+rating, the same distance away. Is there a difference? Can
+you explain why there might be a difference?
+</li></ul>
+
+<h2>Appendix A: The I-V Characteristic of PV cells</h2>
+
+<h3>Basic Electricity</h3>
+
+<p>Remember that voltage and current are not the same. Voltage
+represents the strength of the electricity, analogous to water
+pressure (say, in pounds per square inch). Current represents the
+flow rate, analogous to water flow rate (say, in gallons per second).
+The units of voltage are Volts. The units of current are Amps. 
+
+</p><p>A Resistor is a device that resists the flow of electricity.
+Its behavior s governed by Ohm's Law, which says that the voltage
+across a resistor (in Ohms) is equal to the Current (in Amps)
+flowing through it times the Voltage across it. Note that current
+is always through an element, and voltage is always across an element.
+
+</p><p>A Current Source is an element that delivers a constant
+current, regardless of the voltage across it. It is an ideal
+element that is approached by certain circuits over certain
+operational ranges.
+
+</p><p>A Voltage Source is an element that delivers a constant
+voltage at its terminals. Like a Current Source, it is an
+ideal device, approached over particular operating ranges by
+real devices.
+
+</p><h3>PV Cells</h3>
+
+<p>Over part of its operating region, PV cells act like
+a current source. Over part of their region, they act like
+a voltage source. The following figure is what is known as an
+I-V curve. It shows how current and voltage relate to each
+other in a typical PV cell. Each of the colored lines describes
+behavior at one level of incoming radiation.
+
+<img src="./Measuring Solar Radiation_files/pviv.gif" alt="I-V Curve" border="0">
+
+</p><p>Note that when voltage is very low, the cell acts like a current
+source. That is, it delivers a rather constant current, independent
+of the voltage. 
+
+</p><p>The point at which the I/V curve intersects the vertical
+axis is called the "short circuit current", or Isc. Isc is
+directly proportional to the solar radiation striking the cell.
+If you could short out the cell and measure the current,
+your reading would be proportional to the incoming radiation.
+
+</p><p>The point at which the curve intersects the horizontal axis
+corresponds to what a voltmeter (which takes its reading without
+drawing hardly any current) will read if connected to a PV cell.
+It is called the Open Circuit Voltage, or Voc. Voc is NOT
+proportional to to incoming radiation.
+
+</p><h3>Pitfalls</h3>
+
+<p>To use a PV cell to measure solar radiation, you want
+to measure its current output. Ideally, a current meter
+would have zero resistance. In reality, they all have some
+resistance. Here we investigate the effect of current
+meter resistance on our measurement.
+
+</p><p>In addition to the PV cell I/V curves, the above graph
+shows I/V curves for three different resistors, 0.0667 ohms,
+0.4 ohms, and 1.5 ohms (note how it obeys Ohm's Law). If
+a resistor is connected across the terminals of a PV cell,
+the operating point will be described by the intersection
+of the resistor's line and the PV cell's curve (for the
+current incoming radiation).
+
+</p><p>Note how for the smallest resistor, the points of intersection
+fall along the constant current portion of the PV cell's
+characteristic. So, the current through the resistor is
+proportional to the incoming radiation.
+
+</p><p>For the other resistors, though, we are not operating
+within the constant current region, so the current through
+our load will NOT be proportional to the incoming radiation.
+
+</p><p>My first attempt at measuring PV current was using a
+digital Volt/Amp/Ohmmeter, set to the current scale.
+I got totally crazy results, with a mostly shaded cell
+showing nearly as much output as an unshaded cell.
+Investigation showed that the resistance of the ammeter
+was over 2 ohms, which was drastically altering the
+result.
+
+</p><p>If you are going to use a silicon PV cell for measuring
+solar radiation you MUST first consider the resistance of
+your current measuring circuit, making sure that it is low
+enough to be mostly in the constant current region of the
+cell. The method described above limits PV output voltage to
+about 0.4 volts, which keeps the measurement reasonably linear
+with radiation variation.
+
+</p><h2>Appendix B: Wire resistance</h2>
+<p>The following table shows resistance per foot for various
+wire gauges:
+<br><br>
+
+<table cellpadding="0" cellspacing="5" width="200" border="1">
+	<caption>Copper Wire Resistance</caption>
+<tbody><tr>
+	<th>Gauge</th>
+	<th>Ohms/ft</th>
+</tr><tr>
+	<td>24</td>
+	<td>0.0302</td>
+</tr>
+<tr>
+	<td>26</td>
+	<td>0.048</td>
+</tr>
+<tr>
+	<td>28</td>
+	<td>0.0764</td>
+</tr>
+<tr>
+	<td>30</td>
+	<td>0.121</td>
+</tr>
+<tr>
+	<td>32</td>
+	<td>0.193</td>
+</tr>
+<tr>
+	<td>34</td>
+	<td>0.307</td>
+</tr>
+<tr>
+	<td>36</td>
+	<td>0.488</td>
+</tr>
+</tbody></table>
+
+</p><h2>Deficiencies in this Measurement Device</h2>
+<p>A pyranometer based on silicon cells is not a
+laboratory device. A good pyranometer has a very flat
+spectral response. This means that it responds equally
+to all wavelengths that strike it. Silicon photocells
+tend to have an irregular spectral response, responding
+less well to longer wavelength photons. Below a certain
+wavelength in the infrared, they cease to respond at
+all.
+</p><p>In spite of the limitations, the simple device shown here
+is useful as a learning tool.
+
+<script language="JavaScript">
+writeFooter();
+</script></p><p><a href="mailto:webct08%20at%20chuck-wright.com">To contact me...</a></p><hr><center><a href="http://chuck-wright.com/index.html">home</a>    <a href="http://chuck-wright.com/wcs/index.php">dataloggers</a>    <a href="http://chuck-wright.com/calculator_home.html">calculators</a>    <a href="http://chuck-wright.com/general_renewable.html">renewables info</a>    <a href="http://chuck-wright.com/projects.html">solar projects</a>    <a href="http://chuck-wright.com/hobby_home.html">hobbies</a>    </center></td></tr></tbody></table>
+</td>
+</tr>
+</tbody></table>
+
+
+</body><iframe id="foxclocks-statusbar-iframe" class="foxclocks-content" src="./Measuring Solar Radiation_files/statusbar.html" kwframeid="1"></iframe><div id="foxclocks-statusbar-spacer" class="foxclocks-content"></div></html>

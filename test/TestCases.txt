@@ -1,0 +1,21 @@
+1. Pump control:
+*1.1 pump disabled setting - turn off and on 
+
+*1.2 change on time and off time:
+*a) while pump is off, change to be on
+*b) while pump is on, change to be off
+*c) test fractions of an hour
+*d) set the on/off time and wait until clock reaches it
+
+*1.3 Too many errors in one day (toggle T probe sim on & off)
+passed 25 Mar 2018
+*1.4 level sensor low
+*1.5 overtemperature on cold outlet
+*1.6 overtemperature on hot inlet
+*1.7a reaches setpoint
+*1.7b drops below setpoint, then below hysteresis
+1.8 pump is running, solar below threshold, !heatavailable,  times out
+1.8b pump running, solar below threshold, heat available
+
+
+
