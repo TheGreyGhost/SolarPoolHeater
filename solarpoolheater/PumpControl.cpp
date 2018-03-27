@@ -59,7 +59,8 @@ const int SAMPLE_PERIOD_MS = 1000;
 
 const int PUMP_PIN = 3;
 
-const char* pumpStateLabels[NUMBER_OF_PUMP_STATES] = {"OFF(TIME)", "OFF(>SETPT)", "OFF(NO_SUN)", "OFF(ERRORS)", "OFF(TOO_MANY_ERRORS)", "OFF(OVERTEMP_HOT_INLET)", "OFF(OVERTEMP_COLD_OUTLET)", "ON", "ON(TIMING_OUT)", "OFF(DISABLED)", "OFF(SURGE_TANK_LEVEL_LOW)"};
+const char* pumpStateLabels[NUMBER_OF_PUMP_STATES] = {"OFF(TIME)", "OFF(>SETPT)", "OFF(NO_SUN)", "OFF(ERRORS)", "OFF(TOO_MANY_ERRORS)", "OFF(OVERTEMP_HOT_INLET)", 
+                                                      "OFF(OVERTEMP_COLD_OUTLET)", "ON", "ON(TIMING_OUT)", "OFF(DISABLED)", "OFF(SURGE_TANK_LEVEL_LOW)", "OFF(EXCESSIVE_PUMP_CYCLING)"};
 
 int pumpTurnOnCount;
 unsigned long firstPumpTurnOnMillis;
@@ -137,6 +138,7 @@ void tickPumpControl()
   float currentHours = currentTime.hour() + currentTime.minute() / 60.0;
 
   switch (pumpState) {
+    case PS_OFF_PUMP_CYCLING:
     case PS_OFF_SURGE_TANK_LEVEL_LOW:
     case PS_OFF_EXCESSIVE_ERRORS:
     case PS_OFF_OVERTEMP_HOT_INLET:
@@ -188,7 +190,7 @@ void tickPumpControl()
     if (pumpTurnOnCount >= 4) {
       pumpTurnOnCount = 0;
       if (timeNow - firstPumpTurnOnMillis < getSetting(SET_minSecondsPerFourPumpOns) * 1000) {
-        pumpState = PS_OFF_EXCESSIVE_ERRORS;              
+        pumpState = PS_OFF_PUMP_CYCLING;              
       }
     }
   }
