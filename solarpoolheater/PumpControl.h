@@ -28,6 +28,6 @@ bool isPumpInError();
 // returns the current pump error code (or 0 if no error)
 byte getPumpErrorCode();
 
-extern bool surgeTankLevelOK;
+extern bool surgeTankLevelOK;  // if false, the surge tank level switch is off (level is low)
 
 #endif

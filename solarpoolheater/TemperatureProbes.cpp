@@ -152,7 +152,6 @@ bool unreadTemperatures = false;            // has the temperature sampling been
 const unsigned long TEMP_CONVERSION_DELAY = 500; // milliseconds; wait for a suitable length of time (11 bits is 375 ms)
 const unsigned long TEMP_SAMPLE_PERIOD = 1000; // milliseconds.  Makes a temperature reading with this period.
 
-
 void setupTemperatureProbes()
 {
    // Start up the library 
@@ -166,9 +165,7 @@ void setupTemperatureProbes()
 
 void tickTemperatureProbes()
 {
-  // there is a bug here; the first logged sample for each probe says max is 85 C - is that the default of the sensor?
-  
-    unsigned long timeNow = millis();
+  unsigned long timeNow = millis();
   if (unreadTemperatures && timeNow - temperatureSampleMillis > TEMP_CONVERSION_DELAY) { // read values from sensors
     int i;
     for (i = 0; i < NUMBER_OF_PROBES; ++i) {

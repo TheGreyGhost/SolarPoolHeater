@@ -288,7 +288,7 @@ void executeCommand(char command[])
           }
           break;
         }
-        case 's': {  //todo there is a bug in here eg Mar 04 2018 06:00:00 doesn't set time correctly.  !cs doesn't complain at all even if no args
+        case 's': {  
           commandIsValid = true;
           if (strlen(command) < 3 + DATETIMEFORMAT_TOTALLENGTH) {
             console->println("syntax error.  !cs Dec 26 2009 12:34:56 (capitalisation, character count, and spacings must match exactly)");

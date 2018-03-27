@@ -69,25 +69,18 @@ bool shutdownErrorsPresent()
 {
   for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
     if (probeStatuses[i] != PS_OK) {
-//      Serial.print("p"); Serial.print(i); // todo remove
       return true;
     }
   }
   if (logfileStatus != LFS_OK) {
-//      Serial.print("r"); Serial.print(logfileStatus); // todo remove
     return true;
   }
   if (assertFailureCode != 0) {
-//      Serial.print("s"); Serial.print(assertFailureCode); // todo remove
     return true;
   }
   if (!realTimeClockStatus) {
-//      Serial.print("t"); // todo remove
     return true;
   }
-//  if (solarIntensityReadingInvalid) {
-//    return true;
-//  }
 
   return false;
 }

@@ -2,6 +2,6 @@
 #define SOLARPOOLHEATER_H  
 #include <Arduino.h>
 
-const char SPH_VERSION[] = "0.6";
+const char SPH_VERSION[] = "1.0";
 
 #endif
