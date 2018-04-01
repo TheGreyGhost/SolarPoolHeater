@@ -35,7 +35,7 @@
 // 8) cold outlet overtemperature
 
 bool surgeTankLevelOK;
-const int SURGE_TANK_LEVEL_PIN = 4;
+const int SURGE_TANK_LEVEL_PIN = 5;
 
 bool pumpIsRunning;
 PumpState pumpState;
@@ -105,7 +105,7 @@ PumpState checkForPumpStateTransition(float currentHours, unsigned long timeNow)
 
 void tickPumpControl()
 {
-  surgeTankLevelOK = (digitalRead(SURGE_TANK_LEVEL_PIN) == HIGH);
+  surgeTankLevelOK = (digitalRead(SURGE_TANK_LEVEL_PIN) == LOW);
   if (isBeingSimulated(SIM_SURGE_TANK_LEVEL)) {
     surgeTankLevelOK = fabs(getSimulatedValue(SIM_SURGE_TANK_LEVEL, 0)) >= 0.5;
   }

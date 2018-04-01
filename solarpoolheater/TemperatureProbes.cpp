@@ -31,6 +31,8 @@ float errorLastImplausibleValueC[NUMBER_OF_PROBES];
 const float MIN_PLAUSIBLE_TEMPERATURE = -5.0;
 const float MAX_PLAUSIBLE_TEMPERATURE = 120.0;
 
+const int16_t INITIAL_VALUE_RAW = 0x0550;  // this is the default powerup value; 85.0 C.  If we ever see it, just ignore it.
+
 DeviceAddress probeAddresses[NUMBER_OF_PROBES] = 
    {{0x28, 0xFF, 0xCC, 0x47, 0x71, 0x17, 0x03, 0x09},  // HX_HOT_INLET
     {0x28, 0xFF, 0xE4, 0x9B, 0x81, 0x17, 0x04, 0xD2},  // HX_HOT_OUTLET
@@ -119,7 +121,7 @@ bool enumerateProbes() {
   numberOfSensors = 0;
   for (i = 0; i < numberOfSensorsFound; ++i) {
     found = sensors.getAddress(addressesFound[i], i);
-    console->print("ID: ");
+    console->print("ID: ");!s
     if (found) {
       printAddress(addressesFound[i]); 
     } else {
@@ -180,7 +182,10 @@ void tickTemperatureProbes()
           case DEVICE_NOT_FOUND: probeStatuses[i] = PS_NOT_FOUND; ++errorCountNotFound[i]; break;
           default: assertFailureCode = ASSERT_INVALID_SWITCH; probeStatuses[i] = PS_NOT_FOUND; ++errorCountNotFound[i]; break; 
         }
-      } else {
+      } else if (tempValue == INITIAL_VALUE_RAW) {
+          probeStatuses[i] = PS_OK;
+          // don't store anything
+      } else  {
         if (tempValueCelcius < MIN_PLAUSIBLE_TEMPERATURE || tempValueCelcius > MAX_PLAUSIBLE_TEMPERATURE) {
           probeStatuses[i] = PS_IMPLAUSIBLE_VALUE;
           ++errorCountImplausibleValue[i]; 
