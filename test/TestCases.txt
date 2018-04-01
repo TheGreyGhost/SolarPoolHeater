@@ -18,7 +18,10 @@ V0.6
 * 1.8 pump is running, solar below threshold, !heatavailable,  times out
 *1.8b pump running, solar below threshold, heat available.  doesn't time out
 *     when heat no longer available, time out
+<<<<<<< HEAD
 * pump switch on and off too frequently
+=======
+>>>>>>> refs/remotes/origin/working
 
 
 

@@ -26,7 +26,7 @@ void setupSolarIntensity()
 
 const int SAMPLE_PERIOD_MS = 1000;
 
-  // expect the maximum reading to be about 200 mV, the analog ref is 1.1V, so the max reading is 200/1100 * 1024 = 186
+  // expect the maximum reading to be about 1000 mV, the analog ref is 1.1V, so the max reading is nearly 1024
 
 const int MINIMUM_VALID_READING = 0;
 const int MAXIMUM_VALID_READING = 1000;

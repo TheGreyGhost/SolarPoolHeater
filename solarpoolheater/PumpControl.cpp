@@ -27,22 +27,12 @@
 //save settings in EEPROM:
 // 1) on clock time
 // 2) off clock time
-// 3) temperature setpoint
+// 3) temperature setpoint & hysteresis
 // 4) insolation threshold
 // 5) pumprunout time (time to keep running after conditions are unfavourable.
-
-//const float onTimeHours = 9.0;             // before this time (hours), turn off
-//const float offTimeHours = 19.0;           // after this time (hours), turn off
-//const float temperatureSetpoint = 28.0;  // target pool temperature
-//const float temperatureSetpointHysteresis = 1.0; // once target temp setpoint is reached, stay off until below setpoint - hysteresis
-//const float solarIntensityThreshold = SOLAR_INTENSITY_10pc;             // start the pump once the solar intensity is above this threshold 
-////const float solarInsolationThreshold = 20.0 * 10 * 60;  // if we receive this much insolation, start the pump
-////const float insolationTriggerRunSeconds = 180.0;        // time to run the pump once insolation trigger reached, before watching HotInlet minus ColdInlet
-//const float minimumHotInletMinusColdInlet = 1.0;        // minimum difference between hot inlet and cold inlet to keep running pump
-//const float belowMinimumTimeoutSeconds = 180.0;         // once the deltaT is below minimumHotInletMinusColdInlet, run for this timeout then stop
-//const int maxDailySystemErrorCount = 5;  // if we get more than this number of system errors in one day, stop the pump permanently.
-//const float hotInletAlarm = 60.0;
-//const float coldOutletAlarm = 45.0; 
+// 6) minimum diff hot inlet - cold inlet to keep pump running
+// 7) hot inlet overtemperature
+// 8) cold outlet overtemperature
 
 bool surgeTankLevelOK;
 const int SURGE_TANK_LEVEL_PIN = 4;
@@ -59,7 +49,8 @@ const int SAMPLE_PERIOD_MS = 1000;
 
 const int PUMP_PIN = 3;
 
-const char* pumpStateLabels[NUMBER_OF_PUMP_STATES] = {"OFF(TIME)", "OFF(>SETPT)", "OFF(NO_SUN)", "OFF(ERRORS)", "OFF(TOO_MANY_ERRORS)", "OFF(OVERTEMP_HOT_INLET)", "OFF(OVERTEMP_COLD_OUTLET)", "ON", "ON(TIMING_OUT)", "OFF(DISABLED)", "OFF(SURGE_TANK_LEVEL_LOW)"};
+const char* pumpStateLabels[NUMBER_OF_PUMP_STATES] = {"OFF(TIME)", "OFF(>SETPT)", "OFF(NO_SUN)", "OFF(ERRORS)", "OFF(TOO_MANY_ERRORS)", "OFF(OVERTEMP_HOT_INLET)", 
+                                                      "OFF(OVERTEMP_COLD_OUTLET)", "ON", "ON(TIMING_OUT)", "OFF(DISABLED)", "OFF(SURGE_TANK_LEVEL_LOW)", "OFF(EXCESSIVE_PUMP_CYCLING)"};
 
 int pumpTurnOnCount;
 unsigned long firstPumpTurnOnMillis;
@@ -137,6 +128,7 @@ void tickPumpControl()
   float currentHours = currentTime.hour() + currentTime.minute() / 60.0;
 
   switch (pumpState) {
+    case PS_OFF_PUMP_CYCLING:
     case PS_OFF_SURGE_TANK_LEVEL_LOW:
     case PS_OFF_EXCESSIVE_ERRORS:
     case PS_OFF_OVERTEMP_HOT_INLET:
@@ -188,7 +180,7 @@ void tickPumpControl()
     if (pumpTurnOnCount >= 4) {
       pumpTurnOnCount = 0;
       if (timeNow - firstPumpTurnOnMillis < getSetting(SET_minSecondsPerFourPumpOns) * 1000) {
-        pumpState = PS_OFF_EXCESSIVE_ERRORS;              
+        pumpState = PS_OFF_PUMP_CYCLING;              
       }
     }
   }
@@ -197,14 +189,7 @@ void tickPumpControl()
 
 PumpState checkForPumpStateTransition(float currentHours, unsigned long timeNow)
 {
-  // look for conditions which always turn the pump off
-//  console->print("currentHours:");
-//  console->print(currentHours);
-//
-//    console->print(" OnTime:");
-//  console->print(getSetting(SET_onTimeHours));
-//    console->print(" OffTime:");
-//  console->println(getSetting(SET_offTimeHours));
+  // first look for conditions which always turn the pump off
 
   if (shutdownErrorsPresent()) {
     return PS_OFF_ERRORS;
@@ -227,11 +212,12 @@ PumpState checkForPumpStateTransition(float currentHours, unsigned long timeNow)
     return PS_OFF_REACHED_SETPOINT;            
   } 
 
+  // look for other conditions which might cause a transition
+
   bool sunIsShining = !solarIntensityReadingInvalid && smoothedSolarIntensity.isValid() &&
                       smoothedSolarIntensity.getEWMA() >= getSetting(SET_solarIntensityThreshold);
   bool heatAvailable = smoothedTemperatures[HX_HOT_INLET].getEWMA() - smoothedTemperatures[HX_COLD_INLET].getEWMA() 
                          >= getSetting(SET_minimumHotInletMinusColdInlet);
-  // look for other conditions
   switch (pumpState) {
     case PS_OFF_DISABLED:
     case PS_OFF_REACHED_SETPOINT:

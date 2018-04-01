@@ -55,6 +55,7 @@ bool parseFloatFromString(const char *buffer, const char * &nextUnparsedChar, fl
 //      console->println("!d = print debug info");
 //      console->println("!ds variable# value = simulate variable# with value");
 //      console->println("!dc variable# = cancel simulation for variable #, if variable# = a then cancel all");
+//      console->println("!da variable# = list all simulate-able variables");
 bool firstLetterD(const char *command) 
 {
   bool commandIsValid = false;
@@ -64,6 +65,21 @@ bool firstLetterD(const char *command)
     printDebugInfo(*console); 
   } else {
     switch (command[1])    {
+      case 'a': {
+        commandIsValid = true;
+        SimVariables i;
+        for (i = SIM_FIRST; i < SIM_LAST_PLUS_ONE; i = (SimVariables)((int)i + 1)) {
+          console->print(getSimulationLabel(i));
+          console->print("["); console->print((int)i); console->print("]:");
+          if (isBeingSimulated(i)) {
+            console->println(getSimulatedValue(i, -1.0));
+          } else {
+            console->println("-not simulated-");  
+          }
+        }
+        break;
+      }
+
       case 's': {
         const char *nextnumber;
         long variable; 
@@ -108,7 +124,7 @@ bool firstLetterD(const char *command)
 //      console->println("!pr param# value = read EEPROM parameter");
 //      console->println("!ps param# value = set EEPROM parameter.  if value = d, use default");
 //      console->println("!pd = set all EEPROM parameter back to default");
-//      console->println("!pa = read all EEPROM parameters");
+//      console->println("!pa = list all EEPROM parameters");
 //      console->println("!p? = list EEPROM parameter names");
 bool firstLetterP(const char *command) 
 {
@@ -209,8 +225,9 @@ void executeCommand(char command[])
       console->println("!cr = read clock date+time");
       console->println("!cs Dec 26 2009 12:34:56 = set clock date + time (capitalisation, character count, and spacings must match exactly)");
       console->println("!d = print debug info");
-      console->println("!ds variable# value = simulate variable# with value");
+      console->println("!da variable# = list all simulate-able variables");
       console->println("!dc variable# = cancel simulation for variable #, if variable# = a then cancel all");
+      console->println("!ds variable# value = simulate variable# with value");
       console->println("!le = erase log file");
       console->println("!li = log file info");
       console->println("!lr sample# count = read log data");
@@ -271,7 +288,7 @@ void executeCommand(char command[])
           }
           break;
         }
-        case 's': {  //todo there is a bug in here eg Mar 04 2018 06:00:00 doesn't set time correctly.  !cs doesn't complain at all even if no args
+        case 's': {  
           commandIsValid = true;
           if (strlen(command) < 3 + DATETIMEFORMAT_TOTALLENGTH) {
             console->println("syntax error.  !cs Dec 26 2009 12:34:56 (capitalisation, character count, and spacings must match exactly)");

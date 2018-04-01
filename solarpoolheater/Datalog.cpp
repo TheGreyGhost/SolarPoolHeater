@@ -26,15 +26,12 @@ void setupEthernet();
 
 void setupDatalog()
 {
-  Serial.print("Initializing SD card..."); // todo comment out
-
   // see if the card is present and can be initialized:
   if (!SD.begin(SD_CHIPSELECT)) {
     logfileStatus = LFS_CARD_NOT_PRESENT;
     return;
   }
   logfileStatus = LFS_OK;
-  Serial.println("card initialized.");  // todo comment out
 //  setupEthernet();
 
   datalogfile = SD.open(DATALOG_FILENAME, FILE_WRITE);
@@ -49,7 +46,6 @@ void tickDatalog()
 
     // if the file is available, write to it:
     if (datalogfile) {  // don't forget to update DATALOG_BYTES_PER_SAMPLE
-//      Serial.print("start datafile write:"); Serial.println(millis());
       datalogfile.seek(datalogfile.size());
 
       size_t totalBytesWritten = 0;
@@ -142,6 +138,7 @@ void dataLogExtractEntries(Print &dest, long startidx, long numberOfEntries, con
 
     dest.print("cumul. insolation "); dest.print(probeSeparator);
     dest.print("cumul. pump runtime(s) "); dest.print(probeSeparator);
+    dest.print("pump state "); dest.print(probeSeparator);
     dest.println();
     
     for (long i = 0; i < samplesToRead; ++i) {
@@ -169,7 +166,7 @@ void dataLogExtractEntries(Print &dest, long startidx, long numberOfEntries, con
 
       PumpState pumpState = getPumpState();
       datalogfile.readBytes((byte *)&pumpState, sizeof(pumpState));
-      dest.print(pumpState, 0); dest.print(" "); // dest.print(probeSeparator);
+      dest.print((int)pumpState, HEX); // dest.print(" "); // dest.print(probeSeparator);
      
       dest.println();
     }
