@@ -1,5 +1,6 @@
 #ifndef PUMPCONTROL_H
 #define PUMPCONTROL_H
+#include "DataStats.h"
 
 void setupPumpControl();
 void tickPumpControl();
@@ -29,5 +30,6 @@ bool isPumpInError();
 byte getPumpErrorCode();
 
 extern bool surgeTankLevelOK;  // if false, the surge tank level switch is off (level is low)
+extern DataStats surgeTankLevelStats; // todo delete
 
 #endif

@@ -12,8 +12,8 @@
 
 const int SD_CHIPSELECT = 4;
 File datalogfile;
-// each sample has timestamp; min, avg, max for each temp probe; cumulative insolation; cumulative pump runtime (s); pumpState
-const unsigned long DATALOG_BYTES_PER_SAMPLE = sizeof(long) + NUMBER_OF_PROBES * 3 * sizeof(float) + sizeof(float) + sizeof(float) + sizeof(PumpState); 
+// each sample has timestamp; min, avg, max for each temp probe; cumulative insolation; cumulative pump runtime (s); averaged surge tank level; pumpState
+const unsigned long DATALOG_BYTES_PER_SAMPLE = sizeof(long) + NUMBER_OF_PROBES * 3 * sizeof(float) + sizeof(float) + sizeof(float) + sizeof(float) + sizeof(PumpState);   //todo remove
 const char DATALOG_FILENAME[] = "datalog.txt";
 
 const char* logfileStatusText[4] = {"Card not present", "Failed to open", "Write failed", "OK"};
@@ -79,6 +79,15 @@ void tickDatalog()
       }
       totalBytesWritten += bytesWritten;
 
+    // todo remove
+      float tempLevel = surgeTankLevelStats.getAverage();
+      surgeTankLevelStats.clear();
+      bytesWritten = datalogfile.write((byte *)&tempLevel, sizeof tempLevel);
+      if (bytesWritten != sizeof tempLevel) {
+        logfileStatus = LFS_WRITE_FAILED;
+      }
+      totalBytesWritten += bytesWritten;
+
       bytesWritten = datalogfile.write((byte *)&pumpRuntimeSeconds, sizeof pumpRuntimeSeconds);
       if (bytesWritten != sizeof pumpRuntimeSeconds) {
         logfileStatus = LFS_WRITE_FAILED;
@@ -137,6 +146,7 @@ void dataLogExtractEntries(Print &dest, long startidx, long numberOfEntries, con
     }
 
     dest.print("cumul. insolation "); dest.print(probeSeparator);
+    dest.print("surge tank avg level "); dest.print(probeSeparator);  //todo remove
     dest.print("cumul. pump runtime(s) "); dest.print(probeSeparator);
     dest.print("pump state "); dest.print(probeSeparator);
     dest.println();
@@ -145,6 +155,8 @@ void dataLogExtractEntries(Print &dest, long startidx, long numberOfEntries, con
       long timestamp;
       float cumulativeInsolation;
       float pumpRuntime;
+      float surgeTankLevel;
+      
       datalogfile.readBytes((byte *)&timestamp, sizeof(timestamp));
       dest.print(timestamp); dest.print(" "); dest.print(probeSeparator);
       
@@ -160,6 +172,9 @@ void dataLogExtractEntries(Print &dest, long startidx, long numberOfEntries, con
       
       datalogfile.readBytes((byte *)&cumulativeInsolation, sizeof(cumulativeInsolation));
       dest.print(cumulativeInsolation, 0); dest.print(" "); dest.print(probeSeparator);
+      
+      datalogfile.readBytes((byte *)&surgeTankLevel, sizeof(surgeTankLevel));      //todo remove
+      dest.print(surgeTankLevel, 4); dest.print(" "); dest.print(probeSeparator);
       
       datalogfile.readBytes((byte *)&pumpRuntime, sizeof(pumpRuntime));
       dest.print(pumpRuntime, 0); dest.print(" "); // dest.print(probeSeparator);

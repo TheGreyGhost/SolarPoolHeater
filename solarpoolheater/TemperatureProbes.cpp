@@ -121,7 +121,7 @@ bool enumerateProbes() {
   numberOfSensors = 0;
   for (i = 0; i < numberOfSensorsFound; ++i) {
     found = sensors.getAddress(addressesFound[i], i);
-    console->print("ID: ");!s
+    console->print("ID: ");
     if (found) {
       printAddress(addressesFound[i]); 
     } else {
