@@ -3,7 +3,8 @@
 
 enum EEPROMSettings {SET_FIRST = 0, SET_onTimeHours = 0, SET_offTimeHours = 1, SET_temperatureSetpoint = 2, SET_temperatureSetpointHysteresis = 3,
 			SET_solarIntensityThreshold = 4, SET_minimumHotInletMinusColdInlet = 5, SET_belowMinimumTimeoutSeconds = 6, 
-			SET_maxDailySystemErrorCount = 7, SET_hotInletAlarm = 8, SET_coldOutletAlarm = 9, SET_minSecondsPerFourPumpOns = 10, SET_dontRunPump = 11, SET_INVALID = 12};
+			SET_maxDailySystemErrorCount = 7, SET_hotInletAlarm = 8, SET_coldOutletAlarm = 9, SET_minSecondsPerFourPumpOns = 10, SET_dontRunPump = 11, 
+			SET_logIntervalSeconds = 12, SET_logIntervalIdleSeconds = 13, SET_INVALID = 14};
 const int NUMBER_OF_EEPROM_SETTINGS = (int)SET_INVALID + 1;
 
 // change the given setting to a new value. if whichSetting is out of range, uses SET_INVALID.

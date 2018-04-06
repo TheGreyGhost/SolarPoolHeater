@@ -26,6 +26,9 @@ bool isPumpRunning();
 // returns true if the pump control has an error
 bool isPumpInError(); 
 
+// returns true if the system is idle (controls logging frequency)
+bool isSystemIdle();
+
 // returns the current pump error code (or 0 if no error)
 byte getPumpErrorCode();
 

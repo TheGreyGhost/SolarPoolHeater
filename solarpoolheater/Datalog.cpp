@@ -9,6 +9,7 @@
 #include "SolarIntensity.h"
 #include "PumpControl.h"
 #include "TemperatureProbes.h"
+#include "Settings.h"
 
 const int SD_CHIPSELECT = 4;
 File datalogfile;
@@ -24,6 +25,8 @@ const int LOG_PERIOD_SAMPLES = 60;
 
 void setupEthernet();
 
+unsigned long lastLogTime;
+
 void setupDatalog()
 {
   // see if the card is present and can be initialized:
@@ -38,12 +41,14 @@ void setupDatalog()
   if (!datalogfile) {
     logfileStatus = LFS_FAILED_TO_OPEN;
   }
+  lastLogTime = millis();
 }
 
 void tickDatalog()
 {
-  if (temperatureDataStats[0].getCount() >= LOG_PERIOD_SAMPLES) {
-
+  unsigned long secondsSinceLastLog = (millis() - lastLogTime) / 1000;
+  if (secondsSinceLastLog >= (isSystemIdle() ?  getSetting(SET_logIntervalIdleSeconds) :  getSetting(SET_logIntervalSeconds))) {
+    lastLogTime = millis();    
     // if the file is available, write to it:
     if (datalogfile) {  // don't forget to update DATALOG_BYTES_PER_SAMPLE
       datalogfile.seek(datalogfile.size());

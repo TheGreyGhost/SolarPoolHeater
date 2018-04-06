@@ -72,6 +72,12 @@ bool isPumpRunning()
   return (pumpState & 0x10);
 }
 
+bool isSystemIdle()
+{
+  float currentHours = currentTime.hour() + currentTime.minute() / 60.0;
+  return (currentHours < getSetting(SET_onTimeHours) || currentHours > getSetting(SET_offTimeHours)); 
+}
+
 // returns true if the pump control has an error
 bool isPumpInError()
 {
