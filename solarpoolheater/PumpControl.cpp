@@ -115,7 +115,7 @@ void tickPumpControl()
   surgeTankLevelOK = (digitalRead(SURGE_TANK_LEVEL_PIN) == LOW);
 
   surgeTankLevelStats.addDatapoint(surgeTankLevelOK ? 1.0 : 0.0); // todo remove
-  surgeTankLevelOK = true; // todo remove
+//  surgeTankLevelOK = true; // todo remove
   
   if (isBeingSimulated(SIM_SURGE_TANK_LEVEL)) {
     surgeTankLevelOK = fabs(getSimulatedValue(SIM_SURGE_TANK_LEVEL, 0)) >= 0.5;
