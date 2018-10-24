@@ -9,6 +9,7 @@
 #include "PumpControl.h"
 #include "SolarIntensity.h"
 #include "Simulate.h"
+#include "EthernetLink.h"
 
 /********************************************************************/
 
@@ -43,5 +44,3 @@ void loop(void)
   tickSimulate();
   tickEthernet();
 }
-
-
