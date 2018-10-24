@@ -1,7 +1,5 @@
 #include "TemperatureProbes.h"
 #include <OneWire.h> 
-
-#define REQUIRESALARMS false // Don't need the temp probe alarms
 #include <DallasTemperatureErrorCodes.h>
 #include "Simulate.h"
 
@@ -228,5 +226,3 @@ void tickTemperatureProbes()
   }
 
 }
-
-

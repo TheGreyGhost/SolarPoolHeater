@@ -1,5 +1,6 @@
 #ifndef PUMPCONTROL_H
 #define PUMPCONTROL_H
+#include "GlobalDefines.h"
 #include "DataStats.h"
 
 void setupPumpControl();

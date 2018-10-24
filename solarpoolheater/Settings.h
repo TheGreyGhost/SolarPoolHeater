@@ -1,5 +1,6 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
+#include "GlobalDefines.h"
 
 enum EEPROMSettings {SET_FIRST = 0, SET_onTimeHours = 0, SET_offTimeHours = 1, SET_temperatureSetpoint = 2, SET_temperatureSetpointHysteresis = 3,
 			SET_solarIntensityThreshold = 4, SET_minimumHotInletMinusColdInlet = 5, SET_belowMinimumTimeoutSeconds = 6, 

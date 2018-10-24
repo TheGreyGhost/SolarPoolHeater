@@ -1,5 +1,6 @@
 #ifndef DEBUG_H   
-#define DEBUG_H  
+#define DEBUG_H
+#include "GlobalDefines.h"  
 #include <Arduino.h>
 extern byte assertFailureCode;
 

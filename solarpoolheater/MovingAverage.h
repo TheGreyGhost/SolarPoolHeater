@@ -13,6 +13,7 @@ Usage:
   */
 #ifndef MovingAverage_h   // if x.h hasn't been included yet...
 #define MovingAverage_h   //   #define this so the compiler knows it has been included
+#include "GlobalDefines.h"
 #include <Arduino.h>
 
 class MovingAverage

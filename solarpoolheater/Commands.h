@@ -1,5 +1,6 @@
 #ifndef COMMANDS_H   
 #define COMMANDS_H  
+#include "GlobalDefines.h"
 #include <Arduino.h>
 
 // prepare for receiving/executing commands
