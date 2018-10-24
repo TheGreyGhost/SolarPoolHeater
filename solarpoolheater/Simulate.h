@@ -1,6 +1,5 @@
 #ifndef SIMULATE_H
 #define SIMULATE_H
-#include "GlobalDefines.h"
 
 // these values must match TemperatureProbes:: probe numbers
 enum SimVariables {SIM_FIRST = 0, SIM_HX_HOT_INLET = 0, SIM_HX_HOT_OUTLET = 1, SIM_HX_COLD_INLET = 2, SIM_HX_COLD_OUTLET = 3, SIM_AMBIENT = 4,

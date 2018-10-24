@@ -1,6 +1,5 @@
 #ifndef REALTIMECLOCK_H
 #define REALTIMECLOCK_H
-#include "GlobalDefines.h"
 #include <Arduino.h>
 #include <RTClib.h>
 

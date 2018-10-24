@@ -1,6 +1,5 @@
 #ifndef SOLARINTENSITY_H
 #define SOLARINTENSITY_H
-#include "GlobalDefines.h"
 #include "MovingAverage.h"
 
 void setupSolarIntensity();

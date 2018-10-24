@@ -1,6 +1,5 @@
 #ifndef DATALOG_H   
 #define DATALOG_H
-#include "GlobalDefines.h"  
 #include <Arduino.h>
 
 enum LogfileStatus {LFS_CARD_NOT_PRESENT = 0, LFS_FAILED_TO_OPEN = 1, LFS_WRITE_FAILED = 2, LFS_OK = 3};

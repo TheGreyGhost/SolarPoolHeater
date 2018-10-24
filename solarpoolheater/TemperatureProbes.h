@@ -1,6 +1,5 @@
 #ifndef TEMPERATURE_PROBES_H   
 #define TEMPERATURE_PROBES_H
-#include "GlobalDefines.h"  
 #include <Arduino.h>
 #include "MovingAverage.h"
 #include "DataStats.h"

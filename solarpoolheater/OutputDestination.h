@@ -1,6 +1,5 @@
 #ifndef OUTPUT_DESTINATION_H
 #define OUTPUT_DESTINATION_H
-#include "GlobalDefines.h"
 #include <Arduino.h>
 
 class OutputDestinationSerial : public Print {
