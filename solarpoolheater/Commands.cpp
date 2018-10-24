@@ -56,6 +56,8 @@ bool parseFloatFromString(const char *buffer, const char * &nextUnparsedChar, fl
 //      console->println("!ds variable# value = simulate variable# with value");
 //      console->println("!dc variable# = cancel simulation for variable #, if variable# = a then cancel all");
 //      console->println("!da variable# = list all simulate-able variables");
+//      console->println("!de string = echo string to ethernet port");
+
 bool firstLetterD(const char *command) 
 {
   bool commandIsValid = false;
@@ -114,6 +116,10 @@ bool firstLetterD(const char *command)
         stopSimulating((SimVariables)variable);
         console->print("Stopped simulating ");
         console->println(getSimulationLabel((SimVariables)variable));
+        break;
+      }
+      case 'e'
+      : {
         break;
       }
     }
@@ -228,6 +234,7 @@ void executeCommand(char command[])
       console->println("!da variable# = list all simulate-able variables");
       console->println("!dc variable# = cancel simulation for variable #, if variable# = a then cancel all");
       console->println("!ds variable# value = simulate variable# with value");
+      console->println("!de string = echo string to ethernet port");
       console->println("!le = erase log file");
       console->println("!li = log file info");
       console->println("!lr sample# count = read log data");

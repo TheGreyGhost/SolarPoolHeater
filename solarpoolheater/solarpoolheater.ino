@@ -26,6 +26,7 @@ void setup(void)
   setupPumpControl();
   setupTemperatureProbes();
   setupDatalog();
+  setupEthernet();
   setupCommands();
   setupSolarIntensity();
 } 
@@ -40,6 +41,7 @@ void loop(void)
   tickSystemStatus();
   tickSolarIntensity();
   tickSimulate();
+  tickEthernet();
 }
 
 
