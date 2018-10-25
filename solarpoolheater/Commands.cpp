@@ -8,6 +8,7 @@
 #include "PumpControl.h"
 #include "Simulate.h"
 #include "Settings.h"
+#include "EthernetLink.h"
 
 const int MAX_COMMAND_LENGTH = 30;
 const int COMMAND_BUFFER_SIZE = MAX_COMMAND_LENGTH + 2;  // if buffer fills to max size, truncation occurs
@@ -118,8 +119,9 @@ bool firstLetterD(const char *command)
         console->println(getSimulationLabel((SimVariables)variable));
         break;
       }
-      case 'e'
-      : {
+      case 'e': {
+        commandIsValid = true;
+        sendEthernetMessage(command+2, strlen(command) - 2);
         break;
       }
     }
@@ -389,6 +391,3 @@ void tickCommands()
     }
   }
 }
-
-
-

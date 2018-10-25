@@ -25,6 +25,7 @@ const byte ERRORCODE_ASSERT = 48; // leave space for error codes
 const byte ERRORCODE_RTC = 64; // only takes up one slot
 const byte ERRORCODE_SOLAR_SENSOR = 65; // only takes up one slot
 const byte ERRORCODE_PUMP_CONTROL = 80; // leave space for up to 16
+const byte ERRORCODE_ETHERNET = 96; // leave space for error codes
 
 // no error = steady on off     .#.#.#.#  
 // error patterns are msb first.  zero = short, one = long.  eg 0 0 1 1 is #... #... ###. ###.

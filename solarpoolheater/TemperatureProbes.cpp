@@ -2,14 +2,12 @@
 #include <OneWire.h> 
 #include <DallasTemperatureErrorCodes.h>
 #include "Simulate.h"
+#include "PinAssignments.h"
 
-/********************************************************************/
-// Data wire is plugged into pin 2 on the Arduino 
-#define TEMP_PROBES_ONE_WIRE_BUS 2 
 /********************************************************************/
 // Setup a oneWire instance to communicate with any OneWire devices  
 // (not just Maxim/Dallas temperature ICs) 
-OneWire oneWire(TEMP_PROBES_ONE_WIRE_BUS); 
+OneWire oneWire(DIGPIN_TEMP_PROBES_ONE_WIRE_BUS); 
 /********************************************************************/
 // Pass our oneWire reference to Dallas Temperature. 
 DallasTemperatureErrorCodes sensors(&oneWire);

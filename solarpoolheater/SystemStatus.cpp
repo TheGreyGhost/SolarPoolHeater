@@ -8,6 +8,8 @@
 #include "RealTimeClock.h"
 #include "SolarIntensity.h"
 #include "PumpControl.h"
+#include "EthernetLink.h"
+#include "PinAssignments.h"
 
 byte assertFailureCode = 0;
 
@@ -34,13 +36,19 @@ void printDebugInfo(Print &dest)
   } else {
     dest.println(logfileStatus);
   }  
+  dest.print("Ethernet status:");
+  if (ethernetStatus >= 0 && ethernetStatus <= ES_OK) {
+    dest.println(ethernetStatusText[ethernetStatus]);
+  } else {
+    dest.println(ethernetStatus);
+  }  
   dest.print("solar intensity sensor status:");
   dest.print(solarIntensityReadingInvalid ? "INVALID " : "OK");
   dest.print(" with lastInvalidReading:");
   dest.println(lastInvalidReading);
 }
 
-DigitalPin<LED_BUILTIN> pinStatusLED;
+DigitalPin<DIGPIN_STATUS_LED> pinStatusLED;
 
 const int MAX_ERROR_DEPTH = 16;
 byte errorStack[MAX_ERROR_DEPTH];
@@ -95,6 +103,9 @@ void populateErrorStack()
   }
   if (logfileStatus != LFS_OK) {
     errorStack[errorStackIdx++] = ERRORCODE_DATALOG | logfileStatus;
+  }
+  if (ethernetStatus != LFS_OK) {
+    errorStack[errorStackIdx++] = ERRORCODE_ETHERNET | ethernetStatus;
   }
   if (assertFailureCode != 0) {
     errorStack[errorStackIdx++] = ERRORCODE_ASSERT | assertFailureCode;
@@ -168,7 +179,3 @@ void updateStatusLEDisr()
   pinStatusLED.write((flashSequence & 0x80000000UL)^0x80000000UL);
   flashSequence <<= 1;
 }
-
-
-
-

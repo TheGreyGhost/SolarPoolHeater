@@ -10,8 +10,8 @@
 #include "PumpControl.h"
 #include "TemperatureProbes.h"
 #include "Settings.h"
+#include "PinAssignments.h"
 
-const int SD_CHIPSELECT = 4;
 File datalogfile;
 // each sample has timestamp; min, avg, max for each temp probe; cumulative insolation; cumulative pump runtime (s); averaged surge tank level; pumpState
 const unsigned long DATALOG_BYTES_PER_SAMPLE = sizeof(long) + NUMBER_OF_PROBES * 3 * sizeof(float) + sizeof(float) + sizeof(float) + sizeof(float) + sizeof(PumpState);   //todo remove
@@ -28,7 +28,7 @@ unsigned long lastLogTime;
 void setupDatalog()
 {
   // see if the card is present and can be initialized:
-  if (!SD.begin(SD_CHIPSELECT)) {
+  if (!SD.begin(DIGPIN_CHIPSELECT_SDCARD)) {
     logfileStatus = LFS_CARD_NOT_PRESENT;
     return;
   }

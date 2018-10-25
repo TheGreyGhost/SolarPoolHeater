@@ -6,6 +6,7 @@
 #include "SolarIntensity.h"
 #include "Settings.h"
 #include "Simulate.h"
+#include "PinAssignments.h"
 
 // rules:
 // 1) If time is before pump start time, or after pump stop time, turn off
@@ -36,7 +37,6 @@
 
 bool surgeTankLevelOK;
 DataStats surgeTankLevelStats; // todo delete
-const int SURGE_TANK_LEVEL_PIN = 5;
 
 bool pumpIsRunning;
 PumpState pumpState;
@@ -47,8 +47,6 @@ float pumpRuntimeSeconds;
 unsigned long lastMillisPC;
 uint8_t lastDayPC;
 const int SAMPLE_PERIOD_MS = 1000;
-
-const int PUMP_PIN = 3;
 
 const char* pumpStateLabels[NUMBER_OF_PUMP_STATES] = {"OFF(TIME)", "OFF(>SETPT)", "OFF(NO_SUN)", "OFF(ERRORS)", "OFF(TOO_MANY_ERRORS)", "OFF(OVERTEMP_HOT_INLET)", 
                                                       "OFF(OVERTEMP_COLD_OUTLET)", "ON", "ON(TIMING_OUT)", "OFF(DISABLED)", "OFF(SURGE_TANK_LEVEL_LOW)", "OFF(EXCESSIVE_PUMP_CYCLING)"};
@@ -97,8 +95,8 @@ PumpState getPumpState()
 
 void setupPumpControl()
 {
-  pinMode(SURGE_TANK_LEVEL_PIN, INPUT_PULLUP);
-  pinMode(PUMP_PIN, OUTPUT);
+  pinMode(DIGPIN_SURGE_TANK_LEVEL, INPUT_PULLUP);
+  pinMode(DIGPIN_PUMP, OUTPUT);
 
   pumpRuntimeSeconds = 0;
   pumpIsRunning = false;
@@ -112,7 +110,7 @@ PumpState checkForPumpStateTransition(float currentHours, unsigned long timeNow)
 
 void tickPumpControl()
 {
-  surgeTankLevelOK = (digitalRead(SURGE_TANK_LEVEL_PIN) == LOW);
+  surgeTankLevelOK = (digitalRead(DIGPIN_SURGE_TANK_LEVEL) == LOW);
 
   surgeTankLevelStats.addDatapoint(surgeTankLevelOK ? 1.0 : 0.0); // todo remove
 //  surgeTankLevelOK = true; // todo remove
@@ -265,4 +263,3 @@ PumpState checkForPumpStateTransition(float currentHours, unsigned long timeNow)
   }  
   return pumpState;
 }
-
