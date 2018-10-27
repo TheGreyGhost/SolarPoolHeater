@@ -121,7 +121,7 @@ bool firstLetterD(const char *command)
       }
       case 'e': {
         commandIsValid = true;
-        sendEthernetMessage(command+2, strlen(command) - 2);
+        sendEthernetMessage((byte *)(command+2), strlen(command) - 2);
         break;
       }
     }

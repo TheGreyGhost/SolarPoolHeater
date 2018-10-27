@@ -104,7 +104,7 @@ void populateErrorStack()
   if (logfileStatus != LFS_OK) {
     errorStack[errorStackIdx++] = ERRORCODE_DATALOG | logfileStatus;
   }
-  if (ethernetStatus != LFS_OK) {
+  if (ethernetStatus != ES_OK) {
     errorStack[errorStackIdx++] = ERRORCODE_ETHERNET | ethernetStatus;
   }
   if (assertFailureCode != 0) {

@@ -45,7 +45,7 @@ void setupEthernet() {
       Serial.print("UDP server is at ");
       Serial.print(Ethernet.localIP());
       Serial.print(":");
-      Serial.println(localPort);
+      Serial.println(PORT_LOCAL);
     }  
   }
 }
@@ -72,8 +72,8 @@ void tickEthernet() {
     int numofchars;
     bool readmore = true;
     do {
-      numofchars = Udp.read(packetBuffer, UDP_PACKET_CHUNK_SIZE);
-      if (numofchars < 0)
+      numofchars = Udp.read(packetBufferChunk, UDP_PACKET_CHUNK_SIZE);
+      if (numofchars < 0) {
         readmore = false;
       } else {
         Serial.write(packetBufferChunk, numofchars);
@@ -83,7 +83,7 @@ void tickEthernet() {
   }
 }
 
-void sendEthernetMessage(const byte msg[], messagelength)
+void sendEthernetMessage(const byte msg[], int messagelength)
 {
     Udp.beginPacket(IP_REMOTE, PORT_REMOTE);
     Udp.write(msg, messagelength);

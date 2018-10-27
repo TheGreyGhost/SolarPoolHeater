@@ -2,7 +2,7 @@
 #include "SolarIntensity.h"
 #include "RealTimeClock.h"
 #include "Simulate.h"
-#include "PinAssignments.h:
+#include "PinAssignments.h"
 
 const float EWMA_TIME_CONSTANT = 120.0; // decay time in seconds (time to drop to 1/e) assuming 1 Hz sampling frequency
 const float EWMA_ALPHA = 1.0/120.0;  // corresponds roughly to 120 seconds decay time assuming 1 Hz sampling frequency

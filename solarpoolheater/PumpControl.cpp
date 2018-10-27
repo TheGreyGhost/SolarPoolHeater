@@ -176,7 +176,7 @@ void tickPumpControl()
 
   pumpIsRunning = isPumpRunning();
 
-  digitalWrite(PUMP_PIN, pumpIsRunning ? HIGH : LOW);
+  digitalWrite(DIGPIN_PUMP, pumpIsRunning ? HIGH : LOW);
 
   lastMillisPC = timeNow;
 
