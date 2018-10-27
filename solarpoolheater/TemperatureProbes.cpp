@@ -27,7 +27,9 @@ float errorLastImplausibleValueC[NUMBER_OF_PROBES];
 const float MIN_PLAUSIBLE_TEMPERATURE = -5.0;
 const float MAX_PLAUSIBLE_TEMPERATURE = 120.0;
 
-const int16_t INITIAL_VALUE_RAW = 0x0550;  // this is the default powerup value; 85.0 C.  If we ever see it, just ignore it.
+const int16_t INITIAL_VALUE_RAW = 0x2A80;  // this is the default powerup value; 85.0 C.  If we ever see it, just ignore it.
+//const float INITIAL_VALUE_CELCIUS = 85.0;  // this is the default powerup value; 85.0 C.  If we ever see it, just ignore it.  Shouldn't be necessary; todo remove bugfix
+//const float INITIAL_VALUE_CELCIUS_TOLERANCE = 0.1;  // this is the default powerup value; 85.0 C.  If we ever see it, just ignore it.
 
 DeviceAddress probeAddresses[NUMBER_OF_PROBES] = 
    {{0x28, 0xFF, 0xCC, 0x47, 0x71, 0x17, 0x03, 0x09},  // HX_HOT_INLET
@@ -161,6 +163,9 @@ void setupTemperatureProbes()
  sensors.setWaitForConversion(false);
 }
 
+//int16_t lastdudtemp = 0.0; // todo remove
+//float lastdudtempcelcius = 0.0; // todo remove
+
 void tickTemperatureProbes()
 {
   unsigned long timeNow = millis();
@@ -178,9 +183,10 @@ void tickTemperatureProbes()
           case DEVICE_NOT_FOUND: probeStatuses[i] = PS_NOT_FOUND; ++errorCountNotFound[i]; break;
           default: assertFailureCode = ASSERT_INVALID_SWITCH; probeStatuses[i] = PS_NOT_FOUND; ++errorCountNotFound[i]; break; 
         }
-      } else if (tempValue == INITIAL_VALUE_RAW) {
+      } else if (tempValue == INITIAL_VALUE_RAW) { // || fabs(tempValueCelcius - INITIAL_VALUE_CELCIUS) < INITIAL_VALUE_CELCIUS_TOLERANCE ) {
           probeStatuses[i] = PS_OK;
-          // don't store anything
+//          lastdudtempcelcius = tempValueCelcius;
+//          lastdudtemp = tempValue;
       } else  {
         if (tempValueCelcius < MIN_PLAUSIBLE_TEMPERATURE || tempValueCelcius > MAX_PLAUSIBLE_TEMPERATURE) {
           probeStatuses[i] = PS_IMPLAUSIBLE_VALUE;
@@ -221,6 +227,13 @@ void tickTemperatureProbes()
     bool success = sensors.requestTemperatures(); // Send the command to get temperature readings 
     temperatureSampleMillis = timeNow;
     unreadTemperatures = true;
+
+//            console->print(lastdudtemp, HEX);  //todo remove these
+//          console->print(":");
+//          console->println(lastdudtempcelcius);
+//          // don't store anything
+
   }
+
 
 }
