@@ -1,0 +1,9 @@
+
+testing of ethernet connection:
+28-10-2018
+works fine in both directions
+
+test using
+nc -u -l 53201   (listen on port 53201)
+and
+nc -u 192.168.2.35 53201 (send to 192.168.2.35:53201)
