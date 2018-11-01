@@ -56,8 +56,9 @@ bool parseFloatFromString(const char *buffer, const char * &nextUnparsedChar, fl
 //      console->println("!d = print debug info");
 //      console->println("!ds variable# value = simulate variable# with value");
 //      console->println("!dc variable# = cancel simulation for variable #, if variable# = a then cancel all");
-//      console->println("!da variable# = list all simulate-able variables");
+//      console->println("!da = list all simulate-able variables");
 //      console->println("!de string = echo string to ethernet port");
+//      console->println("!dt test# = execute debug test #");
 
 bool firstLetterD(const char *command) 
 {
@@ -119,9 +120,22 @@ bool firstLetterD(const char *command)
         console->println(getSimulationLabel((SimVariables)variable));
         break;
       }
+
+      case 't': {
+        const char *nextnumber;
+        long variable; 
+        float value;
+        if (!parseLongFromString(command + 2, nextnumber, variable)) {
+          break;
+        }
+        commandIsValid = true;
+        
+        break;
+      }
+
       case 'e': {
         commandIsValid = true;
-        sendEthernetMessage((byte *)(command+2), strlen(command) - 2);
+        sendEthernetMessage(ED_TERMINAL, (byte *)(command+2), strlen(command) - 2);
         break;
       }
     }
@@ -233,10 +247,11 @@ void executeCommand(char command[])
       console->println("!cr = read clock date+time");
       console->println("!cs Dec 26 2009 12:34:56 = set clock date + time (capitalisation, character count, and spacings must match exactly)");
       console->println("!d = print debug info");
-      console->println("!da variable# = list all simulate-able variables");
+      console->println("!da = list all simulate-able variables");
       console->println("!dc variable# = cancel simulation for variable #, if variable# = a then cancel all");
       console->println("!ds variable# value = simulate variable# with value");
       console->println("!de string = echo string to ethernet port");
+      console->println("!dt test# = execute debug test #");
       console->println("!le = erase log file");
       console->println("!li = log file info");
       console->println("!lr sample# count = read log data");

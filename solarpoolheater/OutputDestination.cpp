@@ -33,21 +33,23 @@ size_t OutputDestinationEthernet::write(uint8_t b)
 
 size_t OutputDestinationEthernet::write(const uint8_t *buf, size_t size)
 {
-  const MAX_PACKET_SIZE = 500;
+  const int MAX_PACKET_SIZE = 500;
   size_t bytesSent = 0;
+  size_t bytesToAdd = 0;
 
-// keep sending chunks until we have less than the MAX packet size remaining
+// if we have enough buffered data to exceed the packet sizekeep sending chunks until we have less than the MAX packet size remaining
   while (m_queuedBytes + (size - bytesSent) >= MAX_PACKET_SIZE) {
-    size_t bytesToAdd = MAX_PACKET_SIZE - m_queuedBytes;
+    bytesToAdd = MAX_PACKET_SIZE - m_queuedBytes;
     addChunk(buf + bytesSent, bytesToAdd, true);
     bytesSent += bytesToAdd;
   }
 
 // find the last \n
-  for (int i = size; i > bytesSent && buf[i-1] != '\n'; --i);
+  int i;
+  for (i = size; i > bytesSent && buf[i-1] != '\n'; --i);
   
   if (i > bytesSent) {  // found one
-    size_t bytesToAdd = i - bytesSent;
+    bytesToAdd = i - bytesSent;
     addChunk(buf + bytesSent, bytesToAdd, true);
     bytesSent += bytesToAdd;
   }
@@ -73,4 +75,11 @@ size_t OutputDestinationEthernet::addChunk(const uint8_t *buf, size_t size, bool
   return size;
 }
 
+// NULL just does nothing.
 
+OutputDestinationEthernetNULL::OutputDestinationEthernetNULL(EthernetUDP &udpConnection, IPAddress remoteIP, unsigned int remotePort)
+  : OutputDestinationEthernet(udpConnection, remoteIP, remotePort)
+{}
+void OutputDestinationEthernetNULL::begin() {}
+size_t OutputDestinationEthernetNULL::write(uint8_t) {}
+size_t OutputDestinationEthernetNULL::write(const uint8_t *buf, size_t size) {}
