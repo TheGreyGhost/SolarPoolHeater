@@ -13,14 +13,10 @@ public:
 };
 
 
-QUESTION - DO I REALLY NEED OutputDestinationInternet for the datastream?  Just run UDP separately
-
-// will wait until \n is received before sending packet; or until packet size reaches 500 bytes
+// runs as a terminal : will wait until \n is received before sending packet; or until packet size reaches 500 bytes
 class OutputDestinationEthernet : public Print {
 public:
-  // if textMode = false then 
-  
-  OutputDestinationEthernet(EthernetUDP &udpConnection, IPAddress remoteIP, unsigned int remotePort, boolean textMode);
+  OutputDestinationEthernet(EthernetUDP &udpConnection, IPAddress remoteIP, unsigned int remotePort);
   virtual void begin();
   virtual size_t write(uint8_t);
   virtual size_t write(const uint8_t *buf, size_t size);

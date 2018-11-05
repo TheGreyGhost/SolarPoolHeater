@@ -7,3 +7,8 @@ test using
 nc -u -l 53201   (listen on port 53201)
 and
 nc -u 192.168.2.35 53201 (send to 192.168.2.35:53201)
+
+Commands are received by either Serial (in tickCommands) or Ethernet (tickEthernet which calls Commands::parseIncomingInput)
+Commands must have ! as the starting character
+
+to test: Commands::parseIncomingInput

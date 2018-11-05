@@ -7,7 +7,7 @@ extern byte assertFailureCode;
 #define ASSERT_INDEX_OUT_OF_BOUNDS 2
 
 extern Print *console;
-extern Stream *consoleInput;
+//extern Stream *consoleInput;
 
 void setupSystemStatus();
 

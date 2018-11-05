@@ -26,11 +26,9 @@ const int UDP_PACKET_CHUNK_SIZE = 64;
 char packetBufferChunk[UDP_PACKET_CHUNK_SIZE];  // buffer to hold incoming packet,
 
 // An EthernetUDP instance to let us send and receive packets over UDP
-EthernetUDP UdpTerminal;
-EthernetUDP UdpDatastream;
+EthernetUDP udpConnection;
 
 OutputDestinationEthernet *outputDestinationTerminal;
-OutputDestinationEthernet *outputDestinationDatastream;
 
 void setupEthernet() {
   // Open serial communications and wait for port to open:
@@ -45,37 +43,30 @@ void setupEthernet() {
     ethernetStatus = ES_LINK_OFF;
   } else {
     // start UDP
-    int success = UdpTerminal.begin(PORT_LOCAL_TERMINAL);
-    if (success == 1) {
-      success = UdpDatastream.begin(PORT_LOCAL_DATASTREAM);
-    }
+    int success = udpConnection.begin(PORT_LOCAL_TERMINAL);
     
     if (success != 1) {
       ethernetStatus = ES_NO_SOCKETS;
-      outputDestinationTerminal = new OutputDestinationEthernetNULL(UdpTerminal, IP_REMOTE, PORT_REMOTE_TERMINAL);
-      outputDestinationDatastream = new OutputDestinationEthernetNULL(UdpTerminal, IP_REMOTE, PORT_REMOTE_TERMINAL);
+      outputDestinationTerminal = new OutputDestinationEthernetNULL(udpConnection, IP_REMOTE, PORT_REMOTE_TERMINAL);
     } else {  
       ethernetStatus = ES_OK;
       Serial.print("UDP server is at ");
       Serial.print(Ethernet.localIP());
       Serial.print(":");
       Serial.print(PORT_LOCAL_TERMINAL);
-      Serial.print(" and :");
-      Serial.println(PORT_LOCAL_DATASTREAM);
-      outputDestinationTerminal = new OutputDestinationEthernet(UdpTerminal, IP_REMOTE, PORT_REMOTE_TERMINAL);
-      outputDestinationDatastream = new OutputDestinationEthernet(UdpTerminal, IP_REMOTE, PORT_REMOTE_TERMINAL);
+      outputDestinationTerminal = new OutputDestinationEthernet(udpConnection, IP_REMOTE, PORT_REMOTE_TERMINAL);
     }  
   }
 }
 
 void tickEthernet() {
   // if there's data available, read a packet
-  int packetSize = UdpTerminal.parsePacket();
+  int packetSize = udpConnection.parsePacket();
   if (packetSize) {
     Serial.print("Received packet of size ");
     Serial.println(packetSize);
     Serial.print("From ");
-    IPAddress remote = UdpTerminal.remoteIP();
+    IPAddress remote = udpConnection.remoteIP();
     for (int i=0; i < 4; i++) {
       Serial.print(remote[i], DEC);
       if (i < 3) {
@@ -83,14 +74,14 @@ void tickEthernet() {
       }
     }
     Serial.print(", port ");
-    Serial.println(UdpTerminal.remotePort());
+    Serial.println(udpConnection.remotePort());
     Serial.println("Contents:");
 
     // read the packet into packetBufffer
     int numofchars;
     bool readmore = true;
     do {
-      numofchars = Udp.read(packetBufferChunk, UDP_PACKET_CHUNK_SIZE);
+      numofchars = udpConnection.read(packetBufferChunk, UDP_PACKET_CHUNK_SIZE);
       if (numofchars < 0) {
         readmore = false;
       } else {
@@ -101,9 +92,9 @@ void tickEthernet() {
   }
 }
 
-void sendEthernetMessage(EthernetDestination destination, const byte msg[], int messagelength)
+void sendEthernetTerminalMessage(const byte msg[], int messagelength)
 {
-    Udp.beginPacket(IP_REMOTE, destination == ED_TERMINAL ? PORT_REMOTE_TERMINAL : PORT_REMOTE_DATASTREAM);
-    Udp.write(msg, messagelength);
-    Udp.endPacket();
+    udpConnection.beginPacket(IP_REMOTE, PORT_REMOTE_TERMINAL);
+    udpConnection.write(msg, messagelength);
+    udpConnection.endPacket();
 }

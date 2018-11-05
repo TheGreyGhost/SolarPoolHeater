@@ -14,7 +14,7 @@
 byte assertFailureCode = 0;
 
 Print *console;
-Stream *consoleInput;
+//Stream *consoleInput;
 
 void printDebugInfo(Print &dest)
 {
@@ -60,7 +60,7 @@ void setupSystemStatus()
 {
   pinStatusLED.mode(OUTPUT);
   console = new OutputDestinationSerial();
-  consoleInput = &Serial;
+//  consoleInput = &Serial;
   WatchDog::init(updateStatusLEDisr);
   WatchDog::setPeriod(OVF_250MS);
   WatchDog::start();

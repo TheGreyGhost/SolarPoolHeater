@@ -60,25 +60,25 @@ bool parseFloatFromString(const char *buffer, const char * &nextUnparsedChar, fl
 //      console->println("!de string = echo string to ethernet port");
 //      console->println("!dt test# = execute debug test #");
 
-bool firstLetterD(const char *command) 
+bool firstLetterD(const char *command, Print *replyConsole) 
 {
   bool commandIsValid = false;
     
   if (command[1] == '\0' || isspace(command[1])) {
     commandIsValid = true; 
-    printDebugInfo(*console); 
+    printDebugInfo(*replyConsole); 
   } else {
     switch (command[1])    {
       case 'a': {
         commandIsValid = true;
         SimVariables i;
         for (i = SIM_FIRST; i < SIM_LAST_PLUS_ONE; i = (SimVariables)((int)i + 1)) {
-          console->print(getSimulationLabel(i));
-          console->print("["); console->print((int)i); console->print("]:");
+          replyConsole->print(getSimulationLabel(i));
+          replyConsole->print("["); replyConsole->print((int)i); replyConsole->print("]:");
           if (isBeingSimulated(i)) {
-            console->println(getSimulatedValue(i, -1.0));
+            replyConsole->println(getSimulatedValue(i, -1.0));
           } else {
-            console->println("-not simulated-");  
+            replyConsole->println("-not simulated-");  
           }
         }
         break;
@@ -96,10 +96,10 @@ bool firstLetterD(const char *command)
         }
         commandIsValid = true;
         setSimulatedValue((SimVariables)variable, value);
-        console->print("Simulating ");
-        console->print(getSimulationLabel((SimVariables)variable));
-        console->print(" with ");
-        console->println(getSimulatedValue((SimVariables)variable, -1.0));
+        replyConsole->print("Simulating ");
+        replyConsole->print(getSimulationLabel((SimVariables)variable));
+        replyConsole->print(" with ");
+        replyConsole->println(getSimulatedValue((SimVariables)variable, -1.0));
         break;
       }
       case 'c': {
@@ -109,15 +109,15 @@ bool firstLetterD(const char *command)
         if (!parseLongFromString(command + 2, nextnumber, variable)) {
           if (*nextnumber == 'a') {
             stopSimulatingAll();
-            console->println("stopped simulating all");
+            replyConsole->println("stopped simulating all");
             commandIsValid = true;
           }
           break;
         }
         commandIsValid = true;
         stopSimulating((SimVariables)variable);
-        console->print("Stopped simulating ");
-        console->println(getSimulationLabel((SimVariables)variable));
+        replyConsole->print("Stopped simulating ");
+        replyConsole->println(getSimulationLabel((SimVariables)variable));
         break;
       }
 
@@ -129,13 +129,33 @@ bool firstLetterD(const char *command)
           break;
         }
         commandIsValid = true;
-        
+
+          // 0 = process command via parseIncomingInput:
+          //   first = missing !, second = no trailing \0, third = too long, fourth = valid status command
+        switch (variable) {
+          case 0: {
+            char test0a[] = "no!"; 
+            parseIncomingInput(test0a, sizeof test0a, &Serial);
+            char test0b[] = "!no"; 
+            parseIncomingInput(test0b, sizeof test0b - 1, &Serial);
+            char *junk = (char *)malloc(MAX_COMMAND_LENGTH + 4);
+            if (NULL != junk) {
+              memset(junk, MAX_COMMAND_LENGTH + 4, '!');
+              junk[MAX_COMMAND_LENGTH+3] = '\0';
+              parseIncomingInput(junk, MAX_COMMAND_LENGTH + 4, &Serial);
+              free(junk);
+            }
+            char test0d[] = "!s";
+            parseIncomingInput(junk, sizeof test0d, &Serial);
+            break;
+          }
+        } 
         break;
       }
 
       case 'e': {
         commandIsValid = true;
-        sendEthernetMessage(ED_TERMINAL, (byte *)(command+2), strlen(command) - 2);
+        sendEthernetTerminalMessage((byte *)(command+2), strlen(command) - 2);
         break;
       }
     }
@@ -143,12 +163,12 @@ bool firstLetterD(const char *command)
   return commandIsValid;
 }
 
-//      console->println("!pr param# value = read EEPROM parameter");
-//      console->println("!ps param# value = set EEPROM parameter.  if value = d, use default");
-//      console->println("!pd = set all EEPROM parameter back to default");
-//      console->println("!pa = list all EEPROM parameters");
-//      console->println("!p? = list EEPROM parameter names");
-bool firstLetterP(const char *command) 
+//      replyConsole->println("!pr param# value = read EEPROM parameter");
+//      replyConsole->println("!ps param# value = set EEPROM parameter.  if value = d, use default");
+//      replyConsole->println("!pd = set all EEPROM parameter back to default");
+//      replyConsole->println("!pa = list all EEPROM parameters");
+//      replyConsole->println("!p? = list EEPROM parameter names");
+bool firstLetterP(const char *command, Print *replyConsole)  
 {
   bool commandIsValid = false;
  
@@ -158,12 +178,12 @@ bool firstLetterP(const char *command)
       setSettingDefaultAll();
       EEPROMSettings i;
       for (i = SET_FIRST; i < SET_INVALID; i = (EEPROMSettings)((int)i + 1)) {
-        console->print("The value of ");
-        console->print(getEEPROMSettingLabel(i));
-        console->print("[");  
-        console->print(i);
-        console->print("] was set to ");
-        console->println(getSetting(i));
+        replyConsole->print("The value of ");
+        replyConsole->print(getEEPROMSettingLabel(i));
+        replyConsole->print("[");  
+        replyConsole->print(i);
+        replyConsole->print("] was set to ");
+        replyConsole->println(getSetting(i));
       }  
       break;
     }
@@ -171,11 +191,11 @@ bool firstLetterP(const char *command)
       commandIsValid = true;
       EEPROMSettings i;
       for (i = SET_FIRST; i < SET_INVALID; i = (EEPROMSettings)((int)i + 1)) {
-        console->print(i);
-        console->print(": ");            
-        console->print(getEEPROMSettingLabel(i));
-        console->print(": ");
-        console->println(getSetting(i));
+        replyConsole->print(i);
+        replyConsole->print(": ");            
+        replyConsole->print(getEEPROMSettingLabel(i));
+        replyConsole->print(": ");
+        replyConsole->println(getSetting(i));
       }  
       break;
     }
@@ -189,12 +209,12 @@ bool firstLetterP(const char *command)
       commandIsValid = true;
       EEPROMSettings whichSetting = (EEPROMSettings)param;
       value = getSetting(whichSetting);
-      console->print("The value of ");
-      console->print(getEEPROMSettingLabel(whichSetting));
-      console->print("[");  
-      console->print(whichSetting);
-      console->print("] is ");
-      console->println(value);
+      replyConsole->print("The value of ");
+      replyConsole->print(getEEPROMSettingLabel(whichSetting));
+      replyConsole->print("[");  
+      replyConsole->print(whichSetting);
+      replyConsole->print("] is ");
+      replyConsole->println(value);
       break;
     }
     case 's':{
@@ -213,12 +233,12 @@ bool firstLetterP(const char *command)
       } else {
         value = setSetting(whichSetting, value);
       }
-      console->print("The value of ");
-      console->print(getEEPROMSettingLabel(whichSetting));
-      console->print("[");  
-      console->print(whichSetting);
-      console->print("] was set to ");
-      console->println(value);         
+      replyConsole->print("The value of ");
+      replyConsole->print(getEEPROMSettingLabel(whichSetting));
+      replyConsole->print("[");  
+      replyConsole->print(whichSetting);
+      replyConsole->print("] was set to ");
+      replyConsole->println(value);         
       commandIsValid = true;
       break;
     }
@@ -226,9 +246,9 @@ bool firstLetterP(const char *command)
       commandIsValid = true;
       EEPROMSettings i;
       for (i = SET_FIRST; i < SET_INVALID; i = (EEPROMSettings)((int)i + 1)) {
-        console->print((int)i);
-        console->print(" = ");
-        console->println(getEEPROMSettingLabel(i));
+        replyConsole->print((int)i);
+        replyConsole->print(" = ");
+        replyConsole->println(getEEPROMSettingLabel(i));
       }
       break;
     }
@@ -237,40 +257,40 @@ bool firstLetterP(const char *command)
 }
 
 // execute the command encoded in commandString.  Null-terminated
-void executeCommand(char command[]) 
+void executeCommand(char command[], Print *replyConsole)  
 {
   bool commandIsValid = false;
   switch (command[0]) {
     case '?': {
       commandIsValid = true;
-      console->println("commands (turn CR+LF on):");
-      console->println("!cr = read clock date+time");
-      console->println("!cs Dec 26 2009 12:34:56 = set clock date + time (capitalisation, character count, and spacings must match exactly)");
-      console->println("!d = print debug info");
-      console->println("!da = list all simulate-able variables");
-      console->println("!dc variable# = cancel simulation for variable #, if variable# = a then cancel all");
-      console->println("!ds variable# value = simulate variable# with value");
-      console->println("!de string = echo string to ethernet port");
-      console->println("!dt test# = execute debug test #");
-      console->println("!le = erase log file");
-      console->println("!li = log file info");
-      console->println("!lr sample# count = read log data");
-      console->println("!lv sample# count = view log data (more readable than lr)");
-      console->println("!pr param# = read EEPROM parameter");
-      console->println("!ps param# value = set EEPROM parameter.  if value = d, use default");
-      console->println("!pd = set all EEPROM parameter back to default");
-      console->println("!pa = read all EEPROM parameters");
-      console->println("!p? = list EEPROM parameter names");
-      console->println("!s = display solar readings and pump runtime");
-      console->println("!t = toggle echo of temp probe readings");
+      replyConsole->println("commands (turn CR+LF on):");
+      replyConsole->println("!cr = read clock date+time");
+      replyConsole->println("!cs Dec 26 2009 12:34:56 = set clock date + time (capitalisation, character count, and spacings must match exactly)");
+      replyConsole->println("!d = print debug info");
+      replyConsole->println("!da = list all simulate-able variables");
+      replyConsole->println("!dc variable# = cancel simulation for variable #, if variable# = a then cancel all");
+      replyConsole->println("!ds variable# value = simulate variable# with value");
+      replyConsole->println("!de string = echo string to ethernet port");
+      replyConsole->println("!dt test# = execute debug test #");
+      replyConsole->println("!le = erase log file");
+      replyConsole->println("!li = log file info");
+      replyConsole->println("!lr sample# count = read log data");
+      replyConsole->println("!lv sample# count = view log data (more readable than lr)");
+      replyConsole->println("!pr param# = read EEPROM parameter");
+      replyConsole->println("!ps param# value = set EEPROM parameter.  if value = d, use default");
+      replyConsole->println("!pd = set all EEPROM parameter back to default");
+      replyConsole->println("!pa = read all EEPROM parameters");
+      replyConsole->println("!p? = list EEPROM parameter names");
+      replyConsole->println("!s = display solar readings and pump runtime");
+      replyConsole->println("!t = toggle echo of temp probe readings");
       break;
     }
     case 'd': {
-      commandIsValid = firstLetterD(command);
+      commandIsValid = firstLetterD(command, replyConsole);
       break;
     }
     case 'p': {
-      commandIsValid = firstLetterP(command);
+      commandIsValid = firstLetterP(command, replyConsole);
       break;
     }
     case 't': {
@@ -278,27 +298,27 @@ void executeCommand(char command[])
       echoProbeReadings = !echoProbeReadings;
       if (echoProbeReadings) {
         for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
-          console->print(probeNames[i]);
-          console->print(":");
+          replyConsole->print(probeNames[i]);
+          replyConsole->print(":");
         }
-        console->println();
+        replyConsole->println();
       }  
       break;
     }
     case 's': {
       commandIsValid = true;
-      console->print("solar intensity:"); 
+      replyConsole->print("solar intensity:"); 
         if (solarIntensityReadingInvalid) {
-          console->println("INVALID");
+          replyConsole->println("INVALID");
         } else {
-          console->println(smoothedSolarIntensity.getEWMA());
+          replyConsole->println(smoothedSolarIntensity.getEWMA());
         }
-      console->print("cumulative insolation:"); console->println(cumulativeInsolation);
-      console->print("surge tank level:"); console->println(surgeTankLevelOK ? "OK" : "LOW");
-      console->print("pump state:");
-      console->print(getCurrentPumpStateLabel());
-      console->print("["); console->print(getPumpState()); console->println("]");
-      console->print("cumulative pump runtime (s):"); console->println(pumpRuntimeSeconds);
+      replyConsole->print("cumulative insolation:"); replyConsole->println(cumulativeInsolation);
+      replyConsole->print("surge tank level:"); replyConsole->println(surgeTankLevelOK ? "OK" : "LOW");
+      replyConsole->print("pump state:");
+      replyConsole->print(getCurrentPumpStateLabel());
+      replyConsole->print("["); replyConsole->print(getPumpState()); replyConsole->println("]");
+      replyConsole->print("cumulative pump runtime (s):"); replyConsole->println(pumpRuntimeSeconds);
       break;
     }
     case 'c': {
@@ -308,17 +328,17 @@ void executeCommand(char command[])
           if (realTimeClockStatus) {
             printDateTime(*console, currentTime);
           } else {
-            console->println("real time clock is not running");  
+            replyConsole->println("real time clock is not running");  
           }
           break;
         }
         case 's': {  
           commandIsValid = true;
           if (strlen(command) < 3 + DATETIMEFORMAT_TOTALLENGTH) {
-            console->println("syntax error.  !cs Dec 26 2009 12:34:56 (capitalisation, character count, and spacings must match exactly)");
+            replyConsole->println("syntax error.  !cs Dec 26 2009 12:34:56 (capitalisation, character count, and spacings must match exactly)");
           } else {
             DateTime newTime(command+3, command+3 + DATETIMEFORMAT_TIME_STARTPOS);
-            console->print("setting date+time to ");
+            replyConsole->print("setting date+time to ");
             printDateTime(*console, newTime);
             setDateTime(command+3); 
           } 
@@ -333,17 +353,17 @@ void executeCommand(char command[])
           commandIsValid = true; 
           bool success = dataLogErase();
           if (success) {
-            console->println("data log erased successfully");
+            replyConsole->println("data log erased successfully");
           } else {  
-            console->println("failed to erase datafile for logged data");
+            replyConsole->println("failed to erase datafile for logged data");
           }
           break;
         }
         case 'i': { //li file info
           commandIsValid = true;
           unsigned long filesize = dataLogNumberOfSamples();
-          console->print(filesize);
-          console->println(" samples");
+          replyConsole->print(filesize);
+          replyConsole->println(" samples");
           break;
         }
         case 'v':      //lv sample# numberOfSamples - read
@@ -354,7 +374,7 @@ void executeCommand(char command[])
           arg1 = strtol(command + 2, &nextnumber, 10);
           arg2 = strtol(nextnumber, &nextnumber, 10);
           if (arg1 < 0 || arg2 <= 0) {
-            console->println("invalid arguments");
+            replyConsole->println("invalid arguments");
           } else {
             dataLogExtractEntries(*console, arg1, arg2, (command[1] == 'r' ? "" : ": "));
           }
@@ -369,21 +389,21 @@ void executeCommand(char command[])
   }
 
   if (!commandIsValid) {
-    console->print("unknown command:");
-    console->println(command);
-    console->println("use ? for help");
+    replyConsole->print("unknown command:");
+    replyConsole->println(command);
+    replyConsole->println("use ? for help");
   }
 }
 
 // look for incoming serial input (commands); collect the command and execute it when the entire command has arrived.
 void tickCommands()
 {
-  while (consoleInput->available()) {
+  while (Serial.available()) {
     if (commandBufferIdx < -1  || commandBufferIdx > COMMAND_BUFFER_SIZE) {
       assertFailureCode = ASSERT_INDEX_OUT_OF_BOUNDS;
       commandBufferIdx = -1;
     }
-    int nextChar = consoleInput->read();
+    int nextChar = Serial.read();
     if (nextChar == COMMAND_START_CHAR) {
       commandBufferIdx = 0;        
     } else if (nextChar == '\n') {
@@ -395,7 +415,7 @@ void tickCommands()
           console->print("Command too long:"); console->println(commandBuffer);
         } else {
           commandBuffer[commandBufferIdx++] = '\0';
-          executeCommand(commandBuffer);
+          executeCommand(commandBuffer, console);
         } 
         commandBufferIdx = -1; 
       }
@@ -403,6 +423,23 @@ void tickCommands()
       if (commandBufferIdx >= 0 && commandBufferIdx < COMMAND_BUFFER_SIZE) {
         commandBuffer[commandBufferIdx++] = nextChar;
       }
+    }
+  }
+}
+
+void parseIncomingInput(char command[], int bufferlen, Print *replyConsole)
+{
+  char *end;
+  if (bufferlen < 1 || command[0] != COMMAND_START_CHAR) {
+    replyConsole->println("Type !? for help");
+  } else {
+    end = memchr(command, bufferlen, '\0');
+    if (NULL == end) {
+      replyConsole->println("Program error: missing terminating null");
+    } else if (end - command > MAX_COMMAND_LENGTH) {
+      replyConsole->print("Command too long:"); replyConsole->println(commandBuffer);    
+    } else {
+      executeCommand(commandBuffer+1, replyConsole);    
     }
   }
 }
