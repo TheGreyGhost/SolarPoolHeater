@@ -140,13 +140,13 @@ bool firstLetterD(const char *command, Print *replyConsole)
             parseIncomingInput(test0b, sizeof test0b - 1, &Serial);
             char *junk = (char *)malloc(MAX_COMMAND_LENGTH + 4);
             if (NULL != junk) {
-              memset(junk, MAX_COMMAND_LENGTH + 4, '!');
+              memset(junk, '!', MAX_COMMAND_LENGTH + 4);
               junk[MAX_COMMAND_LENGTH+3] = '\0';
               parseIncomingInput(junk, MAX_COMMAND_LENGTH + 4, &Serial);
               free(junk);
             }
             char test0d[] = "!s";
-            parseIncomingInput(junk, sizeof test0d, &Serial);
+            parseIncomingInput(test0d, sizeof test0d, &Serial);
             break;
           }
         } 
@@ -433,13 +433,13 @@ void parseIncomingInput(char command[], int bufferlen, Print *replyConsole)
   if (bufferlen < 1 || command[0] != COMMAND_START_CHAR) {
     replyConsole->println("Type !? for help");
   } else {
-    end = memchr(command, bufferlen, '\0');
+    end = (char *)memchr(command, '\0', bufferlen);
     if (NULL == end) {
       replyConsole->println("Program error: missing terminating null");
     } else if (end - command > MAX_COMMAND_LENGTH) {
-      replyConsole->print("Command too long:"); replyConsole->println(commandBuffer);    
+      replyConsole->print("Command too long:"); replyConsole->println(command);    
     } else {
-      executeCommand(commandBuffer+1, replyConsole);    
+      executeCommand(command+1, replyConsole);    
     }
   }
 }
