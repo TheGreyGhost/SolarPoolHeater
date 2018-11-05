@@ -3,6 +3,7 @@
 #include <Ethernet.h>
 #include <EthernetUdp.h>
 #include "DebugTests.h"
+#include "Commands.h"
 
 const char* ethernetStatusText[4] = {"Ethernet shield not found", "Ethernet cable is not connected", "No sockets available", "OK"};
 EthernetStatus ethernetStatus;
@@ -22,7 +23,7 @@ unsigned int PORT_LOCAL_DATASTREAM = 53202;      // local datastream port to lis
 unsigned int PORT_REMOTE_DATASTREAM = 53202;      // remote port to send datastream to
 
 // buffers for receiving and sending data
-const int UDP_PACKET_CHUNK_SIZE = 64;
+const int UDP_PACKET_CHUNK_SIZE = 64;           // greater than COMMAND_BUFFER_SIZE
 char packetBufferChunk[UDP_PACKET_CHUNK_SIZE];  // buffer to hold incoming packet,
 
 // An EthernetUDP instance to let us send and receive packets over UDP
@@ -61,34 +62,44 @@ void setupEthernet() {
 
 void tickEthernet() {
   // if there's data available, read a packet
+  // if it's on the terminal port, parse it as a command
+  // otherwise, echo the packet to the console (for now - debugging)
   int packetSize = udpConnection.parsePacket();
   if (packetSize) {
-    Serial.print("Received packet of size ");
-    Serial.println(packetSize);
-    Serial.print("From ");
-    IPAddress remote = udpConnection.remoteIP();
-    for (int i=0; i < 4; i++) {
-      Serial.print(remote[i], DEC);
-      if (i < 3) {
-        Serial.print(".");
+    if (udpConnection.localPort() == PORT_LOCAL_TERMINAL) {
+        int numofchars = udpConnection.read(packetBufferChunk, UDP_PACKET_CHUNK_SIZE-1);  // discard the rest (when next parsePacket is called)
+        if (numofchars >= 0 && numofchars < UDP_PACKET_CHUNK_SIZE) {
+          packetBufferChunk[numofchars] = '\0';
+          parseIncomingInput(packetBufferChunk, numofchars, &Serial);  // todo later change to Ethernet terminal for reply
+        }  
+    } else {
+      IPAddress remoteIP = udpConnection.remoteIP();
+      Serial.print("Received packet of size ");
+      Serial.println(packetSize);
+      Serial.print("From ");
+      for (int i=0; i < 4; i++) {
+        Serial.print(remoteIP[i], DEC);
+        if (i < 3) {
+          Serial.print(".");
+        }
       }
-    }
-    Serial.print(", port ");
-    Serial.println(udpConnection.remotePort());
-    Serial.println("Contents:");
+      Serial.print(", port ");
+      Serial.println(udpConnection.remotePort());
+      Serial.println("Contents:");
 
-    // read the packet into packetBufffer
-    int numofchars;
-    bool readmore = true;
-    do {
-      numofchars = udpConnection.read(packetBufferChunk, UDP_PACKET_CHUNK_SIZE);
-      if (numofchars < 0) {
-        readmore = false;
-      } else {
-        Serial.write(packetBufferChunk, numofchars);
-      }
-    } while (readmore);
-    Serial.println();
+      // read the packet into packetBufffer
+      int numofchars;
+      bool readmore = true;
+      do {
+        numofchars = udpConnection.read(packetBufferChunk, UDP_PACKET_CHUNK_SIZE);
+        if (numofchars < 0) {
+          readmore = false;
+        } else {
+          Serial.write(packetBufferChunk, numofchars);
+        }
+      } while (readmore);
+      Serial.println();
+    }
   }
 }
 

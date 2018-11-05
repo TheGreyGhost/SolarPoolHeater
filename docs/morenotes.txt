@@ -11,4 +11,8 @@ nc -u 192.168.2.35 53201 (send to 192.168.2.35:53201)
 Commands are received by either Serial (in tickCommands) or Ethernet (tickEthernet which calls Commands::parseIncomingInput)
 Commands must have ! as the starting character
 
-to test: Commands::parseIncomingInput
+
+What to do next: patch EthernetLink into parseIncomingInput
+test it: send to ethernet:
+- commands
+- excessively long packet (> 64)
