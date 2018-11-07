@@ -54,7 +54,7 @@ void setupEthernet() {
       Serial.print("UDP server is at ");
       Serial.print(Ethernet.localIP());
       Serial.print(":");
-      Serial.print(PORT_LOCAL_TERMINAL);
+      Serial.println(PORT_LOCAL_TERMINAL);
       outputDestinationTerminal = new OutputDestinationEthernet(udpConnection, IP_REMOTE, PORT_REMOTE_TERMINAL);
     }  
   }
@@ -73,8 +73,17 @@ void tickEthernet() {
           parseIncomingInput(packetBufferChunk, numofchars, &Serial);  // todo later change to Ethernet terminal for reply
         }  
     } else {
+      IPAddress localIP = udpConnection.localIP();
       IPAddress remoteIP = udpConnection.remoteIP();
-      Serial.print("Received packet of size ");
+      for (int i=0; i < 4; i++) {
+        Serial.print(localIP[i], DEC);
+        if (i < 3) {
+          Serial.print(".");
+        }
+      }
+      Serial.print(":");
+      Serial.print(udpConnection.localPort());
+      Serial.print(" received packet of size ");
       Serial.println(packetSize);
       Serial.print("From ");
       for (int i=0; i < 4; i++) {
@@ -83,7 +92,7 @@ void tickEthernet() {
           Serial.print(".");
         }
       }
-      Serial.print(", port ");
+      Serial.print(":");
       Serial.println(udpConnection.remotePort());
       Serial.println("Contents:");
 
