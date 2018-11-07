@@ -16,7 +16,8 @@ size_t OutputDestinationSerial::write(const uint8_t *buf, size_t size)
 }
 
 OutputDestinationEthernet::OutputDestinationEthernet(EthernetUDP &udpConnection, IPAddress remoteIP, unsigned int remotePort)
- : m_udpConnection(udpConnection), m_remoteIP(remoteIP), m_remotePort(remotePort)
+ : m_udpConnection(udpConnection), m_remoteIP(remoteIP), m_remotePort(remotePort), 
+   m_queuedBytes(0)
 {
 }
 
@@ -54,6 +55,7 @@ size_t OutputDestinationEthernet::write(const uint8_t *buf, size_t size)
     bytesSent += bytesToAdd;
   }
   if (bytesSent < size) {
+    bytesToAdd = size - bytesSent;
     addChunk(buf + bytesSent, bytesToAdd, false);
   }
   return size;
@@ -62,15 +64,24 @@ size_t OutputDestinationEthernet::write(const uint8_t *buf, size_t size)
 // add a chunk to the packet.  Start a new packet if necessary, end the packet if flush is true
 size_t OutputDestinationEthernet::addChunk(const uint8_t *buf, size_t size, bool flush)
 {
-  if (m_queuedBytes == 0) {
-    m_udpConnection.beginPacket(m_remoteIP, m_remotePort);
-  }
-  m_udpConnection.write(buf, size);
-  if (flush) {
+  if (size > 0) {
+    if (m_queuedBytes == 0) {
+      m_udpConnection.beginPacket(m_remoteIP, m_remotePort);
+      Serial.println("beginPacket"); // todo remove
+    }
+    m_udpConnection.write(buf, size);
+    m_queuedBytes += size;
+  }  
+  Serial.print("Chunk size:");
+  Serial.println(size);
+//  Serial.write(buf, size); // todo remove
+  if (flush && m_queuedBytes > 0) {
     m_udpConnection.endPacket();     
+    Serial.println("endPacket");
     m_queuedBytes = 0;
   } else {
-    m_queuedBytes += size;
+    Serial.print("queued:");
+    Serial.println(m_queuedBytes);
   }  
   return size;
 }
