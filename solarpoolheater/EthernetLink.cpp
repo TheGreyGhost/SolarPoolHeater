@@ -64,6 +64,10 @@ void setupEthernet() {
   }
 }
 
+TODO: test my changes that 
+1) flip console between serial and ethernet
+2) assign a serialConsole to console
+
 void tickEthernet() {
   // if there's data available, read a packet
   // if it's on the terminal port, parse it as a command
@@ -73,6 +77,7 @@ void tickEthernet() {
     int numofchars = udpConnectionTerminal.read(packetBufferChunk, UDP_PACKET_CHUNK_SIZE-1);  // discard the rest (when next parsePacket is called)
     if (numofchars >= 0 && numofchars < UDP_PACKET_CHUNK_SIZE) {
       packetBufferChunk[numofchars] = '\0';
+      console = outputDestinationTerminal;
       parseIncomingInput(packetBufferChunk, numofchars + 1, outputDestinationTerminal);  // todo later change to Ethernet terminal for reply
     }  
   }

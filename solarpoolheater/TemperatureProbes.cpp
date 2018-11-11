@@ -58,6 +58,7 @@ volatile enum ProbeStatus probeStatuses[NUMBER_OF_PROBES];
 const char* probeNames[NUMBER_OF_PROBES] = {"HX_HOT_INLET", "HX_HOT_OUTLET", "HX_COLD_INLET", "HX_COLD_OUTLET", "AMBIENT"};
 
 bool echoProbeReadings = false;
+Print *echoDestination;
 
 void copyProbeAddress(DeviceAddress dest, DeviceAddress source) {
   int i;

@@ -9,8 +9,8 @@
 #include "Simulate.h"
 #include "Settings.h"
 #include "EthernetLink.h"
+#include "DebugTests.h"
 
-const int MAX_COMMAND_LENGTH = 30;
 const int COMMAND_BUFFER_SIZE = MAX_COMMAND_LENGTH + 2;  // if buffer fills to max size, truncation occurs
 int commandBufferIdx = -1;
 char commandBuffer[COMMAND_BUFFER_SIZE];  
@@ -129,27 +129,7 @@ bool firstLetterD(const char *command, Print *replyConsole)
           break;
         }
         commandIsValid = true;
-
-          // 0 = process command via parseIncomingInput:
-          //   first = missing !, second = no trailing \0, third = too long, fourth = valid status command
-        switch (variable) {
-          case 0: {
-            char test0a[] = "no!"; 
-            parseIncomingInput(test0a, sizeof test0a, &Serial);
-            char test0b[] = "!no"; 
-            parseIncomingInput(test0b, sizeof test0b - 1, &Serial);
-            char *junk = (char *)malloc(MAX_COMMAND_LENGTH + 4);
-            if (NULL != junk) {
-              memset(junk, '!', MAX_COMMAND_LENGTH + 4);
-              junk[MAX_COMMAND_LENGTH+3] = '\0';
-              parseIncomingInput(junk, MAX_COMMAND_LENGTH + 4, &Serial);
-              free(junk);
-            }
-            char test0d[] = "!s";
-            parseIncomingInput(test0d, sizeof test0d, &Serial);
-            break;
-          }
-        } 
+        runTest((int)variable);
         break;
       }
 
@@ -407,6 +387,7 @@ void tickCommands()
     if (nextChar == COMMAND_START_CHAR) {
       commandBufferIdx = 0;        
     } else if (nextChar == '\n') {
+      console = serialConsole;
       if (commandBufferIdx == -1) {
         console->println("Type !? for help");
       } else if (commandBufferIdx > 0) {
@@ -415,7 +396,7 @@ void tickCommands()
           console->print("Command too long:"); console->println(commandBuffer);
         } else {
           commandBuffer[commandBufferIdx++] = '\0';
-          executeCommand(commandBuffer, console);
+          executeCommand(commandBuffer, serialConsole);
         } 
         commandBufferIdx = -1; 
       }
