@@ -190,3 +190,38 @@ void dataLogExtractEntries(Print &dest, long startidx, long numberOfEntries, con
     }
   }
 }
+
+// print the given entry to dest, in the format of raw bytes from the log file
+// returns 0 for success or other for failure code
+int dataLogRetrieveEntryBytes(Print &dest, long startidx)
+{
+  if (logfileStatus != LFS_OK) {
+    return logfileStatus + 1;  
+  }
+  unsigned long filesize = datalogfile.size();
+  unsigned long samplesInFile = filesize / DATALOG_BYTES_PER_SAMPLE;
+  if (startidx >= samplesInFile) {
+    return 4;
+  } 
+
+  byte buffer[DATALOG_BYTES_PER_SAMPLE];
+    
+  datalogfile.seek(startidx * DATALOG_BYTES_PER_SAMPLE);
+
+ /* For success read() returns the number of bytes read.
+ * A value less than nbyte, including zero, will be returned
+ * if end of file is reached.
+ * If an error occurs, read() returns -1.  Possible errors include
+ * read() called before a file has been opened, corrupt file system
+ * or an I/O error occurred.
+ */
+  int bytesread = datalogfile.readBytes(buffer, sizeof(buffer));
+  if (bytesread == -1) return 5;
+  if (bytesread < DATALOG_BYTES_PER_SAMPLE) return 6;
+  dest.write(buffer, DATALOG_BYTES_PER_SAMPLE);
+  return 0;
+}
+
+
+
+

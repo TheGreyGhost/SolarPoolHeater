@@ -13,14 +13,6 @@ EthernetStatus ethernetStatus;
 byte MAC_LOCAL[] = {
   0x31, 0x4E, 0xF8, 0xFB, 0x21, 0xDC
 };
-IPAddress IP_LOCAL(192, 168, 2, 35);
-IPAddress IP_REMOTE(192, 168, 2, 34);
-
-unsigned int PORT_LOCAL_TERMINAL = 53201;      // local port to listen on
-unsigned int PORT_REMOTE_TERMINAL = 53201;      // remote port to send to
-
-unsigned int PORT_LOCAL_DATASTREAM = 53202;      // local datastream port to listen on 
-unsigned int PORT_REMOTE_DATASTREAM = 53202;      // remote port to send datastream to
 
 // buffers for receiving and sending data
 const int UDP_PACKET_CHUNK_SIZE = 64;           // greater than COMMAND_BUFFER_SIZE
@@ -121,3 +113,11 @@ void sendEthernetTerminalMessage(const byte msg[], int messagelength)
     udpConnectionTerminal.write(msg, messagelength);
     udpConnectionTerminal.endPacket();
 }
+
+// start a DataStream message; provides an EthernetUDP to use
+EthernetUDP &prepareEthernetDatastreamMessage()
+{
+  udpConnectionDataStream.beginPacket(IP_REMOTE, PORT_REMOTE_DATASTREAM);
+  return udpConnectionDataStream;
+}
+

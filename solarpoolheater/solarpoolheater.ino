@@ -10,6 +10,7 @@
 #include "SolarIntensity.h"
 #include "Simulate.h"
 #include "EthernetLink.h"
+#include "DataStream.h"
 
 /********************************************************************/
 
@@ -30,6 +31,7 @@ void setup(void)
   setupEthernet();
   setupCommands();
   setupSolarIntensity();
+  setupDataStream();
 } 
 
 void loop(void) 

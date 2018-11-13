@@ -11,8 +11,31 @@ nc -u 192.168.2.35 53201 (send to 192.168.2.35:53201)
 Commands are received by either Serial (in tickCommands) or Ethernet (tickEthernet which calls Commands::parseIncomingInput)
 Commands must have ! as the starting character
 
+There are two Ethernet channels - terminal, and datastream
+terminal is the same as the serial terminal
 
-What to do next: patch EthernetLink into parseIncomingInput
-test it: send to ethernet:
-- commands
-- excessively long packet (> 64)
+datastream uses the following protocol:
+
+incoming command:
+!s = request current sensor information
+!p = request parameter information
+!l{dword row nr}{word count} = request entries from log file
+!n = request number of entries in log file
+!c = cancel transmissions (log file)
+
+response:
+!l{byte version} then
+
+for sensor:
+
+for parameter:
+
+for logfile:
+!l -> the byte stream from the log file itself
+!n -> dword number of entries in log file
+
+The final byte in the packet is {byte status: 0 = ok, else error code}
+Each response is a single UDP packet only.
+
+Currently up to: 
+  working on the datastream for log file
