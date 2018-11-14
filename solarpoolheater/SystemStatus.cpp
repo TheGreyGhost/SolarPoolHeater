@@ -47,6 +47,11 @@ void printDebugInfo(Print &dest)
   dest.print(solarIntensityReadingInvalid ? "INVALID " : "OK");
   dest.print(" with lastInvalidReading:");
   dest.println(lastInvalidReading);
+  dest.print("number of DataStream errors:");
+  dest.println(dataStreamErrorCount);
+  dest.print("with last error codes: ");
+  dest.print(lastDataStreamError);
+  dest.println(lastDataStreamErrorCode);
 }
 
 DigitalPin<DIGPIN_STATUS_LED> pinStatusLED;

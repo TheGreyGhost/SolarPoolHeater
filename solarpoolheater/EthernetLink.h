@@ -14,7 +14,8 @@ void tickEthernet();
 void sendEthernetTerminalMessage(const byte msg[], int messagelength);
 
 // start a DataStream message; provides an EthernetUDP to use
-EthernetUDP &prepareEthernetDatastreamMessage();
+// true for success
+bool prepareEthernetDatastreamMessage(EthernetUDP * &connection);
 
 // retrieve an OutputDestination that will send to the ethernet (for terminal comms)
 extern OutputDestinationEthernet *outputDestinationTerminal;

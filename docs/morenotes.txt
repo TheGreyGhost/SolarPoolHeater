@@ -38,4 +38,4 @@ The final byte in the packet is {byte status: 0 = ok, else error code}
 Each response is a single UDP packet only.
 
 Currently up to: 
-  working on the datastream for log file
+  working on the datastream commands

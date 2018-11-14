@@ -70,12 +70,18 @@ void tickEthernet() {
     if (numofchars >= 0 && numofchars < UDP_PACKET_CHUNK_SIZE) {
       packetBufferChunk[numofchars] = '\0';
       console = outputDestinationTerminal;
-      parseIncomingInput(packetBufferChunk, numofchars + 1, outputDestinationTerminal);  // todo later change to Ethernet terminal for reply
+      parseIncomingInput(packetBufferChunk, numofchars + 1, outputDestinationTerminal); 
     }  
   }
 
   packetSize = udpConnectionDatastream.parsePacket();
   if (packetSize) {
+    int numofchars = udpConnectionDatastream.read(packetBufferChunk, UDP_PACKET_CHUNK_SIZE);  // discard the rest (when next parsePacket is called)
+    if (numofchars >= 0 && numofchars < UDP_PACKET_CHUNK_SIZE) {
+      executeDataStreamCommand(packetBufferChunk, numofchars);
+    }  
+    
+/*        
     IPAddress remoteIP = udpConnectionDatastream.remoteIP();
     Serial.print("Port ");
     Serial.print(udpConnectionDatastream.localPort());
@@ -91,7 +97,6 @@ void tickEthernet() {
     Serial.print(":");
     Serial.println(udpConnectionDatastream.remotePort());
     Serial.println("Contents:");
-
     // read the packet into packetBufffer
     int numofchars;
     bool readmore = true;
@@ -104,6 +109,8 @@ void tickEthernet() {
       }
     } while (readmore);
     Serial.println();
+  */
+    
   }
 }
 
@@ -115,9 +122,9 @@ void sendEthernetTerminalMessage(const byte msg[], int messagelength)
 }
 
 // start a DataStream message; provides an EthernetUDP to use
-EthernetUDP &prepareEthernetDatastreamMessage()
+bool prepareEthernetDatastreamMessage(EthernetUDP * &connection);
 {
-  udpConnectionDataStream.beginPacket(IP_REMOTE, PORT_REMOTE_DATASTREAM);
-  return udpConnectionDataStream;
+  connection = &udpConnectionDataStream;
+  int success = udpConnectionDataStream.beginPacket(IP_REMOTE, PORT_REMOTE_DATASTREAM);
+  return (success == 1);
 }
-
