@@ -84,7 +84,7 @@ void tickEthernet() {
   packetSize = udpConnectionDataStream.parsePacket();
   if (packetSize) {
     int numofchars = udpConnectionDataStream.read(packetBufferChunk, UDP_PACKET_CHUNK_SIZE);  // discard the rest (when next parsePacket is called)
-    if (numofchars >= 0 && numofchars < UDP_PACKET_CHUNK_SIZE) {
+    if (numofchars >= 0 && numofchars <= UDP_PACKET_CHUNK_SIZE) {
       executeDataStreamCommand(packetBufferChunk, numofchars);
     }  
     

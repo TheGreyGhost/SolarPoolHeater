@@ -33,7 +33,7 @@ void printDebugInfo(Print &dest)
   }
   dest.print("real time clock is running:"); dest.println(realTimeClockStatus);
   dest.print("log file status:");
-  if (logfileStatus >= 0 && logfileStatus <= LFS_OK) {
+  if (logfileStatus >= 0 && logfileStatus < LFS_LAST_STATUS_PLUS_ONE) {
     dest.println(logfileStatusText[logfileStatus]);
   } else {
     dest.println(logfileStatus);
@@ -50,8 +50,9 @@ void printDebugInfo(Print &dest)
   dest.println(lastInvalidReading);
   dest.print("number of DataStream errors:");
   dest.println(dataStreamErrorCount);
-  dest.print("with last error codes: ");
+  dest.print("with last error code: ");
   dest.print(lastDataStreamError);
+  dest.print(" subcode ");
   dest.println(lastDataStreamErrorCode);
 }
 

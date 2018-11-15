@@ -67,21 +67,21 @@ size_t OutputDestinationEthernet::addChunk(const uint8_t *buf, size_t size, bool
   if (size > 0) {
     if (m_queuedBytes == 0) {
       m_udpConnection.beginPacket(m_remoteIP, m_remotePort);
-      Serial.println("beginPacket"); // todo remove
+//      Serial.println("beginPacket"); // todo remove
     }
     m_udpConnection.write(buf, size);
     m_queuedBytes += size;
   }  
-  Serial.print("Chunk size:");
-  Serial.println(size);
+//  Serial.print("Chunk size:");
+//  Serial.println(size);
 //  Serial.write(buf, size); // todo remove
   if (flush && m_queuedBytes > 0) {
     m_udpConnection.endPacket();     
-    Serial.println("endPacket");
+//    Serial.println("endPacket");
     m_queuedBytes = 0;
-  } else {
-    Serial.print("queued:");
-    Serial.println(m_queuedBytes);
+//  } else {
+//    Serial.print("queued:");
+//    Serial.println(m_queuedBytes);
   }  
   return size;
 }
