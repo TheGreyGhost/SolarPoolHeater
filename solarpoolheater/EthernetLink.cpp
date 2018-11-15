@@ -4,6 +4,8 @@
 #include <EthernetUdp.h>
 #include "DebugTests.h"
 #include "Commands.h"
+#include "SystemStatus.h"
+#include "DataStream.h"
 
 const char* ethernetStatusText[4] = {"Ethernet shield not found", "Ethernet cable is not connected", "No sockets available", "OK"};
 EthernetStatus ethernetStatus;
@@ -14,13 +16,22 @@ byte MAC_LOCAL[] = {
   0x31, 0x4E, 0xF8, 0xFB, 0x21, 0xDC
 };
 
+IPAddress IP_LOCAL(192, 168, 2, 35);
+IPAddress IP_REMOTE(192, 168, 2, 34);
+
+unsigned int PORT_LOCAL_TERMINAL = 53201;      // local port to listen on
+unsigned int PORT_REMOTE_TERMINAL = 53201;      // remote port to send to
+
+unsigned int PORT_LOCAL_DATASTREAM = 53202;      // local datastream port to listen on 
+unsigned int PORT_REMOTE_DATASTREAM = 53202;      // remote port to send datastream to
+
 // buffers for receiving and sending data
 const int UDP_PACKET_CHUNK_SIZE = 64;           // greater than COMMAND_BUFFER_SIZE
 char packetBufferChunk[UDP_PACKET_CHUNK_SIZE];  // buffer to hold incoming packet,
 
 // An EthernetUDP instance to let us send and receive packets over UDP
 EthernetUDP udpConnectionTerminal;
-EthernetUDP udpConnectionDatastream;
+EthernetUDP udpConnectionDataStream;
 
 OutputDestinationEthernet *outputDestinationTerminal;
 
@@ -38,7 +49,7 @@ void setupEthernet() {
   } else {
     // start UDP
     int success1 = udpConnectionTerminal.begin(PORT_LOCAL_TERMINAL);  
-    int success2 = udpConnectionDatastream.begin(PORT_LOCAL_DATASTREAM);
+    int success2 = udpConnectionDataStream.begin(PORT_LOCAL_DATASTREAM);
     
     if (success1 != 1 || success2 != 1) {
       ethernetStatus = ES_NO_SOCKETS;
@@ -56,10 +67,6 @@ void setupEthernet() {
   }
 }
 
-TODO: test my changes that 
-1) flip console between serial and ethernet
-2) assign a serialConsole to console
-
 void tickEthernet() {
   // if there's data available, read a packet
   // if it's on the terminal port, parse it as a command
@@ -74,9 +81,9 @@ void tickEthernet() {
     }  
   }
 
-  packetSize = udpConnectionDatastream.parsePacket();
+  packetSize = udpConnectionDataStream.parsePacket();
   if (packetSize) {
-    int numofchars = udpConnectionDatastream.read(packetBufferChunk, UDP_PACKET_CHUNK_SIZE);  // discard the rest (when next parsePacket is called)
+    int numofchars = udpConnectionDataStream.read(packetBufferChunk, UDP_PACKET_CHUNK_SIZE);  // discard the rest (when next parsePacket is called)
     if (numofchars >= 0 && numofchars < UDP_PACKET_CHUNK_SIZE) {
       executeDataStreamCommand(packetBufferChunk, numofchars);
     }  
@@ -122,7 +129,7 @@ void sendEthernetTerminalMessage(const byte msg[], int messagelength)
 }
 
 // start a DataStream message; provides an EthernetUDP to use
-bool prepareEthernetDatastreamMessage(EthernetUDP * &connection);
+bool prepareEthernetDatastreamMessage(EthernetUDP * &connection)
 {
   connection = &udpConnectionDataStream;
   int success = udpConnectionDataStream.beginPacket(IP_REMOTE, PORT_REMOTE_DATASTREAM);

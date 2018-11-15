@@ -10,6 +10,7 @@
 #include "PumpControl.h"
 #include "EthernetLink.h"
 #include "PinAssignments.h"
+#include "DataStream.h"
 
 byte assertFailureCode = 0;
 

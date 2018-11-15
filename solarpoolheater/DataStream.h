@@ -1,5 +1,6 @@
 #ifndef DATASTREAM_H   
 #define DATASTREAM_H  
+#include <Arduino.h>
 
 const byte DATASTREAM_VERSION_BYTE = 'a';
 

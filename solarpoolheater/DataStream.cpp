@@ -1,4 +1,8 @@
 #include "DataStream.h"
+#include <Ethernet.h>
+#include <EthernetUdp.h>
+#include "EthernetLink.h"
+#include "Datalog.h"
 
 const char COMMAND_START_CHAR = '!';
 
@@ -15,14 +19,14 @@ int lastDataStreamErrorCode;
 DataStreamError startResponse(byte commandecho, EthernetUDP * &outConnection)
 {
   EthernetUDP *connection;
-  bool success = prepareEthernetDatastreamMessage(&connection);
+  bool success = prepareEthernetDatastreamMessage(connection);
   outConnection = connection;
-  if (!success) return DSE_RESPONSE_CONNECTION_FAILED;
+  if (!success || connection == NULL) return DSE_RESPONSE_CONNECTION_FAILED;
 
   int bytesWritten = 0;
-  bytesWritten += connection.write(COMMAND_START_CHAR);
-  bytesWritten += connection.write(commandecho);
-  bytesWritten += connection.write(DATASTREAM_VERSION_BYTE);
+  bytesWritten += connection->write(COMMAND_START_CHAR);
+  bytesWritten += connection->write(commandecho);
+  bytesWritten += connection->write(DATASTREAM_VERSION_BYTE);
 
   if (bytesWritten == 3) return DSE_OK;
   return DSE_WRITE_FAILED;
@@ -30,9 +34,9 @@ DataStreamError startResponse(byte commandecho, EthernetUDP * &outConnection)
 
 // ends a response message with the final byte in the packet which is {byte status: 0 = ok, else error code}
 // returns DSE_OK for success, error code otherwise
-DataStreamError endResponse(EthernetUDP * connection, byte successcode)
+DataStreamError endResponse(EthernetUDP &connection, byte successCode)
 {
-  int bytesWritten = connection->write(successCode);
+  int bytesWritten = connection.write(successCode);
   if (bytesWritten != 1) return DSE_WRITE_FAILED;    
 
   successCode = connection.endPacket();
@@ -47,7 +51,7 @@ void datastreamLogError(DataStreamError dserror, int errorcode)
   lastDataStreamError = dserror;
   lastDataStreamErrorCode = errorcode;
   ++dataStreamErrorCount;
-  numberofEntriesLeftToSend = 0;
+  numberOfEntriesLeftToSend = 0;
 }
 
 // perform periodic update of the data stream
@@ -57,19 +61,19 @@ void tickDataStream()
   if (!sendingLogData) return;
 
   EthernetUDP *connection; 
-  DataStreamError errorcode = startResponse('l', &connection);
-  if (errorcode != DSE_OK)) {
+  DataStreamError errorcode = startResponse('l', connection);
+  if (errorcode != DSE_OK || connection == NULL) {
     datastreamLogError(errorcode, 0);
     return;
   }
   
-  int successCode = dataLogSendEntryBytes(connection, nextEntryToSend);
+  int successCode = dataLogPrintEntryBytes(*connection, nextEntryToSend);
   if (successCode != 0) {
     datastreamLogError(DSE_LOGFILE_FAILURE, successCode);
     if (successCode == 7) return; // if write failure to UDP then don't try again.  Otherwise, send error code by UDP
   }
-  errorcode = endResponse(connection, successCode & 0xff);
-  if (errorcode != DSE_OK)) {
+  errorcode = endResponse(*connection, successCode & 0xff);
+  if (errorcode != DSE_OK) {
     datastreamLogError(errorcode, 0);
     return;
   }
@@ -109,7 +113,7 @@ Each response is a single UDP packet only.
 
 */
 // execute the given command
-DataStreamError executeDataStreamCommand(const char command[], int commandlength);
+DataStreamError executeDataStreamCommand(const char command[], int commandLength)
 {
   bool commandIsValid = false;
   bool sendEndResponse = false;
@@ -120,6 +124,16 @@ DataStreamError executeDataStreamCommand(const char command[], int commandlength
     switch (command[1]) {
       case 's': {
         commandIsValid = true;
+
+        errorcode = startResponse('s', connection);    //todo remove just for testing
+        if (errorcode == DSE_OK && connection != NULL) {
+          int byteswritten = connection->write('a');
+          if (byteswritten != 1) {
+            errorcode = DSE_WRITE_FAILED;
+          }
+        }
+        sendEndResponse = true;        
+
         break;
       }
       case 'p': {
@@ -130,10 +144,10 @@ DataStreamError executeDataStreamCommand(const char command[], int commandlength
         commandIsValid = true;
         unsigned long numberOfSamples = dataLogNumberOfSamples();
 
-        errorcode = startResponse('n', &connection);
-        if (errorcode == DSE_OK) {
-          int byteswritten = connection->write((byte *)&numberOfSamples, sizeof(numberofSamples))
-          if (byteswritten != sizeof(numberofSamples)) {
+        errorcode = startResponse('n', connection);
+        if (errorcode == DSE_OK && connection != NULL) {
+          int byteswritten = connection->write((byte *)&numberOfSamples, sizeof(numberOfSamples));
+          if (byteswritten != sizeof(numberOfSamples)) {
             errorcode = DSE_WRITE_FAILED;
           }
         }
@@ -155,6 +169,9 @@ DataStreamError executeDataStreamCommand(const char command[], int commandlength
   if (!commandIsValid) {
     errorcode = DSE_INVALID_COMMAND_RECEIVED;
   } 
+  if (errorcode == DSE_OK && sendEndResponse && connection != NULL) {
+    errorcode = endResponse(*connection, 0);
+  }
   if (errorcode != DSE_OK) {
     datastreamLogError(errorcode, 0);        
   }

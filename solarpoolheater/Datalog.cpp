@@ -193,7 +193,7 @@ void dataLogExtractEntries(Print &dest, long startidx, long numberOfEntries, con
 
 // print the given entry to dest, in the format of raw bytes from the log file
 // returns 0 for success or other for failure code
-int dataLogSendEntryBytes(Print &dest, long startidx)
+int dataLogPrintEntryBytes(Print &dest, long startidx)
 {
   if (logfileStatus != LFS_OK) {
     return logfileStatus;  
