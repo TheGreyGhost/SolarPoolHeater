@@ -17,6 +17,16 @@ bool isBeingSimulated(SimVariables whichVariable)
   return simulationActive[whichVariable];
 }
 
+// return a flag showing which vbles are being simulated (each bit = 2<<SimVariables)
+unsigned int isBeingSimulatedAll()
+{
+  unsigned int retval = 0;
+  for (SimVariables i = SIM_LAST_PLUS_ONE; i > SIM_FIRST ; --i) {
+    retval = (retval << 1) | (simulationActive[i - 1] ? 1 : 0);
+  }
+  return retval;
+}
+
 // changes the given setting to its default value
 // returns: the new value.
 void setSimulatedValue(SimVariables whichVariable, float simulationValue)

@@ -13,6 +13,7 @@ void DataStats::addDatapoint(float value)
   minValue = min(minValue, value);
   maxValue = max(maxValue, value);
   cumulativeSum += value;
+  mostRecent = value;
 }
 
 void DataStats::clear()
@@ -21,11 +22,13 @@ void DataStats::clear()
   minValue = FLT_MAX;
   maxValue = -FLT_MAX;
   cumulativeSum = 0;
+  mostRecent = 0;
 }
 
 unsigned long DataStats::getCount() {return numberOfPoints;}
 float DataStats::getMin() {return minValue;}
 float DataStats::getMax() {return maxValue;}
+float DataStats::getMostRecent() {return mostRecent;}
 float DataStats::getAverage() {
   if (numberOfPoints == 0) return 0.0;
   return cumulativeSum / numberOfPoints;

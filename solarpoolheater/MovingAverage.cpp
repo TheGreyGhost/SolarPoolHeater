@@ -10,6 +10,7 @@ MovingAverage::MovingAverage(float alpha, int minSamples)
 
 void MovingAverage::addDatapoint(float value)
 {
+  m_mostRecent = value;
   if (m_numberOfPoints == 0) {
     m_ewma = value;
   } else {
@@ -21,9 +22,10 @@ void MovingAverage::addDatapoint(float value)
   }
 }
 
-void MovingAverage::clear() { m_numberOfPoints = 0; }
+void MovingAverage::clear() { m_numberOfPoints = 0; m_ewma = m_mostRecent = NAN;}
 
 float MovingAverage::getEWMA() { return m_ewma;}
     
 bool MovingAverage::isValid() { return (m_numberOfPoints >= m_minSamples);}
 
+float MovingAverage::getInstantaneous() {return m_mostRecent;}

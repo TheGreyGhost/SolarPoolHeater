@@ -56,6 +56,22 @@ void printDebugInfo(Print &dest)
   dest.println(lastDataStreamErrorCode);
 }
 
+void streamDebugInfo(Print &dest)
+{
+  dest.write((byte *)&assertFailureCode, sizeof assertFailureCode);
+  dest.write((byte *)&realTimeClockStatus, sizeof realTimeClockStatus);
+  dest.write((byte *)&logfileStatus, sizeof logFileStatus);
+  dest.write((byte *)&ethernetStatus, sizeof ethernetStatus);
+  dest.write((byte *)&solarIntensityReadingInvalid, sizeof solarIntensityReadingInvalid)
+  PumpState pumpstate = getPumpState();
+  dest.write((byte *)&pumpstate, sizeof pumpstate)
+    
+  for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
+    dest.write((byte *)&(probeStatuses[i]), sizeof probeStatuses[i]);
+  }
+  todo also add the simulation status
+}
+
 DigitalPin<DIGPIN_STATUS_LED> pinStatusLED;
 
 const int MAX_ERROR_DEPTH = 16;
