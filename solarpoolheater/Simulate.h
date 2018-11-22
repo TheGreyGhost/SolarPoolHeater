@@ -33,6 +33,6 @@ void setupSimulate();
 void tickSimulate();
 
 // return a flag showing which vbles are being simulated (each bit = 2<<SimVariables)
-int isBeingSimulatedAll();
+unsigned int isBeingSimulatedAll();
 
 #endif

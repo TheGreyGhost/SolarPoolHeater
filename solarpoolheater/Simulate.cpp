@@ -21,7 +21,7 @@ bool isBeingSimulated(SimVariables whichVariable)
 unsigned int isBeingSimulatedAll()
 {
   unsigned int retval = 0;
-  for (SimVariables i = SIM_LAST_PLUS_ONE; i > SIM_FIRST ; --i) {
+  for (SimVariables i = SIM_LAST_PLUS_ONE; i > SIM_FIRST ; i = (SimVariables)((int)i - 1)) {
     retval = (retval << 1) | (simulationActive[i - 1] ? 1 : 0);
   }
   return retval;
