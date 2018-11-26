@@ -1,0 +1,14 @@
+To test:
+OK 1) !t and !lr or !lv issued by ethernet return by ethernet
+OK 2) then swap back to serial again
+
+TODO: test my changes that 
+OK 1) flip console between serial and ethernet
+OK 2) assign a serialConsole to console
+
+DataStream
+test sending command, check error status with !d on terminal
+OK 1) too short
+OK 2) doesn't start with !
+OK 3) invalid command
+NOT OK.  Add check? 4) !n returns correct data

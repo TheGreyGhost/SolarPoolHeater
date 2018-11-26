@@ -207,7 +207,7 @@ void tickTemperatureProbes()
             case PS_NOT_FOUND: console->print("Not found"); break;
             case PS_BUS_FAILURE: console->print("Bus failure"); break;
             case PS_CRC_FAILURE: console->print("CRC failure"); break;
-            case PS_IMPLAUSIBLE_VALUE: console->print("Invalid status"); break;
+            case PS_IMPLAUSIBLE_VALUE: console->print("Implausible value"); break;
             default: console->print("Invalid status"); break;
           }
         }

@@ -3,6 +3,12 @@
 #include <EthernetUdp.h>
 #include "EthernetLink.h"
 #include "Datalog.h"
+#include "Simulate.h"
+#include "TemperatureProbes.h"
+#include "SolarIntensity.h"
+#include "SystemStatus.h"
+#include "PumpControl.h"
+#include "Settings.h"
 
 const char COMMAND_START_CHAR = '!';
 
@@ -90,22 +96,81 @@ void setupDataStream()
   sendingLogData = false;
 }
 
+// writes the current sensor readings to the given stream
+// simulation flags (one bit per simulation variable)
+// solarintensity
+// cumulative solar intensity (insolation)
+// surge tank level switch
+// pump runtime (s)
+// for each probe: current instant temperature then current smoothed temperature
+
+DataStreamError sendCurrentSensorReadings(Print &dest)
+{
+  unsigned int simflags = isBeingSimulatedAll();
+  dest.write((byte *)&simflags, sizeof simflags);
+  float solarIntensity = NAN;
+  if (!solarIntensityReadingInvalid && smoothedSolarIntensity.isValid()) {
+    solarIntensity = smoothedSolarIntensity.getEWMA();
+  }
+  dest.write((byte *)&solarIntensity, sizeof solarIntensity);
+  dest.write((byte *)&cumulativeInsolation, sizeof cumulativeInsolation);
+  dest.write((byte *)&surgeTankLevelOK, sizeof surgeTankLevelOK);
+  dest.write((byte *)&pumpRuntimeSeconds, sizeof pumpRuntimeSeconds);
+  for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
+    float value = smoothedTemperatures[i].getInstantaneous();
+    dest.write((byte *)&value, sizeof value);
+    value = smoothedTemperatures[i].getEWMA();
+    dest.write((byte *)&value, sizeof value);
+  }
+  return DSE_OK;
+}
+
+// send all of the current EEPROM settings to the given stream as a byte stream
+DataStreamError sendCurrentEEPROMSettings(Print &dest)
+{
+  EEPROMSettings setting;
+  for (setting = SET_FIRST; setting <= SET_INVALID; setting = (EEPROMSettings)((int)setting + 1)) {
+    float value = getSetting(setting);
+    dest.write((byte *)&value, sizeof value);    
+  }
+}
+
 /*
-!s = request current sensor information
+!r = request current sensor information (readings)
+!s = system status 
 !p = request parameter information
-!l{dword row nr}{word count} = request entries from log file
+!l{dword row nr}{word count} in LSB first order = request entries from log file
 !n = request number of entries in log file
 !c = cancel transmissions (log file)
 
 response:
 !{command letter echoed}{byte version} then:
 
-for sensor:
+for sensor readings:
+native byte stream of
+  uint flags of vbles being simulated
+  solar intensity
+  cumulative insolation
+  surge tank level
+  pump runtime
+  for each temp probe: instant temp then smoothed temp
+invalid values are sent as NAN
+
+for system status
+native byte stream of
+  assert error
+  real time clock status
+  log file status
+  ethernet status (duh)
+  solar sensor status
+  temp probe statuses
+  pump status
 
 for parameter:
+native byte stream of all EEPROM settings
 
 for logfile:
-!l -> the byte stream from the log file itself
+!l -> the byte stream from the log file itself, one entry per packet
 !n -> dword number of entries in log file
 
 The final byte in the packet is {byte status: 0 = ok, else error code}
@@ -122,25 +187,51 @@ DataStreamError executeDataStreamCommand(const char command[], int commandLength
 
   if (commandLength >= 2 && command[0] == COMMAND_START_CHAR) {
     switch (command[1]) {
-      case 's': {
+      case 's': {  //!s = system status
         commandIsValid = true;
 
-        errorcode = startResponse('s', connection);    //todo remove just for testing
+        errorcode = startResponse('s', connection);    
         if (errorcode == DSE_OK && connection != NULL) {
           int byteswritten = connection->write('a');
           if (byteswritten != 1) {
             errorcode = DSE_WRITE_FAILED;
-          }
+          } else{
+            streamDebugInfo(*connection);
+          }  
         }
         sendEndResponse = true;        
-
         break;
       }
-      case 'p': {
+      case 'r': {  //!r = request current sensor information (readings)
         commandIsValid = true;
+
+        errorcode = startResponse('r', connection);    
+        if (errorcode == DSE_OK && connection != NULL) {
+          int byteswritten = connection->write('a');
+          if (byteswritten != 1) {
+            errorcode = DSE_WRITE_FAILED;
+          } else{
+            errorcode = sendCurrentSensorReadings(*connection);
+          }  
+        }
+        sendEndResponse = true;        
         break;
       }
-      case 'n': {
+      case 'p': {  //!p = request parameter information
+        commandIsValid = true;
+        errorcode = startResponse('p', connection);    
+        if (errorcode == DSE_OK && connection != NULL) {
+          int byteswritten = connection->write('a');
+          if (byteswritten != 1) {
+            errorcode = DSE_WRITE_FAILED;
+          } else{
+            errorcode = sendCurrentEEPROMSettings(*connection);
+          }  
+        }
+        sendEndResponse = true;        
+        break;
+      }
+      case 'n': {  //!n = request number of entries in log file
         commandIsValid = true;
         unsigned long numberOfSamples = dataLogNumberOfSamples();
 
@@ -154,12 +245,18 @@ DataStreamError executeDataStreamCommand(const char command[], int commandLength
         sendEndResponse = true;        
         break;
       }
-      case 'c': {
+      case 'c': {  //!c = cancel transmissions (log file)
         commandIsValid = true;
         sendingLogData = false;
         break;
       }
-      case 'l': {
+      case 'l': { //!l{dword row nr}{word count} in LSB first order = request entries from log file
+        if (commandLength < 2 + 4 + 2) break;
+        byte *bp = command + 2;
+        nextEntryToSend = bp[0] + (bp[1]<<8) + (bp[2]<<16) + (bp[3]<<24);
+        bp += 4;
+        numberOfEntriesLeftToSend = bp[0] + (bp[1]<<8);
+        sendingLogData = true;
         commandIsValid = true;
         break;
       }

@@ -10,6 +10,7 @@ Usage:
   read the various stats using:
     getEWMA()
     isValid() - is the answer valid yet?	 
+    getInstantaneous() - the last reading added, or NAN if no value added yet
   */
 #ifndef MovingAverage_h   // if x.h hasn't been included yet...
 #define MovingAverage_h   //   #define this so the compiler knows it has been included
@@ -28,12 +29,14 @@ class MovingAverage
 
     float getEWMA();
     bool isValid(); 	
+    float getInstantaneous();
 
   private:
     int m_numberOfPoints;
     int m_minSamples;
     float m_ewma;
     float m_alpha;	
+    float m_mostRecent;
 };
 
 #endif

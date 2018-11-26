@@ -17,7 +17,7 @@ File datalogfile;
 const unsigned long DATALOG_BYTES_PER_SAMPLE = sizeof(long) + NUMBER_OF_PROBES * 3 * sizeof(float) + sizeof(float) + sizeof(float) + sizeof(float) + sizeof(PumpState);   //todo remove
 const char DATALOG_FILENAME[] = "datalog.txt";
 
-const char* logfileStatusText[4] = {"Card not present", "Failed to open", "Write failed", "OK"};
+const char* logfileStatusText[4] = {"OK", "Card not present", "Failed to open", "Write failed"};
 
 LogfileStatus logfileStatus;
 

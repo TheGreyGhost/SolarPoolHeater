@@ -2,7 +2,7 @@
 #define DATALOG_H
 #include <Arduino.h>
 
-enum LogfileStatus {LFS_OK = 0, LFS_CARD_NOT_PRESENT = 1, LFS_FAILED_TO_OPEN = 2, LFS_WRITE_FAILED = 3};
+enum LogfileStatus {LFS_OK = 0, LFS_CARD_NOT_PRESENT = 1, LFS_FAILED_TO_OPEN = 2, LFS_WRITE_FAILED = 3, LFS_LAST_STATUS_PLUS_ONE = 4};
 extern const char* logfileStatusText[4];
 
 extern LogfileStatus logfileStatus;

@@ -6,7 +6,7 @@ Usage:
   (3) call clear() to reset the statistics
 
   read the various stats using:
-    getCount, getMin, getMax, getAverage	 
+    getCount, getMin, getMax, getAverage, getMostRecent	 
  
   Note - the average will become inaccurate for large numbers of datapoints due to precision loss
     (the accuracy is approx = 6 digits minus the number of digits in the datapoint count)		
@@ -26,12 +26,14 @@ class DataStats
     float getMin();
     float getMax();
     float getAverage();    
+    float getMostRecent();
 
   private:
     unsigned long numberOfPoints;
     float minValue;
     float maxValue;
     float cumulativeSum; 	
+    float mostRecent;
 };
 
 #endif

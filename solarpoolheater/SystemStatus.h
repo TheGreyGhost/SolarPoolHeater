@@ -16,6 +16,17 @@ void tickSystemStatus();
 
 void printDebugInfo(Print &dest);
 
+// write the debug info to a byte stream
+// format: byte stream of
+//   assert error
+//  real time clock status
+//  log file status
+//  ethernet status (duh)
+//  solar sensor status
+//  temp probe statuses
+//  pump status
+void streamDebugInfo(Print &dest);
+
 // returns true if there are any errors which should shut down the pump
 bool shutdownErrorsPresent();
 

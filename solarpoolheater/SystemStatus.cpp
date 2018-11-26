@@ -33,7 +33,7 @@ void printDebugInfo(Print &dest)
   }
   dest.print("real time clock is running:"); dest.println(realTimeClockStatus);
   dest.print("log file status:");
-  if (logfileStatus >= 0 && logfileStatus <= LFS_OK) {
+  if (logfileStatus >= 0 && logfileStatus < LFS_LAST_STATUS_PLUS_ONE) {
     dest.println(logfileStatusText[logfileStatus]);
   } else {
     dest.println(logfileStatus);
@@ -50,9 +50,25 @@ void printDebugInfo(Print &dest)
   dest.println(lastInvalidReading);
   dest.print("number of DataStream errors:");
   dest.println(dataStreamErrorCount);
-  dest.print("with last error codes: ");
+  dest.print("with last error code: ");
   dest.print(lastDataStreamError);
+  dest.print(" subcode ");
   dest.println(lastDataStreamErrorCode);
+}
+
+void streamDebugInfo(Print &dest)
+{
+  dest.write((byte *)&assertFailureCode, sizeof assertFailureCode);
+  dest.write((byte *)&realTimeClockStatus, sizeof realTimeClockStatus);
+  dest.write((byte *)&logfileStatus, sizeof logfileStatus);
+  dest.write((byte *)&ethernetStatus, sizeof ethernetStatus);
+  dest.write((byte *)&solarIntensityReadingInvalid, sizeof solarIntensityReadingInvalid);
+  PumpState pumpstate = getPumpState();
+  dest.write((byte *)&pumpstate, sizeof pumpstate);
+    
+  for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
+    dest.write((byte *)&(probeStatuses[i]), sizeof probeStatuses[i]);
+  }
 }
 
 DigitalPin<DIGPIN_STATUS_LED> pinStatusLED;
