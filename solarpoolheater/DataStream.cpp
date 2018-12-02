@@ -192,12 +192,7 @@ DataStreamError executeDataStreamCommand(const char command[], int commandLength
 
         errorcode = startResponse('s', connection);    
         if (errorcode == DSE_OK && connection != NULL) {
-          int byteswritten = connection->write('a');
-          if (byteswritten != 1) {
-            errorcode = DSE_WRITE_FAILED;
-          } else{
-            streamDebugInfo(*connection);
-          }  
+          streamDebugInfo(*connection);
         }
         sendEndResponse = true;        
         break;
@@ -207,12 +202,7 @@ DataStreamError executeDataStreamCommand(const char command[], int commandLength
 
         errorcode = startResponse('r', connection);    
         if (errorcode == DSE_OK && connection != NULL) {
-          int byteswritten = connection->write('a');
-          if (byteswritten != 1) {
-            errorcode = DSE_WRITE_FAILED;
-          } else{
-            errorcode = sendCurrentSensorReadings(*connection);
-          }  
+          errorcode = sendCurrentSensorReadings(*connection);
         }
         sendEndResponse = true;        
         break;
@@ -221,12 +211,7 @@ DataStreamError executeDataStreamCommand(const char command[], int commandLength
         commandIsValid = true;
         errorcode = startResponse('p', connection);    
         if (errorcode == DSE_OK && connection != NULL) {
-          int byteswritten = connection->write('a');
-          if (byteswritten != 1) {
-            errorcode = DSE_WRITE_FAILED;
-          } else{
-            errorcode = sendCurrentEEPROMSettings(*connection);
-          }  
+          errorcode = sendCurrentEEPROMSettings(*connection);
         }
         sendEndResponse = true;        
         break;

@@ -1,0 +1,87 @@
+181202:
+Test of !r
+Using serial:
+solar intensity:0.00
+cumulative insolation:0.00
+surge tank level:OK
+pump state:OFF(TIME)[0]
+cumulative pump runtime (s):0.00
+HX_HOT_INLET:HX_HOT_OUTLET:HX_COLD_INLET:HX_COLD_OUTLET:AMBIENT:
+15.38 : 14.31 : 16.19 : 15.69 : 13.50 :
+From datastream:
+!raa
+8x zeros
+1
+6x zeros
+Expect:
+00: !ra
+04: simflags (2)
+06: solar intensity reading (float) = 4
+0a: cumulative insolation
+0e: surgtankok	
+0f: pump runtime seconds
+
+Found:
+13: 15.375
+17: 15.375
+1B: 14.312
+1F: 14.312
+23: 16.18757
+ok up to and including last one
+3b: 0
+3c: EOF
+
+TEST AGAIN with Sim'd vble 5 = solar insolation
+solar intensity:71.64
+cumulative insolation:9997.68
+surge tank level:OK
+pump state:OFF(TIME)[0]
+cumulative pump runtime (s):0.00
+
+response was !raa again
+04,05: 20 = vble 5 = ok
+06: 61.78 (correct)
+0a: 8419 (correct)
+0e: 1
+0f: 0
+
+RESOLVED: removed extra a
+
+Test of !s:
+!saa
+04: BYTE 0  dest.write((byte *)&assertFailureCode, sizeof assertFailureCode);
+05: BOOL 1 dest.write((byte *)&realTimeClockStatus, sizeof realTimeClockStatus);
+06: ENUM 0 dest.write((byte *)&logfileStatus, sizeof logfileStatus);
+08: ENUM 3 dest.write((byte *)&ethernetStatus, sizeof ethernetStatus);
+0A: BOOL dest.write((byte *)&solarIntensityReadingInvalid, sizeof solarIntensityReadingInvalid);
+0B: ENUM PumpState pumpstate = getPumpState();
+  dest.write((byte *)&pumpstate, sizeof pumpstate);
+0D: 5x ENUM
+    
+  for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
+    dest.write((byte *)&(probeStatuses[i]), sizeof probeStatuses[i]);
+  }
+17: 0
+
+04 is assert failure code
+17 = 23 is the last so 19
+5 probes = 10
+assert fail code = 1
+clock status = 2
+log status = 2
+ether status = 2
+solarreadinvalid = 1
+pupstate = 2
+
+OK
+
+test !n:
+!na
+03: dword 36814 = correct
+
+test !p
+!paa
+All parameters then a NAN
+
+test 
+
