@@ -27,6 +27,11 @@ int runTest1(int variable)
 
 }
 
+int runTest2(int variable)
+{
+  
+}
+
 int runTest(int testnumber)
 {
   switch(testnumber) {

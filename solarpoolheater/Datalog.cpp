@@ -131,28 +131,38 @@ unsigned long dataLogNumberOfSamples()
   return datalogfile.size() / DATALOG_BYTES_PER_SAMPLE;
 }
 
+unsigned long timestamps[30]; //todo remove
+int tsidx;
 void dataLogExtractEntries(Print &dest, long startidx, long numberOfEntries, const char probeSeparator[])
 {
   unsigned long filesize = datalogfile.size();
   unsigned long samplesInFile = filesize / DATALOG_BYTES_PER_SAMPLE;
+
+  tsidx = 0;
+  
   if (startidx >= samplesInFile) {
     dest.print("arg1 exceeds file size:");
     dest.println(samplesInFile);
   } else {
+    timestamps[0] = micros();  //todo remove
     datalogfile.seek(startidx * DATALOG_BYTES_PER_SAMPLE);
+    timestamps[1] = micros();  //todo remove
     long samplesToRead = min(numberOfEntries, min(24 * 60, samplesInFile - startidx)); // no more than one day at a time
+    timestamps[2] = micros();  //todo remove
     dest.print("timestamp(s) "); dest.print(probeSeparator);
+    timestamps[3] = micros();  //todo remove
     for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
       dest.print(probeNames[i]);
       dest.print(" min avg max ");
       dest.print(probeSeparator);
     }
-
+    timestamps[4] = micros();  //todo remove
     dest.print("cumul. insolation "); dest.print(probeSeparator);
     dest.print("surge tank avg level "); dest.print(probeSeparator);  //todo remove
     dest.print("cumul. pump runtime(s) "); dest.print(probeSeparator);
     dest.print("pump state "); dest.print(probeSeparator);
     dest.println();
+    timestamps[5] = micros();  //todo remove
 
     for (long i = 0; i < samplesToRead; ++i) {
       long timestamp;
@@ -160,34 +170,55 @@ void dataLogExtractEntries(Print &dest, long startidx, long numberOfEntries, con
       float pumpRuntime;
       float surgeTankLevel;
 
+      timestamps[6] = micros();  //todo remove
       datalogfile.readBytes((byte *)&timestamp, sizeof(timestamp));
+      timestamps[7] = micros();  //todo remove
       dest.print(timestamp); dest.print(" "); dest.print(probeSeparator);
+      timestamps[8] = micros();  //todo remove
 
       for (int j = 0; j < NUMBER_OF_PROBES; ++j) {
         float temp[3];
+        timestamps[9] = micros();  //todo remove
         datalogfile.readBytes((byte *)temp, sizeof(temp));
+        timestamps[10] = micros();  //todo remove
         for (int k = 0; k < 3; ++k) {
           dest.print(temp[k], 1);
           dest.print(" ");
         }
+        timestamps[11] = micros();  //todo remove
         dest.print(probeSeparator);
       }
 
+      timestamps[12] = micros();  //todo remove
       datalogfile.readBytes((byte *)&cumulativeInsolation, sizeof(cumulativeInsolation));
+      timestamps[13] = micros();  //todo remove
       dest.print(cumulativeInsolation, 0); dest.print(" "); dest.print(probeSeparator);
 
+      timestamps[14] = micros();  //todo remove
       datalogfile.readBytes((byte *)&surgeTankLevel, sizeof(surgeTankLevel));      //todo remove
+      timestamps[15] = micros();  //todo remove
       dest.print(surgeTankLevel, 4); dest.print(" "); dest.print(probeSeparator);
 
+      timestamps[16] = micros();  //todo remove
       datalogfile.readBytes((byte *)&pumpRuntime, sizeof(pumpRuntime));
+      timestamps[17] = micros();  //todo remove
       dest.print(pumpRuntime, 0); dest.print(" "); // dest.print(probeSeparator);
 
+      timestamps[18] = micros();  //todo remove
       PumpState pumpState = getPumpState();
+      timestamps[19] = micros();  //todo remove
       datalogfile.readBytes((byte *)&pumpState, sizeof(pumpState));
       dest.print((int)pumpState, HEX); // dest.print(" "); // dest.print(probeSeparator);
+      timestamps[20] = micros();  //todo remove
 
       dest.println();
+      timestamps[21] = micros();  //todo remove
     }
+  }
+  for (int i =  1; i < 22; ++i) {
+    Serial.print(i);
+    Serial.print(":");
+    Serial.println(timestamps[i] - timestamps[i-1]);
   }
 }
 
