@@ -252,10 +252,11 @@ DataStreamError executeDataStreamCommand(const char command[], int commandLength
       }
       case 'l': { //!l{dword row nr}{word count} in LSB first order = request entries from log file
         if (commandLength < 2 + 4 + 2) break;
-        byte *bp = command + 2;
-        nextEntryToSend = bp[0] + (bp[1]<<8) + (bp[2]<<16) + (bp[3]<<24);
+        const byte *bp = (const byte *)(command + 2);
+        nextEntryToSend = bp[0] + ((unsigned long)bp[1]<<8) 
+                          + ((unsigned long)bp[2]<<16) + ((unsigned long)bp[3]<<24);
         bp += 4;
-        numberOfEntriesLeftToSend = bp[0] + (bp[1]<<8);
+        numberOfEntriesLeftToSend = bp[0] + ((unsigned long)bp[1]<<8);
         sendingLogData = true;
         commandIsValid = true;
         break;
