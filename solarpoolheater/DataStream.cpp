@@ -51,7 +51,6 @@ DataStreamError endResponse(EthernetUDP &connection, byte successCode)
   return DSE_OK;
 }
 
-
 void datastreamLogError(DataStreamError dserror, int errorcode)
 {
   lastDataStreamError = dserror;
@@ -66,28 +65,33 @@ void tickDataStream()
   if (ethernetStatus != ES_OK) return;
   if (!sendingLogData) return;
 
-  EthernetUDP *connection; 
-  DataStreamError errorcode = startResponse('l', connection);
-  if (errorcode != DSE_OK || connection == NULL) {
-    datastreamLogError(errorcode, 0);
-    return;
-  }
-  
-  int successCode = dataLogPrintEntryBytes(*connection, nextEntryToSend);
-  if (successCode != 0) {
-    datastreamLogError(DSE_LOGFILE_FAILURE, successCode);
-    if (successCode == 7) return; // if write failure to UDP then don't try again.  Otherwise, send error code by UDP
-  }
-  errorcode = endResponse(*connection, successCode & 0xff);
-  if (errorcode != DSE_OK) {
-    datastreamLogError(errorcode, 0);
-    return;
-  }
-  
-  ++nextEntryToSend;
-  --numberOfEntriesLeftToSend;
+  const unsigned long MAX_MILLIS = 250;
+  unsigned long startmillis = millis();
 
-  sendingLogData = (numberOfEntriesLeftToSend > 0);
+  do {
+    EthernetUDP *connection; 
+    DataStreamError errorcode = startResponse('l', connection);
+    if (errorcode != DSE_OK || connection == NULL) {
+      datastreamLogError(errorcode, 0);
+      return;
+    }
+    
+    int successCode = dataLogPrintEntryBytes(*connection, nextEntryToSend);
+    if (successCode != 0) {
+      datastreamLogError(DSE_LOGFILE_FAILURE, successCode);
+      if (successCode == 7) return; // if write failure to UDP then don't try again.  Otherwise, send error code by UDP
+    }
+    errorcode = endResponse(*connection, successCode & 0xff);
+    if (errorcode != DSE_OK) {
+      datastreamLogError(errorcode, 0);
+      return;
+    }
+    
+    ++nextEntryToSend;
+    --numberOfEntriesLeftToSend;
+  
+    sendingLogData = (numberOfEntriesLeftToSend > 0);
+  } while (sendingLogData && (millis() - startmillis) < MAX_MILLIS);
 }
 
 // set up the datastream (EthernetLink already prepared)
@@ -236,12 +240,15 @@ DataStreamError executeDataStreamCommand(const char command[], int commandLength
         break;
       }
       case 'l': { //!l{dword row nr}{word count} in LSB first order = request entries from log file
+        Serial.println("l"); //todo remove
         if (commandLength < 2 + 4 + 2) break;
         const byte *bp = (const byte *)(command + 2);
         nextEntryToSend = bp[0] + ((unsigned long)bp[1]<<8) 
                           + ((unsigned long)bp[2]<<16) + ((unsigned long)bp[3]<<24);
+        Serial.println(nextEntryToSend); //todo remove
         bp += 4;
         numberOfEntriesLeftToSend = bp[0] + ((unsigned long)bp[1]<<8);
+        Serial.println(numberOfEntriesLeftToSend); //todo remove
         sendingLogData = true;
         commandIsValid = true;
         break;
