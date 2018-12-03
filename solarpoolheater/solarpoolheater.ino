@@ -45,4 +45,5 @@ void loop(void)
   tickSolarIntensity();
   tickSimulate();
   tickEthernet();
+  tickDataStream();
 }
