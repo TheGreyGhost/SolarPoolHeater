@@ -33,6 +33,6 @@ bool isSystemIdle();
 byte getPumpErrorCode();
 
 extern bool surgeTankLevelOK;  // if false, the surge tank level switch is off (level is low)
-extern DataStats surgeTankLevelStats; // todo delete
+extern DataStats surgeTankLevelStats; 
 
 #endif

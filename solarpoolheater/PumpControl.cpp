@@ -36,7 +36,7 @@
 // 8) cold outlet overtemperature
 
 bool surgeTankLevelOK;
-DataStats surgeTankLevelStats; // todo delete
+DataStats surgeTankLevelStats; 
 
 bool pumpIsRunning;
 PumpState pumpState;
@@ -112,8 +112,7 @@ void tickPumpControl()
 {
   surgeTankLevelOK = (digitalRead(DIGPIN_SURGE_TANK_LEVEL) == LOW);
 
-  surgeTankLevelStats.addDatapoint(surgeTankLevelOK ? 1.0 : 0.0); // todo remove
-//  surgeTankLevelOK = true; // todo remove
+  surgeTankLevelStats.addDatapoint(surgeTankLevelOK ? 1.0 : 0.0); 
   
   if (isBeingSimulated(SIM_SURGE_TANK_LEVEL)) {
     surgeTankLevelOK = fabs(getSimulatedValue(SIM_SURGE_TANK_LEVEL, 0)) >= 0.5;

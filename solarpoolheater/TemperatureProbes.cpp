@@ -164,9 +164,6 @@ void setupTemperatureProbes()
  sensors.setWaitForConversion(false);
 }
 
-//int16_t lastdudtemp = 0.0; // todo remove
-//float lastdudtempcelcius = 0.0; // todo remove
-
 void tickTemperatureProbes()
 {
   unsigned long timeNow = millis();
@@ -230,5 +227,3 @@ void tickTemperatureProbes()
 
 
 }
-
-

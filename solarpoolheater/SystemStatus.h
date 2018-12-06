@@ -8,7 +8,6 @@ extern byte assertFailureCode;
 
 extern Print *console;
 extern Print *serialConsole;
-//extern Stream *consoleInput;
 
 void setupSystemStatus();
 
