@@ -240,15 +240,12 @@ DataStreamError executeDataStreamCommand(const char command[], int commandLength
         break;
       }
       case 'l': { //!l{dword row nr}{word count} in LSB first order = request entries from log file
-        Serial.println("l"); //todo remove
         if (commandLength < 2 + 4 + 2) break;
         const byte *bp = (const byte *)(command + 2);
         nextEntryToSend = bp[0] + ((unsigned long)bp[1]<<8) 
                           + ((unsigned long)bp[2]<<16) + ((unsigned long)bp[3]<<24);
-        Serial.println(nextEntryToSend); //todo remove
         bp += 4;
         numberOfEntriesLeftToSend = bp[0] + ((unsigned long)bp[1]<<8);
-        Serial.println(numberOfEntriesLeftToSend); //todo remove
         sendingLogData = true;
         commandIsValid = true;
         break;

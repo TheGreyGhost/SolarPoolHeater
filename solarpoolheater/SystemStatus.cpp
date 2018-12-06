@@ -16,7 +16,6 @@ byte assertFailureCode = 0;
 
 Print *console;
 Print *serialConsole;
-//Stream *consoleInput;
 
 void printDebugInfo(Print &dest)
 {

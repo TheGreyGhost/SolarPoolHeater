@@ -86,3 +86,5 @@ void dataLogExtractEntries(Print &dest, long startidx, long numberOfEntries, con
     Serial.println(timestamps[i] - timestamps[i-1]);
   }
 }
+
+Used !l on datastream to send $1000 records = 4096 and it took about 10 seconds (340 k or so)
