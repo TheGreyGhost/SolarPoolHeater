@@ -167,7 +167,7 @@ void tickPumpControl()
 
     default: {
       assertFailureCode = ASSERT_INVALID_SWITCH;
-      console->print("Invalid Switch tickPumpControl::pumpState:");
+      console->print(F("Invalid Switch tickPumpControl::pumpState:"));
       console->println(pumpState);
       pumpState = PS_OFF_EXCESSIVE_ERRORS;
     }
@@ -255,7 +255,7 @@ PumpState checkForPumpStateTransition(float currentHours, unsigned long timeNow)
      
     default: {
       assertFailureCode = ASSERT_INVALID_SWITCH;
-      console->print("Invalid Switch checkForPumpStateTransition::pumpState:");
+      console->print(F("Invalid Switch checkForPumpStateTransition::pumpState:"));
       console->println(pumpState);
       return PS_OFF_EXCESSIVE_ERRORS;
     }

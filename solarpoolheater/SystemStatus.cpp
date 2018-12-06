@@ -19,39 +19,39 @@ Print *serialConsole;
 
 void printDebugInfo(Print &dest)
 {
-  dest.print("Version:"); dest.println(SPH_VERSION); 
-  dest.print("Last Assert Error:"); dest.println(assertFailureCode); 
-  dest.print("errorCountBusFailure:"); dest.println(errorCountBusFailure);
+  dest.print(F("Version:")); dest.println(SPH_VERSION); 
+  dest.print(F("Last Assert Error:")); dest.println(assertFailureCode); 
+  dest.print(F("errorCountBusFailure:")); dest.println(errorCountBusFailure);
   for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
     dest.println(probeNames[i]);
-    dest.print("  errorCountNotFound:"); dest.println(errorCountNotFound[i]);
-    dest.print("  errorCountCRCFailure:"); dest.println(errorCountCRCFailure[i]);
-    dest.print("  errorCountImplausibleValue:"); dest.println(errorCountImplausibleValue[i]);
-    dest.print("    errorLastImplausibleValue:"); dest.print(errorLastImplausibleValueRaw[i]);
+    dest.print(F("  errorCountNotFound:")); dest.println(errorCountNotFound[i]);
+    dest.print(F("  errorCountCRCFailure:")); dest.println(errorCountCRCFailure[i]);
+    dest.print(F("  errorCountImplausibleValue:")); dest.println(errorCountImplausibleValue[i]);
+    dest.print(F("    errorLastImplausibleValue:")); dest.print(errorLastImplausibleValueRaw[i]);
     dest.print(" "); dest.println(errorLastImplausibleValueC[i]);
   }
-  dest.print("real time clock is running:"); dest.println(realTimeClockStatus);
-  dest.print("log file status:");
+  dest.print(F("real time clock is running:")); dest.println(realTimeClockStatus);
+  dest.print(F("log file status:"));
   if (logfileStatus >= 0 && logfileStatus < LFS_LAST_STATUS_PLUS_ONE) {
     dest.println(logfileStatusText[logfileStatus]);
   } else {
     dest.println(logfileStatus);
   }  
-  dest.print("Ethernet status:");
+  dest.print(F("Ethernet status:"));
   if (ethernetStatus >= 0 && ethernetStatus <= ES_OK) {
     dest.println(ethernetStatusText[ethernetStatus]);
   } else {
     dest.println(ethernetStatus);
   }  
-  dest.print("solar intensity sensor status:");
+  dest.print(F("solar intensity sensor status:"));
   dest.print(solarIntensityReadingInvalid ? "INVALID " : "OK");
-  dest.print(" with lastInvalidReading:");
+  dest.print(F(" with lastInvalidReading:"));
   dest.println(lastInvalidReading);
-  dest.print("number of DataStream errors:");
+  dest.print(F("number of DataStream errors:"));
   dest.println(dataStreamErrorCount);
-  dest.print("with last error code: ");
+  dest.print(F("with last error code: "));
   dest.print(lastDataStreamError);
-  dest.print(" subcode ");
+  dest.print(F(" subcode "));
   dest.println(lastDataStreamErrorCode);
 }
 

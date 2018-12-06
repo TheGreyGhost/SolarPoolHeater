@@ -4,6 +4,7 @@
 #include <SD.h>
 #include <Wire.h>
 #include <DallasTemperatureErrorCodes.h>
+#include <avr/pgmspace.h>
 
 #include "RealTimeClock.h"
 #include "SolarIntensity.h"
@@ -137,7 +138,7 @@ void dataLogExtractEntries(Print &dest, long startidx, long numberOfEntries, con
   unsigned long samplesInFile = filesize / DATALOG_BYTES_PER_SAMPLE;
 
   if (startidx >= samplesInFile) {
-    dest.print("arg1 exceeds file size:");
+    dest.print(F("arg1 exceeds file size:"));
     dest.println(samplesInFile);
   } else {
     datalogfile.seek(startidx * DATALOG_BYTES_PER_SAMPLE);
@@ -148,10 +149,10 @@ void dataLogExtractEntries(Print &dest, long startidx, long numberOfEntries, con
       dest.print(" min avg max ");
       dest.print(probeSeparator);
     }
-    dest.print("cumul. insolation "); dest.print(probeSeparator);
-    dest.print("surge tank avg level "); dest.print(probeSeparator);  
-    dest.print("cumul. pump runtime(s) "); dest.print(probeSeparator);
-    dest.print("pump state "); dest.print(probeSeparator);
+    dest.print(F("cumul. insolation ")); dest.print(probeSeparator);
+    dest.print(F("surge tank avg level ")); dest.print(probeSeparator);  
+    dest.print(F("cumul. pump runtime(s) ")); dest.print(probeSeparator);
+    dest.print(F("pump state ")); dest.print(probeSeparator);
     dest.println();
 
     for (long i = 0; i < samplesToRead; ++i) {

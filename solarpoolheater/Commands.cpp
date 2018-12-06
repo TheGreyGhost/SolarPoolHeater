@@ -243,26 +243,26 @@ void executeCommand(char command[], Print *replyConsole)
   switch (command[0]) {
     case '?': {
       commandIsValid = true;
-      replyConsole->println("commands (turn CR+LF on):");
-      replyConsole->println("!cr = read clock date+time");
-      replyConsole->println("!cs Dec 26 2009 12:34:56 = set clock date + time (capitalisation, character count, and spacings must match exactly)");
-      replyConsole->println("!d = print debug info");
-      replyConsole->println("!da = list all simulate-able variables");
-      replyConsole->println("!dc variable# = cancel simulation for variable #, if variable# = a then cancel all");
-      replyConsole->println("!ds variable# value = simulate variable# with value");
-      replyConsole->println("!de string = echo string to ethernet port");
-      replyConsole->println("!dt test# = execute debug test #");
-      replyConsole->println("!le = erase log file");
-      replyConsole->println("!li = log file info");
-      replyConsole->println("!lr sample# count = read log data");
-      replyConsole->println("!lv sample# count = view log data (more readable than lr)");
-      replyConsole->println("!pr param# = read EEPROM parameter");
-      replyConsole->println("!ps param# value = set EEPROM parameter.  if value = d, use default");
-      replyConsole->println("!pd = set all EEPROM parameter back to default");
-      replyConsole->println("!pa = read all EEPROM parameters");
-      replyConsole->println("!p? = list EEPROM parameter names");
-      replyConsole->println("!s = display solar readings and pump runtime");
-      replyConsole->println("!t = toggle echo of temp probe readings");
+      replyConsole->println(F("commands (turn CR+LF on):"));
+      replyConsole->println(F("!cr = read clock date+time"));
+      replyConsole->println(F("!cs Dec 26 2009 12:34:56 = set clock date + time (capitalisation, character count, and spacings must match exactly)"));
+      replyConsole->println(F("!d = print debug info"));
+      replyConsole->println(F("!da = list all simulate-able variables"));
+      replyConsole->println(F("!dc variable# = cancel simulation for variable #, if variable# = a then cancel all"));
+      replyConsole->println(F("!ds variable# value = simulate variable# with value"));
+      replyConsole->println(F("!de string = echo string to ethernet port"));
+      replyConsole->println(F("!dt test# = execute debug test #"));
+      replyConsole->println(F("!le = erase log file"));
+      replyConsole->println(F("!li = log file info"));
+      replyConsole->println(F("!lr sample# count = read log data"));
+      replyConsole->println(F("!lv sample# count = view log data (more readable than lr)"));
+      replyConsole->println(F("!pr param# = read EEPROM parameter"));
+      replyConsole->println(F("!ps param# value = set EEPROM parameter.  if value = d, use default"));
+      replyConsole->println(F("!pd = set all EEPROM parameter back to default"));
+      replyConsole->println(F("!pa = read all EEPROM parameters"));
+      replyConsole->println(F("!p? = list EEPROM parameter names"));
+      replyConsole->println(F("!s = display solar readings and pump runtime"));
+      replyConsole->println(F("!t = toggle echo of temp probe readings"));
       break;
     }
     case 'd': {
@@ -315,7 +315,7 @@ void executeCommand(char command[], Print *replyConsole)
         case 's': {  
           commandIsValid = true;
           if (strlen(command) < 3 + DATETIMEFORMAT_TOTALLENGTH) {
-            replyConsole->println("syntax error.  !cs Dec 26 2009 12:34:56 (capitalisation, character count, and spacings must match exactly)");
+            replyConsole->println(F("syntax error.  !cs Dec 26 2009 12:34:56 (capitalisation, character count, and spacings must match exactly)"));
           } else {
             DateTime newTime(command+3, command+3 + DATETIMEFORMAT_TIME_STARTPOS);
             replyConsole->print("setting date+time to ");
@@ -335,7 +335,7 @@ void executeCommand(char command[], Print *replyConsole)
           if (success) {
             replyConsole->println("data log erased successfully");
           } else {  
-            replyConsole->println("failed to erase datafile for logged data");
+            replyConsole->println(F("failed to erase datafile for logged data"));
           }
           break;
         }
@@ -416,7 +416,7 @@ void parseIncomingInput(char command[], int bufferlen, Print *replyConsole)
   } else {
     end = (char *)memchr(command, '\0', bufferlen);
     if (NULL == end) {
-      replyConsole->println("Program error: missing terminating null");
+      replyConsole->println(F("Program error: missing terminating null"));
     } else if (end - command > MAX_COMMAND_LENGTH) {
       replyConsole->print("Command too long:"); replyConsole->println(command);    
     } else {
