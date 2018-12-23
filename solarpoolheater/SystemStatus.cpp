@@ -17,6 +17,13 @@ byte assertFailureCode = 0;
 Print *console;
 Print *serialConsole;
 
+// gives a rough and ready estimate of the amount of ram free between the bottom of the stack and the top of the heap
+int freeRam() {
+  extern int __heap_start, *__brkval; 
+  int v; 
+  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval); 
+}
+
 void printDebugInfo(Print &dest)
 {
   dest.print(F("Version:")); dest.println(SPH_VERSION); 
@@ -53,6 +60,8 @@ void printDebugInfo(Print &dest)
   dest.print(lastDataStreamError);
   dest.print(F(" subcode "));
   dest.println(lastDataStreamErrorCode);
+  dest.print(F("Bottom of stack minus top of heap:"));
+  dest.println(freeRam());
 }
 
 void streamDebugInfo(Print &dest)
