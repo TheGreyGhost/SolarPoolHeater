@@ -106,6 +106,14 @@ void setupPumpControl()
   pumpTurnOnCount = 0;
 }
 
+void resetPumpErrors()
+{
+  pumpState = PS_OFF_WAITING_FOR_SUN;
+  lastDayPC = currentTime.day();    
+  systemErrorCountToday = 0;
+  pumpTurnOnCount = 0;
+}
+
 PumpState checkForPumpStateTransition(float currentHours, unsigned long timeNow);
 
 void tickPumpControl()

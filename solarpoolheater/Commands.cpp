@@ -262,6 +262,7 @@ void executeCommand(char command[], Print *replyConsole)
       replyConsole->println(F("!pa = read all EEPROM parameters"));
       replyConsole->println(F("!p? = list EEPROM parameter names"));
       replyConsole->println(F("!s = display solar readings and pump runtime"));
+      replyConsole->println(F("!sr = reset pump status"));
       replyConsole->println(F("!t = toggle echo of temp probe readings"));
       break;
     }
@@ -286,19 +287,29 @@ void executeCommand(char command[], Print *replyConsole)
       break;
     }
     case 's': {
-      commandIsValid = true;
-      replyConsole->print("solar intensity:"); 
-        if (solarIntensityReadingInvalid) {
-          replyConsole->println("INVALID");
-        } else {
-          replyConsole->println(smoothedSolarIntensity.getEWMA());
+      switch (command[1]) {
+        case 'r': {
+          commandIsValid = true;
+          resetPumpErrors();
+          break;
         }
-      replyConsole->print("cumulative insolation:"); replyConsole->println(cumulativeInsolation);
-      replyConsole->print("surge tank level:"); replyConsole->println(surgeTankLevelOK ? "OK" : "LOW");
-      replyConsole->print("pump state:");
-      replyConsole->print(getCurrentPumpStateLabel());
-      replyConsole->print("["); replyConsole->print(getPumpState()); replyConsole->println("]");
-      replyConsole->print("cumulative pump runtime (s):"); replyConsole->println(pumpRuntimeSeconds);
+        case '\0': {
+          commandIsValid = true;
+          replyConsole->print("solar intensity:"); 
+            if (solarIntensityReadingInvalid) {
+              replyConsole->println("INVALID");
+            } else {
+              replyConsole->println(smoothedSolarIntensity.getEWMA());
+            }
+          replyConsole->print("cumulative insolation:"); replyConsole->println(cumulativeInsolation);
+          replyConsole->print("surge tank level:"); replyConsole->println(surgeTankLevelOK ? "OK" : "LOW");
+          replyConsole->print("pump state:");
+          replyConsole->print(getCurrentPumpStateLabel());
+          replyConsole->print("["); replyConsole->print(getPumpState()); replyConsole->println("]");
+          replyConsole->print("cumulative pump runtime (s):"); replyConsole->println(pumpRuntimeSeconds);
+          break;
+        }  
+      }
       break;
     }
     case 'c': {

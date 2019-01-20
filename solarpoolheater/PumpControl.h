@@ -32,6 +32,9 @@ bool isSystemIdle();
 // returns the current pump error code (or 0 if no error)
 byte getPumpErrorCode();
 
+// resets any pump errors
+void resetPumpErrors();
+
 extern bool surgeTankLevelOK;  // if false, the surge tank level switch is off (level is low)
 extern DataStats surgeTankLevelStats; 
 
