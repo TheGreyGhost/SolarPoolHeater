@@ -287,8 +287,6 @@ void executeCommand(char command[], Print *replyConsole)
       break;
     }
     case 's': {
-      int k = command[1];
-      replyConsole->println(k);
       switch (command[1]) {
         case 'r': {
           commandIsValid = true;
@@ -434,7 +432,10 @@ void parseIncomingInput(char command[], int bufferlen, Print *replyConsole)
       return;
     }
     shorter = (char *)strpbrk(command, "\n\r"); // find first null, 0x0a or 0x0d
-    if (shorter != NULL) end = shorter;
+    if (shorter != NULL) {
+      end = shorter;
+      *end = '\0';
+    }
     if (end - command > MAX_COMMAND_LENGTH) {
       replyConsole->print("Command too long:"); replyConsole->println(command);    
     } else {
