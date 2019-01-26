@@ -287,6 +287,8 @@ void executeCommand(char command[], Print *replyConsole)
       break;
     }
     case 's': {
+      int k = command[1];
+      replyConsole->println(k);
       switch (command[1]) {
         case 'r': {
           commandIsValid = true;
