@@ -424,7 +424,7 @@ void tickCommands()
 
 void parseIncomingInput(char command[], int bufferlen, Print *replyConsole)
 {
-  char *end;
+  char *end, *shorter;
   if (bufferlen < 1 || command[0] != COMMAND_START_CHAR) {
     replyConsole->println("Type !? for help");
   } else {
@@ -433,7 +433,8 @@ void parseIncomingInput(char command[], int bufferlen, Print *replyConsole)
       replyConsole->println(F("Program error: missing terminating null"));
       return;
     }
-    end = (char *)strpbrk(command, '\0\n\r'); // find first null, 0x0a or 0x0d
+    shorter = (char *)strpbrk(command, "\n\r"); // find first null, 0x0a or 0x0d
+    if (shorter != NULL) end = shorter;
     if (end - command > MAX_COMMAND_LENGTH) {
       replyConsole->print("Command too long:"); replyConsole->println(command);    
     } else {
