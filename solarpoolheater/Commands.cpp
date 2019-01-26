@@ -295,6 +295,7 @@ void executeCommand(char command[], Print *replyConsole)
           resetPumpErrors();
           break;
         }
+
         case '\0': {
           commandIsValid = true;
           replyConsole->print("solar intensity:"); 
@@ -430,7 +431,10 @@ void parseIncomingInput(char command[], int bufferlen, Print *replyConsole)
     end = (char *)memchr(command, '\0', bufferlen);
     if (NULL == end) {
       replyConsole->println(F("Program error: missing terminating null"));
-    } else if (end - command > MAX_COMMAND_LENGTH) {
+      return;
+    }
+    end = (char *)strpbrk(command, '\0\n\r'); // find first null, 0x0a or 0x0d
+    if (end - command > MAX_COMMAND_LENGTH) {
       replyConsole->print("Command too long:"); replyConsole->println(command);    
     } else {
       executeCommand(command+1, replyConsole);    
