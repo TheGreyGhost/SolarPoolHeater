@@ -435,6 +435,7 @@ void parseIncomingInput(char command[], int bufferlen, Print *replyConsole)
     }
     shorter = (char *)strpbrk(command, "\n\r"); // find first null, 0x0a or 0x0d
     if (shorter != NULL) end = shorter;
+    *end = '\0';
     if (end - command > MAX_COMMAND_LENGTH) {
       replyConsole->print("Command too long:"); replyConsole->println(command);    
     } else {
