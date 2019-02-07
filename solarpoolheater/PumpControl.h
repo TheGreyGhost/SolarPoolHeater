@@ -1,6 +1,7 @@
 #ifndef PUMPCONTROL_H
 #define PUMPCONTROL_H
 #include "DataStats.h"
+#include "RealTimeClock.h"
 
 void setupPumpControl();
 void tickPumpControl();
@@ -37,5 +38,9 @@ void resetPumpErrors();
 
 extern bool surgeTankLevelOK;  // if false, the surge tank level switch is off (level is low)
 extern DataStats surgeTankLevelStats; 
+
+extern float lastSampledPoolTemperature;
+extern DateTime lastSamplePoolTemperatureTime;
+extern bool lastSampledPoolTemperatureIsValid;
 
 #endif

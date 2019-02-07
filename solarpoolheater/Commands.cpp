@@ -308,6 +308,14 @@ void executeCommand(char command[], Print *replyConsole)
           replyConsole->print(getCurrentPumpStateLabel());
           replyConsole->print("["); replyConsole->print(getPumpState()); replyConsole->println("]");
           replyConsole->print("cumulative pump runtime (s):"); replyConsole->println(pumpRuntimeSeconds);
+          replyConsole->print("last sampled pool temperature (C):"); 
+          if (lastSampledPoolTemperatureIsValid) {
+            replyConsole->print(lastSampledPoolTemperature);
+            replyConsole->print(" at ");
+            printDateTime(*replyConsole, lastSamplePoolTemperatureTime);           
+          } else {
+            replyConsole->println("not valid");
+          }
           break;
         }  
       }
