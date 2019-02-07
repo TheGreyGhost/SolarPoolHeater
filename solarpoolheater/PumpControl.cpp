@@ -54,6 +54,10 @@ const char* pumpStateLabels[NUMBER_OF_PUMP_STATES] = {"OFF(TIME)", "OFF(>SETPT)"
 int pumpTurnOnCount;
 unsigned long firstPumpTurnOnMillis;
 
+float lastSampledPoolTemperature;
+DateTime lastSamplePoolTemperatureTime;
+bool lastSampledPoolTemperatureIsValid;
+
 // returns a text description of the current pump state
 const char *getCurrentPumpStateLabel()
 {
@@ -104,6 +108,7 @@ void setupPumpControl()
   lastDayPC = currentTime.day();    
   systemErrorCountToday = 0;
   pumpTurnOnCount = 0;
+  lastSampledPoolTemperatureIsValid = false;
 }
 
 void resetPumpErrors()
@@ -200,7 +205,12 @@ void tickPumpControl()
       }
     }
   }
-  
+
+  if (pumpIsRunning && smoothedTemperatures[HX_COLD_INLET].isValid()) {
+    lastSampledPoolTemperature = smoothedTemperatures[HX_COLD_INLET].getEWMA();
+    lastSamplePoolTemperatureTime = currentTime;
+    lastSampledPoolTemperatureIsValid = true;
+  }
 }
 
 PumpState checkForPumpStateTransition(float currentHours, unsigned long timeNow)

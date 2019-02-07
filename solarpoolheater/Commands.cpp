@@ -287,8 +287,6 @@ void executeCommand(char command[], Print *replyConsole)
       break;
     }
     case 's': {
-      int k = command[1];
-      replyConsole->println(k);
       switch (command[1]) {
         case 'r': {
           commandIsValid = true;
@@ -310,6 +308,14 @@ void executeCommand(char command[], Print *replyConsole)
           replyConsole->print(getCurrentPumpStateLabel());
           replyConsole->print("["); replyConsole->print(getPumpState()); replyConsole->println("]");
           replyConsole->print("cumulative pump runtime (s):"); replyConsole->println(pumpRuntimeSeconds);
+          replyConsole->print("last sampled pool temperature (C):"); 
+          if (lastSampledPoolTemperatureIsValid) {
+            replyConsole->print(lastSampledPoolTemperature);
+            replyConsole->print(" at ");
+            printDateTime(*replyConsole, lastSamplePoolTemperatureTime);           
+          } else {
+            replyConsole->println("not valid");
+          }
           break;
         }  
       }
@@ -434,8 +440,10 @@ void parseIncomingInput(char command[], int bufferlen, Print *replyConsole)
       return;
     }
     shorter = (char *)strpbrk(command, "\n\r"); // find first null, 0x0a or 0x0d
-    if (shorter != NULL) end = shorter;
-    *end = '\0';
+    if (shorter != NULL) {
+      end = shorter;
+      *end = '\0';
+    }
     if (end - command > MAX_COMMAND_LENGTH) {
       replyConsole->print("Command too long:"); replyConsole->println(command);    
     } else {

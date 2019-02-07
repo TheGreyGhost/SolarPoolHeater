@@ -9,6 +9,7 @@
 #include "SystemStatus.h"
 #include "PumpControl.h"
 #include "Settings.h"
+#include "RealTimeClock.h"
 
 const char COMMAND_START_CHAR = '!';
 
@@ -126,6 +127,11 @@ DataStreamError sendCurrentSensorReadings(Print &dest)
     value = smoothedTemperatures[i].getEWMA();
     dest.write((byte *)&value, sizeof value);
   }
+  dest.write((byte *)&lastSampledPoolTemperatureIsValid, sizeof lastSampledPoolTemperatureIsValid);
+  dest.write((byte *)&lastSampledPoolTemperature, sizeof lastSampledPoolTemperature);
+  uint32_t  timestamp = lastSamplePoolTemperatureTime.unixtime();
+  dest.write((byte *)&timestamp, sizeof timestamp);
+  
   return DSE_OK;
 }
 

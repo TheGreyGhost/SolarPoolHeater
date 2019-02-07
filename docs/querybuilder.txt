@@ -1,0 +1,25 @@
+SELECT entry_number, timestamp, assert_failure_code, realtime_clock_status, logfile_status, ethernet_status, solar_intensity_reading_invalid, pump_state, hx_hot_inlet_status, hx_hot_outlet_status, hx_cold_inlet_status, hx_cold_outlet_status, ambient_status, 
+pump_state_label, logfile_status_label, ethernet_status_label, 
+psl0.probe_status_label as hx_hot_inlet_status_label,
+psl1.probe_status_label as hx_hot_outlet_status_label,
+psl2.probe_status_label as hx_cold_inlet_status_label,
+psl3.probe_status_label as hx_cold_outlet_status_label,
+psl4.probe_status_label as ambient_status_label
+FROM PoolHeaterStatus as phs 
+LEFT JOIN PumpStateLabels as psl
+  ON phs.pump_state = psl.pump_state_code
+LEFT JOIN LogfileStatusLabels as lfsl
+  ON phs.logfile_status = lfsl.logfile_status_code
+LEFT JOIN EthernetStatusLabels as esl
+  ON phs.ethernet_status = esl.ethernet_status_code
+LEFT JOIN ProbeStatusLabels as psl0
+  on phs.hx_hot_inlet_status = psl0.probe_state_code
+LEFT JOIN ProbeStatusLabels as psl1
+  on phs.hx_hot_outlet_status = psl1.probe_state_code
+LEFT JOIN ProbeStatusLabels as psl2
+  on phs.cold_inlet_status = psl2.probe_state_code
+LEFT JOIN ProbeStatusLabels as psl3
+  on phs.cold_outlet_status = psl3.probe_state_code
+LEFT JOIN ProbeStatusLabels as psl4
+  on phs.ambient_status = psl4.probe_state_code
+ 
