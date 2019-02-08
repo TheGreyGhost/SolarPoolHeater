@@ -332,10 +332,11 @@ void executeCommand(char command[], Print *replyConsole)
           }
           break;
         }
+
         case 's': {  
           commandIsValid = true;
           if (strlen(command) < 3 + DATETIMEFORMAT_TOTALLENGTH) {
-            replyConsole->println(F("syntax error.  !cs Dec 26 2009 12:34:56 (capitalisation, character count, and spacings must match exactly)"));
+            replyConsole->println(F("syntax error.  !cs Dec 26 2009 12:34:56 UTC+09:30 (capitalisation, character count, and spacings must match exactly)"));
           } else {
             DateTime newTime(command+3, command+3 + DATETIMEFORMAT_TIME_STARTPOS);
             replyConsole->print("setting date+time to ");

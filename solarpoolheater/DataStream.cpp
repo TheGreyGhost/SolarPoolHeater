@@ -152,6 +152,7 @@ DataStreamError sendCurrentEEPROMSettings(Print &dest)
 !l{dword row nr}{word count} in LSB first order = request entries from log file
 !n = request number of entries in log file
 !c = cancel transmissions (log file)
+!t{dword unixtime seconds}{ulong timezone seconds} = set clock time (seconds since unix epoch, in UTC0:00) and the timezone (in seconds eg +9:30 = 9.5*3600)
 
 response:
 !{command letter echoed}{byte version} then:
@@ -182,6 +183,10 @@ native byte stream of all EEPROM settings
 for logfile:
 !l -> the byte stream from the log file itself, one entry per packet
 !n -> dword number of entries in log file
+!c -> no response
+
+for time:
+{ulong mismatch (+ve = arduino is fast)}{bool:autocorrecting}
 
 The final byte in the packet is {byte status: 0 = ok, else error code}
 Each response is a single UDP packet only.
@@ -254,6 +259,27 @@ DataStreamError executeDataStreamCommand(const char command[], int commandLength
         numberOfEntriesLeftToSend = bp[0] + ((unsigned long)bp[1]<<8);
         sendingLogData = true;
         commandIsValid = true;
+        break;
+      }
+      case 't': { // !t{dword unixtime seconds}{long timezone seconds} in LSB first order = set clock time (seconds since unix epoch, in UTC0:00) and the timezone (in seconds eg +9:30 = 9.5*3600)
+        if (commandLength < 2 + 4 + 4) break;
+        const byte *bp = (const byte *)(command + 2);
+        unsigned long unixtimeseconds = bp[0] + ((unsigned long)bp[1]<<8) 
+                                        + ((unsigned long)bp[2]<<16) + ((unsigned long)bp[3]<<24);
+        bp += 4;
+        long newtimezone = bp[0] + ((unsigned long)bp[1]<<8) 
+                           + ((unsigned long)bp[2]<<16) + ((long)(bp[3]<<24));
+        commandIsValid = true;
+
+        errorcode = startResponse('t', connection);
+        if (errorcode == DSE_OK && connection != NULL) {
+          int byteswritten = connection->write((byte *)&numberOfSamples, sizeof(numberOfSamples));
+          if (byteswritten != sizeof(numberOfSamples)) {
+            errorcode = DSE_WRITE_FAILED;
+          }
+        }
+        sendEndResponse = true;        
+
         break;
       }
     }
