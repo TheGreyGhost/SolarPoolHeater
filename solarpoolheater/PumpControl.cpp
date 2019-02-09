@@ -76,7 +76,7 @@ bool isPumpRunning()
 
 bool isSystemIdle()
 {
-  float currentHours = currentTime.hour() + currentTime.minute() / 60.0;
+  float currentHours = currentTimeWithZone.hour() + currentTimeWithZone.minute() / 60.0;
   return (currentHours < getSetting(SET_onTimeHours) || currentHours > getSetting(SET_offTimeHours)); 
 }
 
@@ -105,7 +105,7 @@ void setupPumpControl()
   pumpRuntimeSeconds = 0;
   pumpIsRunning = false;
   pumpState = PS_OFF_WAITING_FOR_SUN;
-  lastDayPC = currentTime.day();    
+  lastDayPC = currentTimeWithZone.day();    
   systemErrorCountToday = 0;
   pumpTurnOnCount = 0;
   lastSampledPoolTemperatureIsValid = false;
@@ -114,7 +114,7 @@ void setupPumpControl()
 void resetPumpErrors()
 {
   pumpState = PS_OFF_WAITING_FOR_SUN;
-  lastDayPC = currentTime.day();    
+  lastDayPC = currentTimeWithZone.day();    
   systemErrorCountToday = 0;
   pumpTurnOnCount = 0;
 }
@@ -139,14 +139,14 @@ void tickPumpControl()
     pumpRuntimeSeconds += (timeNow - lastMillisPC) / 1000.0;
   }  
 
-  if (currentTime.day() != lastDayPC) {
-    lastDayPC = currentTime.day();
+  if (currentTimeWithZone.day() != lastDayPC) {
+    lastDayPC = currentTimeWithZone.day();
     pumpRuntimeSeconds = 0;
     systemErrorCountToday = 0;
     pumpTurnOnCount = 0;
   }
 
-  float currentHours = currentTime.hour() + currentTime.minute() / 60.0;
+  float currentHours = currentTimeWithZone.hour() + currentTimeWithZone.minute() / 60.0;
 
   switch (pumpState) {
     case PS_OFF_PUMP_CYCLING:
@@ -206,9 +206,10 @@ void tickPumpControl()
     }
   }
 
-  if (pumpIsRunning && smoothedTemperatures[HX_COLD_INLET].isValid()) {
+  if (currentHours >= getSetting(SET_onTimeHours) && currentHours <= getSetting(SET_offTimeHours) {
+      && smoothedTemperatures[HX_COLD_INLET].isValid()) {
     lastSampledPoolTemperature = smoothedTemperatures[HX_COLD_INLET].getEWMA();
-    lastSamplePoolTemperatureTime = currentTime;
+    lastSamplePoolTemperatureTime = currentTimeUTC;
     lastSampledPoolTemperatureIsValid = true;
   }
 }

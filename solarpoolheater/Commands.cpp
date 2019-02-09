@@ -245,7 +245,7 @@ void executeCommand(char command[], Print *replyConsole)
       commandIsValid = true;
       replyConsole->println(F("commands (turn CR+LF on):"));
       replyConsole->println(F("!cr = read clock date+time"));
-      replyConsole->println(F("!cs Dec 26 2009 12:34:56 = set clock date + time (capitalisation, character count, and spacings must match exactly)"));
+      replyConsole->println(F("!cs Dec 26 2009 12:34:56UTC+9:30 = set clock date + time (capitalisation, character count, and spacings must match exactly)"));
       replyConsole->println(F("!d = print debug info"));
       replyConsole->println(F("!da = list all simulate-able variables"));
       replyConsole->println(F("!dc variable# = cancel simulation for variable #, if variable# = a then cancel all"));
@@ -326,7 +326,7 @@ void executeCommand(char command[], Print *replyConsole)
         case 'r': {
           commandIsValid = true;
           if (realTimeClockStatus) {
-            printDateTime(*console, currentTime);
+            printDateTime(*console, currentTimeWithZone);
           } else {
             replyConsole->println("real time clock is not running");  
           }
