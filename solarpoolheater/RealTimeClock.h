@@ -11,6 +11,14 @@ enum RESYNCHstatus {RESYNCH_not_required = 0, RESYNCH_synchronising = 1, RESYNCH
 // print the given date + time to the destination
 void printDateTime(Print &dest, DateTime dateTime);
 
+void printDateTimeWithZone(Print &dest, DateTime dateTimeUTC, unsigned long timeZone);
+
+// Parses a date & time with timezone
+// "Dec 26 2009 12:34:56UTC+09:30" - must match this form and spacing and capitalisation exactly
+// returns true for OK, false for a problem with the format
+// retDateTime is the clock time in UTC+0:00, retTimeZone is the timezone in seconds eg +9:30 is 9.5 * 3600
+bool parseDateTimeWithZone(const char newDateTimeWithZone[], DateTime &retDateTime, unsigned long &retTimeZone);
+
 // set the current date + time to the given string
 // MUST follow the following format (exact character count and spacing)
 // "Dec 26 2009 12:34:56 UTC+09:30"
@@ -31,6 +39,7 @@ RESYNCHstatus getResynchStatus();
 
 extern DateTime currentTimeUTC; // the current time in UTC+0:00
 extern DateTime currentTimeWithZone; // the current time in the current timezone
+extern long currentTimeZoneSeconds; // the seconds of the current timezone i.e. +9:30 = 9.5 * 3600
 extern bool realTimeClockStatus;  // true if ok
 
 const int DATETIMEFORMAT_DATELENGTH = 11; // "Dec 04 2018"

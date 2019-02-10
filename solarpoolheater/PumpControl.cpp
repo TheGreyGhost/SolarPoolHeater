@@ -146,7 +146,7 @@ void tickPumpControl()
     pumpTurnOnCount = 0;
   }
 
-  float currentHours = currentTimeWithZone.hour() + currentTimeWithZone.minute() / 60.0;
+  float currentHoursWithZone = currentTimeWithZone.hour() + currentTimeWithZone.minute() / 60.0;
 
   switch (pumpState) {
     case PS_OFF_PUMP_CYCLING:
@@ -174,7 +174,7 @@ void tickPumpControl()
     case PS_OFF_WAITING_FOR_SUN:
     case PS_ON:
     case PS_ON_TIMING_OUT: {
-      pumpState = checkForPumpStateTransition(currentHours, timeNow);
+      pumpState = checkForPumpStateTransition(currentHoursWithZone, timeNow);
       break;
     }
 
@@ -206,7 +206,7 @@ void tickPumpControl()
     }
   }
 
-  if (currentHours >= getSetting(SET_onTimeHours) && currentHours <= getSetting(SET_offTimeHours) {
+  if (currentHoursWithZone >= getSetting(SET_onTimeHours) && currentHoursWithZone <= getSetting(SET_offTimeHours) 
       && smoothedTemperatures[HX_COLD_INLET].isValid()) {
     lastSampledPoolTemperature = smoothedTemperatures[HX_COLD_INLET].getEWMA();
     lastSamplePoolTemperatureTime = currentTimeUTC;
@@ -214,7 +214,7 @@ void tickPumpControl()
   }
 }
 
-PumpState checkForPumpStateTransition(float currentHours, unsigned long timeNow)
+PumpState checkForPumpStateTransition(float currentHours, unsigned long timeNow) 
 {
   // first look for conditions which always turn the pump off
 

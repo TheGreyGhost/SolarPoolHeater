@@ -29,6 +29,13 @@ int runTest1(int variable)
 
 int runTest2(int variable)
 {
+  things to test:
+  print datetime with timezone and without
+  positve and negative timezones
+  parse time correctly including timezones
+  correct time goes in logging and in datastream
+  change time using command works
+  resynch time from rpi works - sets time and timezone correctly, periodic resycnh works correctly
   
 }
 

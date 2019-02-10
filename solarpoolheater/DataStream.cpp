@@ -267,8 +267,8 @@ DataStreamError executeDataStreamCommand(const char command[], int commandLength
         unsigned long unixtimeseconds = bp[0] + ((unsigned long)bp[1]<<8) 
                                         + ((unsigned long)bp[2]<<16) + ((unsigned long)bp[3]<<24);
         bp += 4;
-        long newtimezone = bp[0] + ((unsigned long)bp[1]<<8) 
-                           + ((unsigned long)bp[2]<<16) + ((long)(bp[3]<<24));
+        long newtimezone = bp[0] | ((unsigned long)bp[1]<<8) 
+                           | ((unsigned long)bp[2]<<16) | ((unsigned long)bp[3]<<24);
         commandIsValid = true;
 
         long currentClockError = setDateTimeForResynchronisation(unixtimeseconds, newtimezone);

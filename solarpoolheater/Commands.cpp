@@ -312,7 +312,7 @@ void executeCommand(char command[], Print *replyConsole)
           if (lastSampledPoolTemperatureIsValid) {
             replyConsole->print(lastSampledPoolTemperature);
             replyConsole->print(" at ");
-            printDateTime(*replyConsole, lastSamplePoolTemperatureTime);           
+            printDateTime(*replyConsole, lastSamplePoolTemperatureTime + TimeSpan(currentTimeZoneSeconds));           
           } else {
             replyConsole->println("not valid");
           }
@@ -326,7 +326,7 @@ void executeCommand(char command[], Print *replyConsole)
         case 'r': {
           commandIsValid = true;
           if (realTimeClockStatus) {
-            printDateTime(*console, currentTimeWithZone);
+            printDateTimeWithZone(*console, currentTimeUTC, currentTimeZoneSeconds);
           } else {
             replyConsole->println("real time clock is not running");  
           }
@@ -335,13 +335,21 @@ void executeCommand(char command[], Print *replyConsole)
 
         case 's': {  
           commandIsValid = true;
-          if (strlen(command) < 3 + DATETIMEFORMAT_TOTALLENGTH) {
-            replyConsole->println(F("syntax error.  !cs Dec 26 2009 12:34:56 UTC+09:30 (capitalisation, character count, and spacings must match exactly)"));
+          bool success = false;
+          if (strlen(command) < 3) {
+            success = false;
           } else {
-            DateTime newTime(command+3, command+3 + DATETIMEFORMAT_TIME_STARTPOS);
-            replyConsole->print("setting date+time to ");
-            printDateTime(*console, newTime);
-            setDateTime(command+3); 
+            DateTime newTime;
+            unsigned long newTimeZone;
+            success = parseDateTimeWithZone(command + 3, newTime, newTimeZone);
+            if (success) {
+              replyConsole->print("setting date+time to ");
+              printDateTimeWithZone(*console, newTime, newTimeZone);
+              setDateTime(command+3); 
+            }
+          }  
+          if (!success) {
+            replyConsole->println(F("syntax error.  !cs Dec 26 2009 12:34:56 UTC+09:30 (capitalisation, character count, and spacings must match exactly)"));
           } 
           break;
         }

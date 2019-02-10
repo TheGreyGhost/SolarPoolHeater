@@ -4,7 +4,7 @@
 RTC_DS1307 realTimeClock;
 DateTime currentTimeUTC;
 DateTime currentTimeWithZone;
-long timeZoneSeconds;  // eg UTC+9:30 is 9.5 * 3600.  Also saved in EEPROM.
+long currentTimeZoneSeconds;  // eg UTC+9:30 is 9.5 * 3600.  Also saved in EEPROM.
 
 long timeMismatch;  // seconds that the RTC is ahead of the true time
 
@@ -13,21 +13,21 @@ bool realTimeClockStatus;
 void setupRTC(void){
   Wire.begin();
   realTimeClock.begin();
-  currentTime = realTimeClock.now();
-  timeZoneSeconds = (long)getSetting(SET_timezone);
+  currentTimeZoneSeconds = (long)getSetting(SET_timezone);
+  tickRTC();
 }
 
 void tickRTC() {
   realTimeClockStatus = realTimeClock.isrunning();
   if (realTimeClockStatus) {
     currentTimeUTC = realTimeClock.now();
-    currentTimeWithZone = currentTimeUTC + timeZoneSeconds;
+    currentTimeWithZone = currentTimeUTC + currentTimeZoneSeconds;
   }
 }
 
-// if correctForTimeZone is true, take the time and add the timezone offset.  Otherwise, print as is
-void printDateTime(Print &dest, DateTime dateTime, bool correctForTimeZone) {
-  DateTime displayTime = correctForTimeZone ? dateTime + TimeSpan(newTimeZone) : dateTime;
+// print the time, no time zone
+void printDateTimeNoCarret(Print &dest, DateTime dateTime) {
+  DateTime displayTime = correctForTimeZone ? dateTime + TimeSpan(timeZoneSeconds) : dateTime;
   
   dest.print(displayTime.year(), DEC);
   dest.print('/');
@@ -40,6 +40,25 @@ void printDateTime(Print &dest, DateTime dateTime, bool correctForTimeZone) {
   dest.print(displayTime.minute(), DEC);
   dest.print(':');
   dest.print(displayTime.second(), DEC);
+}
+
+// print the time and time zone
+void printDateTimeWithZone(Print &dest, DateTime dateTime) {
+  printDateTimeNoCarret(dest, dateTime);
+  dest.print(" UTC");
+  dest.print(currentTimeZoneSeconds < 0 ? "-" : "+");
+  int timezonehours = abs(currentTimeZoneSeconds) / 3600;
+  int timezonemins = (abs(currentTimeZoneSeconds) / 60) % 60;
+  dest.print(timezonehours);
+  dest.print(":");
+  dest.print(timezonemins/10);
+  dest.print(timezonemins%10);
+  dest.println();
+}
+
+// print the time, no time zone
+void printDateTime(Print &dest, DateTime dateTime) {
+  printDateTimeNoCarret(dest, dateTime);
   dest.println();
 }
 
@@ -55,24 +74,39 @@ byte gettwodigit(const char* p) {
     return 10 * msd + lsd;
 }
 
+// Parses a date & time with timezone
+// "Dec 26 2009 12:34:56UTC+09:30" - must match this form and spacing and capitalisation exactly
+// returns true for OK, false for a problem with the format
+// retDateTime is the clock time in UTC+0:00, retTimeZone is the timezone in seconds eg +9:30 is 9.5 * 3600
+bool parseDateTimeWithZone(const char newDateTimeWithZone[], DateTime &retDateTime, long &retTimeZone)
+{
+  if (strlen(newDateTimeWithZone) < DATETIMEFORMAT_TOTALLENGTH) return false;
+  
+  DateTime newRawTime(newDateTimeWithZone, newDateTimeWithZone + DATETIMEFORMAT_TIME_STARTPOS);
+
+  long newTimeZone = 3600 * gettwodigit(newDateTimeWithZone + DATETIMEFORMAT_TIMEZONE_STARTPOS + 4)
+                             + 60 * gettwodigit(newDateTimeWithZone + DATETIMEFORMAT_TIMEZONE_STARTPOS + 4 + 2 + 1);
+  if (newDateTimeWithZone[DATETIMEFORMAT_TIMEZONE_STARTPOS + 3] == '-') {
+    newTimeZone *= -1;
+  }
+  
+  retDateTime = newRawTime - TimeSpan(newTimeZone);
+  retTimeZone = newTimeZone;
+  return true;
+}
+
 // "Dec 26 2009 12:34:56UTC+09:30"
 // returns true for OK, false for a problem with the format
 bool setDateTime(const char newDateTime[])
 {
-  if (strlen(newDateTime) < DATETIMEFORMAT_TOTALLENGTH) return false;
+  DateTime newTime;
+  long newTimeZone;
+  success = parseDateWithTimeZone(newDateTime, newTime, newTimeZone);
+  if (!success) return false;
   
-  DateTime newRawTime(newDateTime, newDateTime + DATETIMEFORMAT_TIME_STARTPOS);
-
-  unsigned int newTimeZone = 3600 * gettwodigit(newDateTime + DATETIMEFORMAT_TIMEZONE_STARTPOS + 4)
-                             + 60 * gettwodigit(newDateTime + DATETIMEFORMAT_TIMEZONE_STARTPOS + 4 + 2 + 1);
-  if (newDateTime[DATETIMEFORMAT_TIMEZONE_STARTPOS + 3] == '-') {
-    newTimeZone *= -1;
-  }
-  
-  newTime = newRawTime - TimeSpan(newTimeZone);
   realTimeClock.adjust(newTime);
-  timeZoneSeconds = newTimeZone;
-  setSetting(SET_timezone, timeZoneSeconds);
+  currentTimeZoneSeconds = newTimeZone;
+  setSetting(SET_timezone, currentTimeZoneSeconds);
   currentTimeUTC = realTimeClock.now();
   currentTimeWithZone = currentTimeUTC + timeZoneSeconds;
 
