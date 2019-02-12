@@ -7,6 +7,9 @@ DateTime currentTimeWithZone;
 long currentTimeZoneSeconds;  // eg UTC+9:30 is 9.5 * 3600.  Also saved in EEPROM.
 
 long timeMismatch;  // seconds that the RTC is ahead of the true time
+unsigned long timeOfLastResynchronise; // millis() that we last dropped or gained time to resynchronise
+
+const unsigned long TIME_BETWEEN_RESYNCHRONISE_S = 600; // once per ten minutes - should be enough
 
 bool realTimeClockStatus;
 
@@ -14,6 +17,8 @@ void setupRTC(void){
   Wire.begin();
   realTimeClock.begin();
   currentTimeZoneSeconds = (long)getSetting(SET_timezone);
+  timeMismatch = 0;
+  timeOfLastResynchronise = millis();
   tickRTC();
 }
 
@@ -22,6 +27,10 @@ void tickRTC() {
   if (realTimeClockStatus) {
     currentTimeUTC = realTimeClock.now();
     currentTimeWithZone = currentTimeUTC + currentTimeZoneSeconds;
+    if ((millis() - timeOfLastResynchronise) >= TIME_BETWEEN_RESYNCHRONISE_S) {
+      timeOfLastResynchronise = millis();
+      tickResynchronise();
+    }
   }
 }
 
@@ -52,7 +61,7 @@ void printDateTimeWithZone(Print &dest, DateTime dateTime) {
   dest.print(timezonehours);
   dest.print(":");
   dest.print(timezonemins/10);
-  dest.print(timezonemins%10);
+  dest.print(timezonemis%10);
   dest.println();
 }
 
@@ -123,14 +132,33 @@ const int DATETIMEFORMAT_TOTALLENGTH = DATETIMEFORMAT_TIMEZONE_STARTPOS + DATETI
 // set the correct time, subsequent calls to tickResynchronise will gradually adjust the clock
 //  to match this resynchronisation time
 // returns the current clock error relative to the synch time (+ve --> arduino is ahead of synch time)
-long setDateTimeForResynchronisation(unsigned long unixtimeseconds, long timezoneseconds) {
+long setDateTimeForResynchronisation(unsigned long unixtimeseconds, long timezoneseconds) 
+{
   currentTimeUTC = realTimeClock.now();
   timeZoneSeconds = newTimeZone;
   setSetting(SET_timezone, timeZoneSeconds);
   timeMismatch = currentTimeUTC - unixtimeseconds;
   return timeMismatch;
 }
+
 // resynchronise the clock (if required)
 // resynchronisation is performed one second at a time
 // this function should be called periodically (eg once per hour) to add or drop seconds
-void tickResynchronise();
+// it will wait up to a maximum of 1.1 second to make sure that the clock is aligned
+void tickResynchronise()
+{
+  unsigned long startmillis = millis();
+  time_t currentClock = realTimeClock.now();
+  while (realTimeClock.now() <= currentClock)) {
+     if (millis() - startmillis >= 1100) {        // abort if timeout
+      return;
+     }
+  }
+  realtimeClock.sync(currentClock + 1 + (timeMismatch < 0 ? 1 : -1));
+  if (timeMismatch > 0) {
+    --timeMismatch; 
+  } else {
+    ++timeMismatch;
+  }
+}
+
