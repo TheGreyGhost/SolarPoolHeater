@@ -12,7 +12,8 @@ void printDateTime(Print &dest, DateTime dateTime);
 // set the current date + time to the given string
 // MUST follow the following format (exact character count and spacing)
 // "Dec 26 2009 12:34:56 UTC+09:30"
-void setDateTime(const char newDateTime[]);
+// returns false if a problem occurred (however most errors / format problems will fail silently and result in an unexpected date/time)
+bool setDateTime(const char newDateTime[]);
 
 // set the correct time, subsequent calls to tickResynchronise will gradually adjust the clock
 //  to match this resynchronisation time

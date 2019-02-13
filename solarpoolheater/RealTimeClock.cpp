@@ -59,7 +59,7 @@ bool setDateTime(const char newDateTime[])
     newTimeZone *= -1;
   }
   
-  newTime = newRawTime - TimeSpan(newTimeZone);
+  DateTime newTime = newRawTime - TimeSpan(newTimeZone);
   realTimeClock.adjust(newTime);
   
   return true;
