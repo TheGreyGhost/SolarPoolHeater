@@ -1,35 +1,73 @@
 #include "RealTimeClock.h"
 #include <Wire.h>
-
+#include "Settings.h"
 RTC_DS1307 realTimeClock;
-DateTime currentTime;
+DateTime currentTimeUTC;
+DateTime currentTimeWithZone;
+long currentTimeZoneSeconds;  // eg UTC+9:30 is 9.5 * 3600.  Also saved in EEPROM.
+
+long timeMismatch;  // seconds that the RTC is ahead of the true time
+unsigned long timeOfLastResynchronise; // millis() that we last dropped or gained time to resynchronise
+
+const unsigned long TIME_BETWEEN_RESYNCHRONISE_S = 600; // once per ten minutes - should be enough
+
 bool realTimeClockStatus;
 
 void setupRTC(void){
   Wire.begin();
   realTimeClock.begin();
-  currentTime = realTimeClock.now();
+  currentTimeZoneSeconds = (long)getSetting(SET_timezone);
+  timeMismatch = 0;
+  timeOfLastResynchronise = millis();
+  tickRTC();
 }
 
 void tickRTC() {
   realTimeClockStatus = realTimeClock.isrunning();
   if (realTimeClockStatus) {
-    currentTime = realTimeClock.now();
+    currentTimeUTC = realTimeClock.now();
+    currentTimeWithZone = currentTimeUTC + currentTimeZoneSeconds;
+    if ((millis() - timeOfLastResynchronise) >= TIME_BETWEEN_RESYNCHRONISE_S) {
+      timeOfLastResynchronise = millis();
+      tickResynchronise();
+    }
   }
 }
 
-void printDateTime(Print &dest, DateTime dateTime) {
-  dest.print(dateTime.year(), DEC);
+// print the time, no time zone
+void printDateTimeNoCarret(Print &dest, DateTime dateTime) {
+  DateTime displayTime = correctForTimeZone ? dateTime + TimeSpan(timeZoneSeconds) : dateTime;
+  
+  dest.print(displayTime.year(), DEC);
   dest.print('/');
-  dest.print(dateTime.month(), DEC);
+  dest.print(displayTime.month(), DEC);
   dest.print('/');
-  dest.print(dateTime.day(), DEC);
+  dest.print(displayTime.day(), DEC);
   dest.print(' ');
-  dest.print(dateTime.hour(), DEC);
+  dest.print(displayTime.hour(), DEC);
   dest.print(':');
-  dest.print(dateTime.minute(), DEC);
+  dest.print(displayTime.minute(), DEC);
   dest.print(':');
-  dest.print(dateTime.second(), DEC);
+  dest.print(displayTime.second(), DEC);
+}
+
+// print the time and time zone
+void printDateTimeWithZone(Print &dest, DateTime dateTime) {
+  printDateTimeNoCarret(dest, dateTime);
+  dest.print(" UTC");
+  dest.print(currentTimeZoneSeconds < 0 ? "-" : "+");
+  int timezonehours = abs(currentTimeZoneSeconds) / 3600;
+  int timezonemins = (abs(currentTimeZoneSeconds) / 60) % 60;
+  dest.print(timezonehours);
+  dest.print(":");
+  dest.print(timezonemins/10);
+  dest.print(timezonemis%10);
+  dest.println();
+}
+
+// print the time, no time zone
+void printDateTime(Print &dest, DateTime dateTime) {
+  printDateTimeNoCarret(dest, dateTime);
   dest.println();
 }
 
@@ -45,23 +83,42 @@ byte gettwodigit(const char* p) {
     return 10 * msd + lsd;
 }
 
+// Parses a date & time with timezone
+// "Dec 26 2009 12:34:56UTC+09:30" - must match this form and spacing and capitalisation exactly
+// returns true for OK, false for a problem with the format
+// retDateTime is the clock time in UTC+0:00, retTimeZone is the timezone in seconds eg +9:30 is 9.5 * 3600
+bool parseDateTimeWithZone(const char newDateTimeWithZone[], DateTime &retDateTime, long &retTimeZone)
+{
+  if (strlen(newDateTimeWithZone) < DATETIMEFORMAT_TOTALLENGTH) return false;
+  
+  DateTime newRawTime(newDateTimeWithZone, newDateTimeWithZone + DATETIMEFORMAT_TIME_STARTPOS);
+
+  long newTimeZone = 3600 * gettwodigit(newDateTimeWithZone + DATETIMEFORMAT_TIMEZONE_STARTPOS + 4)
+                             + 60 * gettwodigit(newDateTimeWithZone + DATETIMEFORMAT_TIMEZONE_STARTPOS + 4 + 2 + 1);
+  if (newDateTimeWithZone[DATETIMEFORMAT_TIMEZONE_STARTPOS + 3] == '-') {
+    newTimeZone *= -1;
+  }
+  
+  retDateTime = newRawTime - TimeSpan(newTimeZone);
+  retTimeZone = newTimeZone;
+  return true;
+}
+
 // "Dec 26 2009 12:34:56UTC+09:30"
 // returns true for OK, false for a problem with the format
 bool setDateTime(const char newDateTime[])
 {
-  if (strlen(newDateTime) < DATETIMEFORMAT_TOTALLENGTH) return false;
+  DateTime newTime;
+  long newTimeZone;
+  success = parseDateWithTimeZone(newDateTime, newTime, newTimeZone);
+  if (!success) return false;
   
-  DateTime newRawTime(newDateTime, newDateTime + DATETIMEFORMAT_TIME_STARTPOS);
-
-  unsigned int newTimeZone = 3600 * gettwodigit(newDateTime + DATETIMEFORMAT_TIMEZONE_STARTPOS + 4)
-                             + 60 * gettwodigit(newDateTime + DATETIMEFORMAT_TIMEZONE_STARTPOS + 4 + 2 + 1);
-  if (newDateTime[DATETIMEFORMAT_TIMEZONE_STARTPOS + 3] == '-') {
-    newTimeZone *= -1;
-  }
-  
-  DateTime newTime = newRawTime - TimeSpan(newTimeZone);
   realTimeClock.adjust(newTime);
-  
+  currentTimeZoneSeconds = newTimeZone;
+  setSetting(SET_timezone, currentTimeZoneSeconds);
+  currentTimeUTC = realTimeClock.now();
+  currentTimeWithZone = currentTimeUTC + timeZoneSeconds;
+
   return true;
 }
 
@@ -72,15 +129,36 @@ const int DATETIMEFORMAT_TIME_STARTPOS = DATETIMEFORMAT_DATELENGTH + 1; // inclu
 const int DATETIMEFORMAT_TIMEZONE_STARTPOS = DATETIMEFORMAT_TIME_STARTPOS + DATETIMEFORMAT_TIMELENGTH + 1; // includes space
 const int DATETIMEFORMAT_TOTALLENGTH = DATETIMEFORMAT_TIMEZONE_STARTPOS + DATETIMEFORMAT_TIMEZONE_LENGTH;
 
-  
-}
-
 // set the correct time, subsequent calls to tickResynchronise will gradually adjust the clock
 //  to match this resynchronisation time
 // returns the current clock error relative to the synch time (+ve --> arduino is ahead of synch time)
-unsigned long setDateTimeForResynchronisation(unsigned long unixtimeseconds, long timezoneseconds);
+long setDateTimeForResynchronisation(unsigned long unixtimeseconds, long timezoneseconds) 
+{
+  currentTimeUTC = realTimeClock.now();
+  timeZoneSeconds = newTimeZone;
+  setSetting(SET_timezone, timeZoneSeconds);
+  timeMismatch = currentTimeUTC - unixtimeseconds;
+  return timeMismatch;
+}
 
 // resynchronise the clock (if required)
 // resynchronisation is performed one second at a time
 // this function should be called periodically (eg once per hour) to add or drop seconds
-void tickResynchronise();
+// it will wait up to a maximum of 1.1 second to make sure that the clock is aligned
+void tickResynchronise()
+{
+  unsigned long startmillis = millis();
+  time_t currentClock = realTimeClock.now();
+  while (realTimeClock.now() <= currentClock)) {
+     if (millis() - startmillis >= 1100) {        // abort if timeout
+      return;
+     }
+  }
+  realtimeClock.sync(currentClock + 1 + (timeMismatch < 0 ? 1 : -1));
+  if (timeMismatch > 0) {
+    --timeMismatch; 
+  } else {
+    ++timeMismatch;
+  }
+}
+

@@ -53,7 +53,7 @@ void tickDatalog()
       datalogfile.seek(datalogfile.size());
 
       size_t totalBytesWritten = 0;
-      long timestamp = currentTime.secondstime();
+      long timestamp = currentTimeUTC.secondstime();
       size_t bytesWritten = datalogfile.write((byte *)&timestamp, sizeof timestamp);
       if (bytesWritten != sizeof timestamp) {
         logfileStatus = LFS_WRITE_FAILED;

@@ -186,7 +186,7 @@ for logfile:
 !c -> no response
 
 for time:
-{ulong mismatch (+ve = arduino is fast)}{bool:autocorrecting}
+{ulong mismatch (+ve = arduino is fast)}{byte RESYNCH_status code}
 
 The final byte in the packet is {byte status: 0 = ok, else error code}
 Each response is a single UDP packet only.
@@ -267,18 +267,26 @@ DataStreamError executeDataStreamCommand(const char command[], int commandLength
         unsigned long unixtimeseconds = bp[0] + ((unsigned long)bp[1]<<8) 
                                         + ((unsigned long)bp[2]<<16) + ((unsigned long)bp[3]<<24);
         bp += 4;
-        long newtimezone = bp[0] + ((unsigned long)bp[1]<<8) 
-                           + ((unsigned long)bp[2]<<16) + ((long)(bp[3]<<24));
+        long newtimezone = bp[0] | ((unsigned long)bp[1]<<8) 
+                           | ((unsigned long)bp[2]<<16) | ((unsigned long)bp[3]<<24);
         commandIsValid = true;
 
+        long currentClockError = setDateTimeForResynchronisation(unixtimeseconds, newtimezone);
+        RESYNCHstatus resynchStatus = getResynchStatus();
         errorcode = startResponse('t', connection);
         if (errorcode == DSE_OK && connection != NULL) {
-          int byteswritten = connection->write((byte *)&numberOfSamples, sizeof(numberOfSamples));
-          if (byteswritten != sizeof(numberOfSamples)) {
+          int byteswritten = connection->write((byte *)&currentClockError, sizeof(currentClockError));
+          byteswritten += connection->write((byte *)&resynchStatus, sizeof(resynchStatus));
+          if (byteswritten != sizeof(currentClockError) + sizeof(resynchStatus)) {
             errorcode = DSE_WRITE_FAILED;
           }
         }
         sendEndResponse = true;        
+
+// set the correct time, subsequent calls to tickResynchronise will gradually adjust the clock
+//  to match this resynchronisation time
+// returns the current clock error relative to the synch time (+ve --> arduino is ahead of synch time)
+
 
         break;
       }

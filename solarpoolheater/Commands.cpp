@@ -245,7 +245,7 @@ void executeCommand(char command[], Print *replyConsole)
       commandIsValid = true;
       replyConsole->println(F("commands (turn CR+LF on):"));
       replyConsole->println(F("!cr = read clock date+time"));
-      replyConsole->println(F("!cs Dec 26 2009 12:34:56 = set clock date + time (capitalisation, character count, and spacings must match exactly)"));
+      replyConsole->println(F("!cs Dec 26 2009 12:34:56UTC+9:30 = set clock date + time (capitalisation, character count, and spacings must match exactly)"));
       replyConsole->println(F("!d = print debug info"));
       replyConsole->println(F("!da = list all simulate-able variables"));
       replyConsole->println(F("!dc variable# = cancel simulation for variable #, if variable# = a then cancel all"));
@@ -312,7 +312,7 @@ void executeCommand(char command[], Print *replyConsole)
           if (lastSampledPoolTemperatureIsValid) {
             replyConsole->print(lastSampledPoolTemperature);
             replyConsole->print(" at ");
-            printDateTime(*replyConsole, lastSamplePoolTemperatureTime);           
+            printDateTime(*replyConsole, lastSamplePoolTemperatureTime + TimeSpan(currentTimeZoneSeconds));           
           } else {
             replyConsole->println("not valid");
           }
@@ -326,7 +326,7 @@ void executeCommand(char command[], Print *replyConsole)
         case 'r': {
           commandIsValid = true;
           if (realTimeClockStatus) {
-            printDateTime(*console, currentTime);
+            printDateTimeWithZone(*console, currentTimeUTC, currentTimeZoneSeconds);
           } else {
             replyConsole->println("real time clock is not running");  
           }
@@ -335,13 +335,21 @@ void executeCommand(char command[], Print *replyConsole)
 
         case 's': {  
           commandIsValid = true;
-          if (strlen(command) < 3 + DATETIMEFORMAT_TOTALLENGTH) {
-            replyConsole->println(F("syntax error.  !cs Dec 26 2009 12:34:56 UTC+09:30 (capitalisation, character count, and spacings must match exactly)"));
+          bool success = false;
+          if (strlen(command) < 3) {
+            success = false;
           } else {
-            DateTime newTime(command+3, command+3 + DATETIMEFORMAT_TIME_STARTPOS);
-            replyConsole->print("setting date+time to ");
-            printDateTime(*console, newTime);
-            setDateTime(command+3); 
+            DateTime newTime;
+            unsigned long newTimeZone;
+            success = parseDateTimeWithZone(command + 3, newTime, newTimeZone);
+            if (success) {
+              replyConsole->print("setting date+time to ");
+              printDateTimeWithZone(*console, newTime, newTimeZone);
+              setDateTime(command+3); 
+            }
+          }  
+          if (!success) {
+            replyConsole->println(F("syntax error.  !cs Dec 26 2009 12:34:56 UTC+09:30 (capitalisation, character count, and spacings must match exactly)"));
           } 
           break;
         }
