@@ -17,7 +17,7 @@ void printDateTimeWithZone(Print &dest, DateTime dateTimeUTC, unsigned long time
 // "Dec 26 2009 12:34:56UTC+09:30" - must match this form and spacing and capitalisation exactly
 // returns true for OK, false for a problem with the format
 // retDateTime is the clock time in UTC+0:00, retTimeZone is the timezone in seconds eg +9:30 is 9.5 * 3600
-bool parseDateTimeWithZone(const char newDateTimeWithZone[], DateTime &retDateTime, unsigned long &retTimeZone);
+bool parseDateTimeWithZone(const char newDateTimeWithZone[], DateTime &retDateTime, long &retTimeZone);
 
 // set the current date + time to the given string
 // MUST follow the following format (exact character count and spacing)
@@ -38,6 +38,10 @@ RESYNCHstatus tickResynchronise();
 // what is the current resynchronisation status?
 RESYNCHstatus getResynchStatus();
 
+// refresh currentTimeUTC, currentTimeWithZone
+// returns true for success
+bool refreshCurrentTime();
+
 extern DateTime currentTimeUTC; // the current time in UTC+0:00
 extern DateTime currentTimeWithZone; // the current time in the current timezone
 extern long currentTimeZoneSeconds; // the seconds of the current timezone i.e. +9:30 = 9.5 * 3600
@@ -49,6 +53,5 @@ const int DATETIMEFORMAT_TIMEZONE_LENGTH = 9; // "UTC+09:30"
 const int DATETIMEFORMAT_TIME_STARTPOS = DATETIMEFORMAT_DATELENGTH + 1; // includes space
 const int DATETIMEFORMAT_TIMEZONE_STARTPOS = DATETIMEFORMAT_TIME_STARTPOS + DATETIMEFORMAT_TIMELENGTH + 1; // includes space
 const int DATETIMEFORMAT_TOTALLENGTH = DATETIMEFORMAT_TIMEZONE_STARTPOS + DATETIMEFORMAT_TIMEZONE_LENGTH;
-
 
 #endif

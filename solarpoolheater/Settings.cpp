@@ -10,7 +10,7 @@ const float defaults[] = {9.0, 19.0, 28.0, 1.0,
 const char* settingLabels[NUMBER_OF_EEPROM_SETTINGS] = {"onTimeHours", "offTimeHours", "temperatureSetpoint", "temperatureSetpointHysteresis",
 										 "solarIntensityThreshold", "minimumHotInletMinusColdInlet", "belowMinimumTimeoutSeconds",
 										 "maxDailySystemErrorCount", "hotInletAlarm", "coldOutletAlarm", "minSecondsPerFourPumpOns", "dontRunPump", 
-										 "logInterval(s)", "logIntervalIdle(s)", "timezoneRelativeToUTC (s) "INVALID_PARAMETER"};
+										 "logInterval(s)", "logIntervalIdle(s)", "timezoneRelativeToUTC(s)", "INVALID_PARAMETER"};
 
 int getEEPROMaddress(EEPROMSettings whichSetting);
 EEPROMSettings clipSetting(EEPROMSettings whichSetting);

@@ -20,7 +20,7 @@ void setupSolarIntensity()
   analogReference(INTERNAL1V1);
   cumulativeInsolation = 0;
   lastMillis = 0; 
-  lastDay = currentTime.day();
+  lastDay = currentTimeWithZone.day();
 }
 
 const int SAMPLE_PERIOD_MS = 1000;
@@ -52,8 +52,8 @@ void tickSolarIntensity()
   cumulativeInsolation += value / 1000.0 * (timeNow - lastMillis);
   smoothedSolarIntensity.addDatapoint(value);
 
-  if (currentTime.day() != lastDay) {
-    lastDay = currentTime.day();
+  if (currentTimeWithZone.day() != lastDay) {
+    lastDay = currentTimeWithZone.day();
     cumulativeInsolation = 0;
   }
   lastMillis = timeNow;

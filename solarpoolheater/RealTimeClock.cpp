@@ -8,8 +8,9 @@ long currentTimeZoneSeconds;  // eg UTC+9:30 is 9.5 * 3600.  Also saved in EEPRO
 
 long timeMismatch;  // seconds that the RTC is ahead of the true time
 unsigned long timeOfLastResynchronise; // millis() that we last dropped or gained time to resynchronise
-
 const unsigned long TIME_BETWEEN_RESYNCHRONISE_S = 600; // once per ten minutes - should be enough
+
+const long MAX_MISMATCH_SECONDS = 600; // if the mismatch is bigger than this, don't automatically resynch.
 
 bool realTimeClockStatus;
 
@@ -23,10 +24,8 @@ void setupRTC(void){
 }
 
 void tickRTC() {
-  realTimeClockStatus = realTimeClock.isrunning();
-  if (realTimeClockStatus) {
-    currentTimeUTC = realTimeClock.now();
-    currentTimeWithZone = currentTimeUTC + currentTimeZoneSeconds;
+  bool success = refreshCurrentTime();
+  if (success) {
     if ((millis() - timeOfLastResynchronise) >= TIME_BETWEEN_RESYNCHRONISE_S) {
       timeOfLastResynchronise = millis();
       tickResynchronise();
@@ -34,10 +33,19 @@ void tickRTC() {
   }
 }
 
+// returns true for success
+bool refreshCurrentTime()
+{
+  realTimeClockStatus = realTimeClock.isrunning();
+  if (realTimeClockStatus) {
+    currentTimeUTC = realTimeClock.now();
+    currentTimeWithZone = currentTimeUTC + TimeSpan(currentTimeZoneSeconds);
+  }
+  return realTimeClockStatus;
+}
+
 // print the time, no time zone
-void printDateTimeNoCarret(Print &dest, DateTime dateTime) {
-  DateTime displayTime = correctForTimeZone ? dateTime + TimeSpan(timeZoneSeconds) : dateTime;
-  
+void printDateTimeNoCarret(Print &dest, DateTime displayTime) {
   dest.print(displayTime.year(), DEC);
   dest.print('/');
   dest.print(displayTime.month(), DEC);
@@ -61,7 +69,7 @@ void printDateTimeWithZone(Print &dest, DateTime dateTime) {
   dest.print(timezonehours);
   dest.print(":");
   dest.print(timezonemins/10);
-  dest.print(timezonemis%10);
+  dest.print(timezonemins%10);
   dest.println();
 }
 
@@ -110,14 +118,14 @@ bool setDateTime(const char newDateTime[])
 {
   DateTime newTime;
   long newTimeZone;
-  success = parseDateWithTimeZone(newDateTime, newTime, newTimeZone);
+  bool success = parseDateWithTimeZone(newDateTime, newTime, newTimeZone);
   if (!success) return false;
   
   realTimeClock.adjust(newTime);
   currentTimeZoneSeconds = newTimeZone;
   setSetting(SET_timezone, currentTimeZoneSeconds);
   currentTimeUTC = realTimeClock.now();
-  currentTimeWithZone = currentTimeUTC + timeZoneSeconds;
+  currentTimeWithZone = currentTimeUTC + TimeSpan(currentTimeZoneSeconds);
 
   return true;
 }
@@ -145,20 +153,36 @@ long setDateTimeForResynchronisation(unsigned long unixtimeseconds, long timezon
 // resynchronisation is performed one second at a time
 // this function should be called periodically (eg once per hour) to add or drop seconds
 // it will wait up to a maximum of 1.1 second to make sure that the clock is aligned
-void tickResynchronise()
+RESYNCHstatus tickResynchronise()
 {
+  RESYNCHstatus resynchStatus = getResynchStatus();
+  if (resynchStatus != RESYNCH_synchronising) {
+    return resynchStatus;
+  }
   unsigned long startmillis = millis();
   time_t currentClock = realTimeClock.now();
-  while (realTimeClock.now() <= currentClock)) {
+  time_t nowClock;
+  while ((nowClock = realTimeClock.now()) <= currentClock)) {
      if (millis() - startmillis >= 1100) {        // abort if timeout
       return;
      }
   }
-  realtimeClock.sync(currentClock + 1 + (timeMismatch < 0 ? 1 : -1));
+  realtimeClock.sync(nowClock + (timeMismatch < 0 ? 1 : -1));
   if (timeMismatch > 0) {
     --timeMismatch; 
   } else {
     ++timeMismatch;
   }
+  return getResynchStatus();
 }
 
+RESYNCHstatus getResynchStatus()
+{
+  if (abs(timeMismatch) > MAX_MISMATCH_SECONDS) {
+    return RESYNCH_mismatch_too_big;
+  } else if (timeMismatch == 0) {
+    return RESYNCH_not_required;
+  } else {
+    return RESYNCH_synchronising
+  }
+}
