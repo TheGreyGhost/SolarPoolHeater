@@ -6,7 +6,7 @@
 void setupRTC();
 void tickRTC();
 
-enum RESYNCHstatus {RESYNCH_not_required = 0, RESYNCH_synchronising = 1, RESYNCH_mismatch_too_big = 2};
+enum RESYNCHstatus {RESYNCH_not_required = 0, RESYNCH_synchronising = 1, RESYNCH_mismatch_too_big = 2, RESYNCH_error = 3};
 
 // print the given date + time to the destination
 void printDateTime(Print &dest, DateTime dateTime);

@@ -163,7 +163,7 @@ RESYNCHstatus tickResynchronise()
   uint32_t nowClock;
   while ((nowClock = realTimeClock.now().unixtime()) <= currentClock) {
      if (millis() - startmillis >= 1100) {        // abort if timeout
-      return;
+      return RESYNCH_error;
      }
   }
   realTimeClock.adjust(DateTime(nowClock + (timeMismatch < 0 ? 1 : -1)));
