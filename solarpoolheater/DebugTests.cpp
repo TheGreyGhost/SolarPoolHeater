@@ -124,6 +124,7 @@ int runTest2(int variable)
   mismatchfound = setDateTimeForResynchronisation(savedTime.unixtime() + 10, savedTimeZone);
   refreshCurrentTime();
   printDateTimeWithZone(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
+  return 0;
 }
 
 int runTest(int testnumber)
@@ -131,6 +132,9 @@ int runTest(int testnumber)
   switch(testnumber) {
     case 0: {
       return runTest1(testnumber);
+    }
+    case 1: {
+      return runTest2(testnumber);
     }
     default:
       return -1;
