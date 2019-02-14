@@ -11,7 +11,7 @@ enum RESYNCHstatus {RESYNCH_not_required = 0, RESYNCH_synchronising = 1, RESYNCH
 // print the given date + time to the destination
 void printDateTime(Print &dest, DateTime dateTime);
 
-void printDateTimeWithZone(Print &dest, DateTime dateTimeUTC, unsigned long timeZone);
+void printDateTimeWithZone(Print &dest, DateTime dateTimeUTC, long timeZone);
 
 // Parses a date & time with timezone
 // "Dec 26 2009 12:34:56UTC+09:30" - must match this form and spacing and capitalisation exactly

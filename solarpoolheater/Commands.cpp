@@ -340,7 +340,7 @@ void executeCommand(char command[], Print *replyConsole)
             success = false;
           } else {
             DateTime newTime;
-            unsigned long newTimeZone;
+            long newTimeZone;
             success = parseDateTimeWithZone(command + 3, newTime, newTimeZone);
             if (success) {
               replyConsole->print("setting date+time to ");

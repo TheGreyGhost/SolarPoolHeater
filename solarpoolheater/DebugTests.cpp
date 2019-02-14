@@ -58,72 +58,72 @@ int runTest2(int variable)
   DateTime retDateTime;
   long retTimeZone;
   bool success;
-  DateTime test4(2009, 12, 26, 12, 34, 56)
+  DateTime test4(2009, 12, 26, 12, 34, 56);
   success = parseDateTimeWithZone("Dec 26 2009 12:34:56UTC+09:30", retDateTime, retTimeZone);
   uint32_t test4secs = test4.unixtime() - 9.5 * 3600;
-  serialConsole.print("test4:");
+  serialConsole->print("test4:");
   printDateTimeWithZone(*serialConsole, retDateTime, retTimeZone);
-  serialConsole.print(success);
-  serialConsole.print(test4secs); serialConsole.print(": ");
-  serialConsole.print(retDateTime.unixtime()); serialConsole.print(", ");
-  serialConsole.println(retTimeZone);
+  serialConsole->print(success);
+  serialConsole->print(test4secs); serialConsole->print(": ");
+  serialConsole->print(retDateTime.unixtime()); serialConsole->print(", ");
+  serialConsole->println(retTimeZone);
 
   success = parseDateTimeWithZone("Dec 26 2009 12:34:56UTC-01:15", retDateTime, retTimeZone);
   uint32_t test5secs = test4.unixtime() + 1.25 * 3600;
-  serialConsole.print("test5:");
+  serialConsole->print("test5:");
   printDateTimeWithZone(*serialConsole, retDateTime, retTimeZone);
-  serialConsole.print(success);
-  serialConsole.print(test5secs); serialConsole.print(": ");
-  serialConsole.print(retDateTime.unixtime()); serialConsole.print(", ");
-  serialConsole.println(retTimeZone);
+  serialConsole->print(success);
+  serialConsole->print(test5secs); serialConsole->print(": ");
+  serialConsole->print(retDateTime.unixtime()); serialConsole->print(", ");
+  serialConsole->println(retTimeZone);
 
-  serialConsole.println("resynchtests");
+  serialConsole->println("resynchtests");
   DateTime savedTime = currentTimeUTC;
   long savedTimeZone = currentTimeZoneSeconds;
   long mismatchfound = setDateTimeForResynchronisation(savedTime.unixtime(), savedTimeZone);
-  serialConsole.println(mismatchfound);
-  serialConsole.println(getResynchStatus());    
-  serialConsole.println(tickResynchronise());    
+  serialConsole->println(mismatchfound);
+  serialConsole->println(getResynchStatus());    
+  serialConsole->println(tickResynchronise());    
   refreshCurrentTime();
-  printDateWithTimeZone(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
+  printDateTimeWithZone(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
 
   mismatchfound = setDateTimeForResynchronisation(savedTime.unixtime() + 3, savedTimeZone);
-  serialConsole.println(mismatchfound);
-  serialConsole.println(getResynchStatus());    
-  serialConsole.println(tickResynchronise());    
-  serialConsole.println(tickResynchronise());    
-  serialConsole.println(tickResynchronise());    
-  serialConsole.println(tickResynchronise());    
+  serialConsole->println(mismatchfound);
+  serialConsole->println(getResynchStatus());    
+  serialConsole->println(tickResynchronise());    
+  serialConsole->println(tickResynchronise());    
+  serialConsole->println(tickResynchronise());    
+  serialConsole->println(tickResynchronise());    
   refreshCurrentTime();
-  printDateWithTimeZone(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
+  printDateTimeWithZone(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
   
   mismatchfound = setDateTimeForResynchronisation(savedTime.unixtime(), savedTimeZone);
-  serialConsole.println(mismatchfound);
-  serialConsole.println(getResynchStatus());    
-  serialConsole.println(tickResynchronise());    
-  serialConsole.println(tickResynchronise());    
-  serialConsole.println(tickResynchronise());    
-  serialConsole.println(tickResynchronise());    
+  serialConsole->println(mismatchfound);
+  serialConsole->println(getResynchStatus());    
+  serialConsole->println(tickResynchronise());    
+  serialConsole->println(tickResynchronise());    
+  serialConsole->println(tickResynchronise());    
+  serialConsole->println(tickResynchronise());    
   refreshCurrentTime();
-  printDateWithTimeZone(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
+  printDateTimeWithZone(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
 
   mismatchfound = setDateTimeForResynchronisation(savedTime.unixtime() + 1000, savedTimeZone);
-  serialConsole.println(mismatchfound);
-  serialConsole.println(getResynchStatus());    
-  serialConsole.println(tickResynchronise());    
+  serialConsole->println(mismatchfound);
+  serialConsole->println(getResynchStatus());    
+  serialConsole->println(tickResynchronise());    
   refreshCurrentTime();
-  printDateWithTimeZone(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
+  printDateTimeWithZone(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
 
   mismatchfound = setDateTimeForResynchronisation(currentTimeUTC.unixtime(), savedTimeZone+3600);
-  serialConsole.println(mismatchfound);
-  serialConsole.println(getResynchStatus());    
-  serialConsole.println(tickResynchronise());    
+  serialConsole->println(mismatchfound);
+  serialConsole->println(getResynchStatus());    
+  serialConsole->println(tickResynchronise());    
   refreshCurrentTime();
-  printDateWithTimeZone(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
+  printDateTimeWithZone(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
 
   mismatchfound = setDateTimeForResynchronisation(savedTime.unixtime() + 10, savedTimeZone);
   refreshCurrentTime();
-  printDateWithTimeZone(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
+  printDateTimeWithZone(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
 }
 
 int runTest(int testnumber)
