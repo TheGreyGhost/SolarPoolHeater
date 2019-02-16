@@ -345,7 +345,7 @@ void executeCommand(char command[], Print *replyConsole)
             if (success) {
               replyConsole->print("setting date+time to ");
               printDateTimeWithZone(*console, newTime, newTimeZone);
-              setDateTime(command+3); 
+              setDateTime(newTime, newTimeZone); 
             }
           }  
           if (!success) {

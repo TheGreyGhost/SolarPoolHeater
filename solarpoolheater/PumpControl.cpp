@@ -62,7 +62,7 @@ bool lastSampledPoolTemperatureIsValid;
 const char *getCurrentPumpStateLabel()
 {
   int labelIdx = pumpState & 0x0f;
-  if (labelIdx >= NUMBER_OF_PUMP_STATES) {
+  if (labelIdx < 0 || labelIdx >= NUMBER_OF_PUMP_STATES) {
     return "INVALID PUMP STATE";
   }
   return pumpStateLabels[labelIdx];

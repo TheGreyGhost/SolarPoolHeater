@@ -1,16 +1,22 @@
 #include "RealTimeClock.h"
 #include <Wire.h>
 #include "Settings.h"
+#include "SystemStatus.h"
+
 RTC_DS1307 realTimeClock;
 DateTime currentTimeUTC;
 DateTime currentTimeWithZone;
 long currentTimeZoneSeconds;  // eg UTC+9:30 is 9.5 * 3600.  Also saved in EEPROM.
 
 long timeMismatch;  // seconds that the RTC is ahead of the true time
-unsigned long timeOfLastResynchronise; // millis() that we last dropped or gained time to resynchronise
+unsigned long timeOfLastResynchronise; // millis() of the time we last performed a resynch (i.e. that we last dropped or gained time)
 const unsigned long TIME_BETWEEN_RESYNCHRONISE_S = 600; // once per ten minutes - should be enough
 
 const long MAX_MISMATCH_SECONDS = 600; // if the mismatch is bigger than this, don't automatically resynch.
+
+const long TIMEZONE_MAX = 12 * 3600;
+const long TIMEZONE_MIN = -12 * 3600;
+const long TIMEZONE_DEFAULT = 9.5 * 3600;
 
 bool realTimeClockStatus;
 
@@ -18,6 +24,11 @@ void setupRTC(void){
   Wire.begin();
   realTimeClock.begin();
   currentTimeZoneSeconds = (long)getSetting(SET_timezone);
+  if (currentTimeZoneSeconds > TIMEZONE_MAX || currentTimeZoneSeconds < TIMEZONE_MIN) {
+    currentTimeZoneSeconds = TIMEZONE_DEFAULT;
+    assertFailureCode = ASSERT_INVALID_TIMEZONE;
+  }
+  
   timeMismatch = 0;
   timeOfLastResynchronise = millis();
   tickRTC();
@@ -44,19 +55,26 @@ bool refreshCurrentTime()
   return realTimeClockStatus;
 }
 
+// prints a two digit number with a leading zero if required
+void printTwoDigit(Print &dest, uint8_t number) 
+{
+  if (number < 10) dest.print("0");
+  dest.print(number, DEC);
+}
+
 // print the time, no time zone
 void printDateTimeNoCarret(Print &dest, DateTime displayTime) {
   dest.print(displayTime.year(), DEC);
   dest.print('/');
-  dest.print(displayTime.month(), DEC);
+  printTwoDigit(dest, displayTime.month());
   dest.print('/');
-  dest.print(displayTime.day(), DEC);
+  printTwoDigit(dest, displayTime.day());
   dest.print(' ');
-  dest.print(displayTime.hour(), DEC);
+  printTwoDigit(dest, displayTime.hour());
   dest.print(':');
-  dest.print(displayTime.minute(), DEC);
+  printTwoDigit(dest, displayTime.minute());
   dest.print(':');
-  dest.print(displayTime.second(), DEC);
+  printTwoDigit(dest, displayTime.second());
 }
 
 void printDateTimeWithZone(Print &dest, DateTime dateTime, long timeZone)
@@ -64,12 +82,11 @@ void printDateTimeWithZone(Print &dest, DateTime dateTime, long timeZone)
   printDateTimeNoCarret(dest, dateTime);
   dest.print(" UTC");
   dest.print(timeZone < 0 ? "-" : "+");
-  int timezonehours = abs(timeZone) / 3600;
-  int timezonemins = (abs(timeZone) / 60) % 60;
-  dest.print(timezonehours);
+  long timezonehours = abs(timeZone) / 3600;
+  long timezonemins = (abs(timeZone) / 60) % 60;
+  printTwoDigit(dest, (uint8_t)timezonehours);
   dest.print(":");
-  dest.print(timezonemins/10);
-  dest.print(timezonemins%10);
+  printTwoDigit(dest, (uint8_t)timezonemins);
   dest.println();
 }
 
@@ -112,6 +129,9 @@ bool parseDateTimeWithZone(const char newDateTimeWithZone[], DateTime &retDateTi
   if (newDateTimeWithZone[DATETIMEFORMAT_TIMEZONE_STARTPOS + 3] == '-') {
     newTimeZone *= -1;
   }
+  if (newTimeZone > TIMEZONE_MAX || newTimeZone < TIMEZONE_MIN) {
+    return false;
+  }
   
   retDateTime = newRawTime - TimeSpan(newTimeZone);
   retTimeZone = newTimeZone;
@@ -125,10 +145,22 @@ bool setDateTime(const char newDateTime[])
   DateTime newTime;
   long newTimeZone;
   bool success = parseDateTimeWithZone(newDateTime, newTime, newTimeZone);
-  if (!success) return false;
+  if (success) {
+    success = setDateTime(newTime, newTimeZone);
+  }
+  return success;
+}
+
+// set the current date + time 
+// retDateTime is the clock time in UTC+0:00, retTimeZone is the timezone in seconds eg +9:30 is 9.5 * 3600
+bool setDateTime(DateTime newTimeUTC, long newTimezoneSeconds)
+{
+  if (newTimezoneSeconds > TIMEZONE_MAX || newTimezoneSeconds < TIMEZONE_MIN) {
+    return false;
+  }
   
-  realTimeClock.adjust(newTime);
-  currentTimeZoneSeconds = newTimeZone;
+  realTimeClock.adjust(newTimeUTC);
+  currentTimeZoneSeconds = newTimezoneSeconds;
   setSetting(SET_timezone, currentTimeZoneSeconds);
   currentTimeUTC = realTimeClock.now();
   currentTimeWithZone = currentTimeUTC + TimeSpan(currentTimeZoneSeconds);
@@ -177,6 +209,7 @@ RESYNCHstatus tickResynchronise()
 
 RESYNCHstatus getResynchStatus()
 {
+  if (!realTimeClockStatus) return RESYNCH_error;
   if (abs(timeMismatch) > MAX_MISMATCH_SECONDS) {
     return RESYNCH_mismatch_too_big;
   } else if (timeMismatch == 0) {
@@ -184,4 +217,20 @@ RESYNCHstatus getResynchStatus()
   } else {
     return RESYNCH_synchronising;
   }
+}
+
+const char* resynchStatusLabels[NUMBER_OF_RESYNCH_STATES] = {"synchronised", "synchronising", "mismatch too big", "error"};
+
+const char *getResynchStatusLabel()
+{
+  int labelIdx = getResynchStatus();
+  if (labelIdx < 0 || labelIdx >= NUMBER_OF_RESYNCH_STATES) {
+    return "INVALID RTC RESYNCH STATE";
+  }
+  return resynchStatusLabels[labelIdx];
+}
+
+long getSynchronisationMismatch()
+{
+  return timeMismatch;
 }

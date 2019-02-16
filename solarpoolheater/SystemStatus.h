@@ -5,7 +5,7 @@ extern byte assertFailureCode;
 
 #define ASSERT_INVALID_SWITCH 1
 #define ASSERT_INDEX_OUT_OF_BOUNDS 2
-
+#define ASSERT_INVALID_TIMEZONE 3
 extern Print *console;
 extern Print *serialConsole;
 

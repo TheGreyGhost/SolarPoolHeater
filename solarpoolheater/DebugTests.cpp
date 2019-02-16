@@ -130,10 +130,10 @@ int runTest2(int variable)
 int runTest(int testnumber)
 {
   switch(testnumber) {
-    case 0: {
+    case 1: {
       return runTest1(testnumber);
     }
-    case 1: {
+    case 2: {
       return runTest2(testnumber);
     }
     default:
