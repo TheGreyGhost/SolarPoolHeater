@@ -339,13 +339,13 @@ void executeCommand(char command[], Print *replyConsole)
           if (strlen(command) < 3) {
             success = false;
           } else {
-            DateTime newTime;
+            DateTime newTimeUTC;
             long newTimeZone;
-            success = parseDateTimeWithZone(command + 3, newTime, newTimeZone);
+            success = parseDateTimeWithZone(command + 3, newTimeUTC, newTimeZone);
             if (success) {
               replyConsole->print("setting date+time to ");
-              printDateTimeAndZone(*console, newTime, newTimeZone);
-              setDateTime(newTime - TimeSpan(newTimeZone), newTimeZone); 
+              printDateTimeWithZoneConversion(*console, newTimeUTC, newTimeZone);
+              setDateTime(newTimeUTC, newTimeZone); 
             }
           }  
           if (!success) {
