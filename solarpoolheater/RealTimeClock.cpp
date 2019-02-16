@@ -14,9 +14,9 @@ const unsigned long TIME_BETWEEN_RESYNCHRONISE_S = 600; // once per ten minutes 
 
 const long MAX_MISMATCH_SECONDS = 600; // if the mismatch is bigger than this, don't automatically resynch.
 
-const long TIMEZONE_MAX = 12 * 3600;
-const long TIMEZONE_MIN = -12 * 3600;
-const long TIMEZONE_DEFAULT = 9.5 * 3600;
+const long TIMEZONE_MAX = 12 * 3600L;
+const long TIMEZONE_MIN = -12 * 3600L;
+const long TIMEZONE_DEFAULT = 9.5 * 3600L;
 
 bool realTimeClockStatus;
 
