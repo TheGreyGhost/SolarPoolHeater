@@ -15,6 +15,6 @@ void tickCommands();
 // command input must start with the COMMAND_START_CHAR and end with '\0'. bufferlen can be longer than the command.
 void parseIncomingInput(char command[], int bufferlen, Print *replyConsole);
 
-const int MAX_COMMAND_LENGTH = 30;
+const int MAX_COMMAND_LENGTH = 60;
 
 #endif

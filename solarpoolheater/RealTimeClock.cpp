@@ -124,8 +124,8 @@ bool parseDateTimeWithZone(const char newDateTimeWithZone[], DateTime &retDateTi
   
   DateTime newRawTime(newDateTimeWithZone, newDateTimeWithZone + DATETIMEFORMAT_TIME_STARTPOS);
 
-  long newTimeZone = 3600 * gettwodigit(newDateTimeWithZone + DATETIMEFORMAT_TIMEZONE_STARTPOS + 4)
-                             + 60 * gettwodigit(newDateTimeWithZone + DATETIMEFORMAT_TIMEZONE_STARTPOS + 4 + 2 + 1);
+  long newTimeZone = 3600L * gettwodigit(newDateTimeWithZone + DATETIMEFORMAT_TIMEZONE_STARTPOS + 4)
+                             + 60L * gettwodigit(newDateTimeWithZone + DATETIMEFORMAT_TIMEZONE_STARTPOS + 4 + 2 + 1);
   if (newDateTimeWithZone[DATETIMEFORMAT_TIMEZONE_STARTPOS + 3] == '-') {
     newTimeZone *= -1;
   }
