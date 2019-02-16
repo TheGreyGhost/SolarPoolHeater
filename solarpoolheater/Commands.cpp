@@ -312,7 +312,7 @@ void executeCommand(char command[], Print *replyConsole)
           if (lastSampledPoolTemperatureIsValid) {
             replyConsole->print(lastSampledPoolTemperature);
             replyConsole->print(" at ");
-            printDateTime(*replyConsole, lastSamplePoolTemperatureTime + TimeSpan(currentTimeZoneSeconds));           
+            printDateTimeWithZoneConversion(*replyConsole, lastSamplePoolTemperatureTime, currentTimeZoneSeconds);           
           } else {
             replyConsole->println("not valid");
           }
@@ -326,7 +326,7 @@ void executeCommand(char command[], Print *replyConsole)
         case 'r': {
           commandIsValid = true;
           if (realTimeClockStatus) {
-            printDateTimeWithZone(*console, currentTimeUTC, currentTimeZoneSeconds);
+            printDateTimeAndZone(*console, currentTimeWithZone, currentTimeZoneSeconds);
           } else {
             replyConsole->println("real time clock is not running");  
           }
@@ -344,8 +344,8 @@ void executeCommand(char command[], Print *replyConsole)
             success = parseDateTimeWithZone(command + 3, newTime, newTimeZone);
             if (success) {
               replyConsole->print("setting date+time to ");
-              printDateTimeWithZone(*console, newTime, newTimeZone);
-              setDateTime(newTime, newTimeZone); 
+              printDateTimeAndZone(*console, newTime, newTimeZone);
+              setDateTime(newTime - TimeSpan(newTimeZone), newTimeZone); 
             }
           }  
           if (!success) {

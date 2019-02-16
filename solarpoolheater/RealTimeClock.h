@@ -12,7 +12,11 @@ const int NUMBER_OF_RESYNCH_STATES = 4;
 // print the given date + time to the destination
 void printDateTime(Print &dest, DateTime dateTime);
 
-void printDateTimeWithZone(Print &dest, DateTime dateTimeUTC, long timeZone);
+// prints the given date followed by the given timezone
+void printDateTimeAndZone(Print &dest, DateTime dateTime, long timeZone);
+
+// converts the given dateTimeUTC to the given timeZone, prints both
+void printDateTimeWithZoneConversion(Print &dest, DateTime dateTimeUTC, long timeZone);
 
 // Parses a date & time with timezone
 // "Dec 26 2009 12:34:56 UTC+09:30" - must match this form and spacing and capitalisation exactly
