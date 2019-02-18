@@ -12,10 +12,14 @@ const int NUMBER_OF_RESYNCH_STATES = 4;
 // print the given date + time to the destination
 void printDateTime(Print &dest, DateTime dateTime);
 
-void printDateTimeWithZone(Print &dest, DateTime dateTimeUTC, long timeZone);
+// prints the given date followed by the given timezone
+void printDateTimeAndZone(Print &dest, DateTime dateTime, long timeZone);
+
+// converts the given dateTimeUTC to the given timeZone, prints both
+void printDateTimeWithZoneConversion(Print &dest, DateTime dateTimeUTC, long timeZone);
 
 // Parses a date & time with timezone
-// "Dec 26 2009 12:34:56UTC+09:30" - must match this form and spacing and capitalisation exactly
+// "Dec 26 2009 12:34:56 UTC+09:30" - must match this form and spacing and capitalisation exactly
 // returns true for OK, false for a problem with the format
 // retDateTime is the clock time in UTC+0:00, retTimeZone is the timezone in seconds eg +9:30 is 9.5 * 3600
 bool parseDateTimeWithZone(const char newDateTimeWithZone[], DateTime &retDateTime, long &retTimeZone);
@@ -62,7 +66,7 @@ const int DATETIMEFORMAT_DATELENGTH = 11; // "Dec 04 2018"
 const int DATETIMEFORMAT_TIMELENGTH = 8; // "12:34:56"
 const int DATETIMEFORMAT_TIMEZONE_LENGTH = 9; // "UTC+09:30"
 const int DATETIMEFORMAT_TIME_STARTPOS = DATETIMEFORMAT_DATELENGTH + 1; // includes space
-const int DATETIMEFORMAT_TIMEZONE_STARTPOS = DATETIMEFORMAT_TIME_STARTPOS + DATETIMEFORMAT_TIMELENGTH; // no space
+const int DATETIMEFORMAT_TIMEZONE_STARTPOS = DATETIMEFORMAT_TIME_STARTPOS + DATETIMEFORMAT_TIMELENGTH + 1; // one space
 const int DATETIMEFORMAT_TOTALLENGTH = DATETIMEFORMAT_TIMEZONE_STARTPOS + DATETIMEFORMAT_TIMEZONE_LENGTH;
 
 #endif

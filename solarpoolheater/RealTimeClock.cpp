@@ -77,7 +77,13 @@ void printDateTimeNoCarret(Print &dest, DateTime displayTime) {
   printTwoDigit(dest, displayTime.second());
 }
 
-void printDateTimeWithZone(Print &dest, DateTime dateTime, long timeZone)
+// converts the given dateTimeUTC to the given timeZone, prints both
+void printDateTimeWithZoneConversion(Print &dest, DateTime dateTimeUTC, long timeZone)
+{
+  printDateTimeAndZone(dest, dateTimeUTC + TimeSpan(timeZone), timeZone);
+}
+
+void printDateTimeAndZone(Print &dest, DateTime dateTime, long timeZone)
 {
   printDateTimeNoCarret(dest, dateTime);
   dest.print(" UTC");
@@ -93,7 +99,7 @@ void printDateTimeWithZone(Print &dest, DateTime dateTime, long timeZone)
 // print the time and time zone
 void printDateTimeWithZone(Print &dest, DateTime dateTime) 
 {
-  printDateTimeWithZone(dest, dateTime, currentTimeZoneSeconds);
+  printDateTimeAndZone(dest, dateTime, currentTimeZoneSeconds);
 }
 
 // print the time, no time zone
@@ -124,8 +130,8 @@ bool parseDateTimeWithZone(const char newDateTimeWithZone[], DateTime &retDateTi
   
   DateTime newRawTime(newDateTimeWithZone, newDateTimeWithZone + DATETIMEFORMAT_TIME_STARTPOS);
 
-  long newTimeZone = 3600 * gettwodigit(newDateTimeWithZone + DATETIMEFORMAT_TIMEZONE_STARTPOS + 4)
-                             + 60 * gettwodigit(newDateTimeWithZone + DATETIMEFORMAT_TIMEZONE_STARTPOS + 4 + 2 + 1);
+  long newTimeZone = 3600L * gettwodigit(newDateTimeWithZone + DATETIMEFORMAT_TIMEZONE_STARTPOS + 4)
+                             + 60L * gettwodigit(newDateTimeWithZone + DATETIMEFORMAT_TIMEZONE_STARTPOS + 4 + 2 + 1);
   if (newDateTimeWithZone[DATETIMEFORMAT_TIMEZONE_STARTPOS + 3] == '-') {
     newTimeZone *= -1;
   }

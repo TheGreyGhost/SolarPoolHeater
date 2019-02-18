@@ -47,31 +47,32 @@ int runTest2(int variable)
   printDateTime(*serialConsole, test1);
   printDateTime(*serialConsole, test2);
   printDateTime(*serialConsole, test3);
-  printDateTimeWithZone(*serialConsole, test1, 0);
-  printDateTimeWithZone(*serialConsole, test1, 3600);
-  printDateTimeWithZone(*serialConsole, test1, -5400);
-  printDateTimeWithZone(*serialConsole, test2, 0);
-  printDateTimeWithZone(*serialConsole, test2, -3600*4);
-  printDateTimeWithZone(*serialConsole, test3, 0);
-  printDateTimeWithZone(*serialConsole, test3, 3600 * 4);
+  printDateTimeAndZone(*serialConsole, test1, 0);
+  printDateTimeAndZone(*serialConsole, test1, 3600);
+  printDateTimeWithZoneConversion(*serialConsole, test1, 3600);
+  printDateTimeAndZone(*serialConsole, test1, -5400);
+  printDateTimeAndZone(*serialConsole, test2, 0);
+  printDateTimeAndZone(*serialConsole, test2, -3600*4);
+  printDateTimeAndZone(*serialConsole, test3, 0);
+  printDateTimeAndZone(*serialConsole, test3, 3600 * 4);
 
   DateTime retDateTime;
   long retTimeZone;
   bool success;
   DateTime test4(2009, 12, 26, 12, 34, 56);
-  success = parseDateTimeWithZone("Dec 26 2009 12:34:56UTC+09:30", retDateTime, retTimeZone);
+  success = parseDateTimeWithZone("Dec 26 2009 12:34:56 UTC+09:30", retDateTime, retTimeZone);
   uint32_t test4secs = test4.unixtime() - 9.5 * 3600;
   serialConsole->print("test4:");
-  printDateTimeWithZone(*serialConsole, retDateTime, retTimeZone);
+  printDateTimeAndZone(*serialConsole, retDateTime, retTimeZone);
   serialConsole->print(success);
   serialConsole->print(test4secs); serialConsole->print(": ");
   serialConsole->print(retDateTime.unixtime()); serialConsole->print(", ");
   serialConsole->println(retTimeZone);
 
-  success = parseDateTimeWithZone("Dec 26 2009 12:34:56UTC-01:15", retDateTime, retTimeZone);
+  success = parseDateTimeWithZone("Dec 26 2009 12:34:56 UTC-01:15", retDateTime, retTimeZone);
   uint32_t test5secs = test4.unixtime() + 1.25 * 3600;
   serialConsole->print("test5:");
-  printDateTimeWithZone(*serialConsole, retDateTime, retTimeZone);
+  printDateTimeAndZone(*serialConsole, retDateTime, retTimeZone);
   serialConsole->print(success);
   serialConsole->print(test5secs); serialConsole->print(": ");
   serialConsole->print(retDateTime.unixtime()); serialConsole->print(", ");
@@ -85,7 +86,7 @@ int runTest2(int variable)
   serialConsole->println(getResynchStatus());    
   serialConsole->println(tickResynchronise());    
   refreshCurrentTime();
-  printDateTimeWithZone(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
+  printDateTimeWithZoneConversion(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
 
   mismatchfound = setDateTimeForResynchronisation(savedTime.unixtime() + 3, savedTimeZone);
   serialConsole->println(mismatchfound);
@@ -95,7 +96,7 @@ int runTest2(int variable)
   serialConsole->println(tickResynchronise());    
   serialConsole->println(tickResynchronise());    
   refreshCurrentTime();
-  printDateTimeWithZone(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
+  printDateTimeWithZoneConversion(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
   
   mismatchfound = setDateTimeForResynchronisation(savedTime.unixtime(), savedTimeZone);
   serialConsole->println(mismatchfound);
@@ -105,25 +106,25 @@ int runTest2(int variable)
   serialConsole->println(tickResynchronise());    
   serialConsole->println(tickResynchronise());    
   refreshCurrentTime();
-  printDateTimeWithZone(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
+  printDateTimeWithZoneConversion(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
 
   mismatchfound = setDateTimeForResynchronisation(savedTime.unixtime() + 1000, savedTimeZone);
   serialConsole->println(mismatchfound);
   serialConsole->println(getResynchStatus());    
   serialConsole->println(tickResynchronise());    
   refreshCurrentTime();
-  printDateTimeWithZone(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
+  printDateTimeWithZoneConversion(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
 
   mismatchfound = setDateTimeForResynchronisation(currentTimeUTC.unixtime(), savedTimeZone+3600);
   serialConsole->println(mismatchfound);
   serialConsole->println(getResynchStatus());    
   serialConsole->println(tickResynchronise());    
   refreshCurrentTime();
-  printDateTimeWithZone(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
+  printDateTimeWithZoneConversion(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
 
   mismatchfound = setDateTimeForResynchronisation(savedTime.unixtime() + 10, savedTimeZone);
   refreshCurrentTime();
-  printDateTimeWithZone(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
+  printDateTimeWithZoneConversion(*serialConsole, currentTimeUTC, currentTimeZoneSeconds);
   return 0;
 }
 

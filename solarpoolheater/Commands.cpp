@@ -245,7 +245,7 @@ void executeCommand(char command[], Print *replyConsole)
       commandIsValid = true;
       replyConsole->println(F("commands (turn CR+LF on):"));
       replyConsole->println(F("!cr = read clock date+time"));
-      replyConsole->println(F("!cs Dec 26 2009 12:34:56UTC+9:30 = set clock date + time (capitalisation, character count, and spacings must match exactly)"));
+      replyConsole->println(F("!cs Dec 26 2009 12:34:56 UTC+9:30 = set clock date + time (capitalisation, character count, and spacings must match exactly)"));
       replyConsole->println(F("!d = print debug info"));
       replyConsole->println(F("!da = list all simulate-able variables"));
       replyConsole->println(F("!dc variable# = cancel simulation for variable #, if variable# = a then cancel all"));
@@ -312,7 +312,7 @@ void executeCommand(char command[], Print *replyConsole)
           if (lastSampledPoolTemperatureIsValid) {
             replyConsole->print(lastSampledPoolTemperature);
             replyConsole->print(" at ");
-            printDateTime(*replyConsole, lastSamplePoolTemperatureTime + TimeSpan(currentTimeZoneSeconds));           
+            printDateTimeWithZoneConversion(*replyConsole, lastSamplePoolTemperatureTime, currentTimeZoneSeconds);           
           } else {
             replyConsole->println("not valid");
           }
@@ -326,7 +326,7 @@ void executeCommand(char command[], Print *replyConsole)
         case 'r': {
           commandIsValid = true;
           if (realTimeClockStatus) {
-            printDateTimeWithZone(*console, currentTimeUTC, currentTimeZoneSeconds);
+            printDateTimeAndZone(*console, currentTimeWithZone, currentTimeZoneSeconds);
           } else {
             replyConsole->println("real time clock is not running");  
           }
@@ -339,13 +339,13 @@ void executeCommand(char command[], Print *replyConsole)
           if (strlen(command) < 3) {
             success = false;
           } else {
-            DateTime newTime;
+            DateTime newTimeUTC;
             long newTimeZone;
-            success = parseDateTimeWithZone(command + 3, newTime, newTimeZone);
+            success = parseDateTimeWithZone(command + 3, newTimeUTC, newTimeZone);
             if (success) {
               replyConsole->print("setting date+time to ");
-              printDateTimeWithZone(*console, newTime, newTimeZone);
-              setDateTime(newTime, newTimeZone); 
+              printDateTimeWithZoneConversion(*console, newTimeUTC, newTimeZone);
+              setDateTime(newTimeUTC, newTimeZone); 
             }
           }  
           if (!success) {
