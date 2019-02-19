@@ -108,6 +108,7 @@ void setupDataStream()
 // surge tank level switch
 // pump runtime (s)
 // for each probe: current instant temperature then current smoothed temperature
+// last sampled pool temperature: validity, temperature, time (UTC)
 
 DataStreamError sendCurrentSensorReadings(Print &dest)
 {

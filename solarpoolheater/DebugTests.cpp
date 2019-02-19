@@ -61,18 +61,18 @@ int runTest2(int variable)
   bool success;
   DateTime test4(2009, 12, 26, 12, 34, 56);
   success = parseDateTimeWithZone("Dec 26 2009 12:34:56 UTC+09:30", retDateTime, retTimeZone);
-  uint32_t test4secs = test4.unixtime() - 9.5 * 3600;
+  uint32_t test4secs = test4.unixtime();
   serialConsole->print("test4:");
-  printDateTimeAndZone(*serialConsole, retDateTime, retTimeZone);
+  printDateTimeWithZoneConversion(*serialConsole, retDateTime, retTimeZone);
   serialConsole->print(success);
   serialConsole->print(test4secs); serialConsole->print(": ");
   serialConsole->print(retDateTime.unixtime()); serialConsole->print(", ");
   serialConsole->println(retTimeZone);
 
   success = parseDateTimeWithZone("Dec 26 2009 12:34:56 UTC-01:15", retDateTime, retTimeZone);
-  uint32_t test5secs = test4.unixtime() + 1.25 * 3600;
+  uint32_t test5secs = test4.unixtime();
   serialConsole->print("test5:");
-  printDateTimeAndZone(*serialConsole, retDateTime, retTimeZone);
+  printDateTimeWithZoneConversion(*serialConsole, retDateTime, retTimeZone);
   serialConsole->print(success);
   serialConsole->print(test5secs); serialConsole->print(": ");
   serialConsole->print(retDateTime.unixtime()); serialConsole->print(", ");
