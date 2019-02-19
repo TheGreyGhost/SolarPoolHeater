@@ -132,7 +132,7 @@ DataStreamError sendCurrentSensorReadings(Print &dest)
   dest.write((byte *)&lastSampledPoolTemperature, sizeof lastSampledPoolTemperature);
   uint32_t  timestamp = lastSamplePoolTemperatureTime.unixtime();
   dest.write((byte *)&timestamp, sizeof timestamp);
-  
+
   return DSE_OK;
 }
 
@@ -177,6 +177,7 @@ native byte stream of
   solar sensor status
   temp probe statuses
   pump status
+ resynch status of RTC, synch mismatch (# of seconds that the RTC is ahead of the real time)
 
 for parameter:
 native byte stream of all EEPROM settings

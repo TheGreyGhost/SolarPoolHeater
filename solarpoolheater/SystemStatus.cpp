@@ -82,6 +82,16 @@ void streamDebugInfo(Print &dest)
   for (int i = 0; i < NUMBER_OF_PROBES; ++i) {
     dest.write((byte *) & (probeStatuses[i]), sizeof probeStatuses[i]);
   }
+
+  /* todo uncomment
+ * // what is the current resynchronisation status?
+ * RESYNCHstatus resynchStatus = getResynchStatus();
+ * long synchMismatch = getSynchronisationMismatch();
+ * dest.write((byte *)resynchStatus, sizeof resynchStatus);
+ * dest.write((byte *)synchMismatch, sizeof synchMismatch);
+ */
+  
+
 }
 
 DigitalPin<DIGPIN_STATUS_LED> pinStatusLED;
