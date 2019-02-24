@@ -38,6 +38,7 @@ void printDebugInfo(Print &dest)
     dest.print(" "); dest.println(errorLastImplausibleValueC[i]);
   }
   dest.print(F("real time clock is running:")); dest.println(realTimeClockStatus);
+  dest.print(F("timezone (s):")); dest.println(currentTimeZoneSeconds);
   dest.print(F("real time clock synchronisation status:")); dest.println(getResynchStatusLabel());
   dest.print(F("real time clock synchronisation mismatch (seconds ahead of true time):")); dest.println(getSynchronisationMismatch());
 
@@ -86,6 +87,7 @@ void streamDebugInfo(Print &dest)
   // what is the current resynchronisation status?
   RESYNCHstatus resynchStatus = getResynchStatus();
   long synchMismatch = getSynchronisationMismatch();
+  dest.write((byte *)currentTimeZoneSeconds, sizeof currentTimeZoneSeconds);
   dest.write((byte *)resynchStatus, sizeof resynchStatus);
   dest.write((byte *)synchMismatch, sizeof synchMismatch);
 }
