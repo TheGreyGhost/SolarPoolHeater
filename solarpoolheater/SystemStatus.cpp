@@ -87,9 +87,9 @@ void streamDebugInfo(Print &dest)
   // what is the current resynchronisation status?
   RESYNCHstatus resynchStatus = getResynchStatus();
   long synchMismatch = getSynchronisationMismatch();
-  dest.write((byte *)currentTimeZoneSeconds, sizeof currentTimeZoneSeconds);
-  dest.write((byte *)resynchStatus, sizeof resynchStatus);
-  dest.write((byte *)synchMismatch, sizeof synchMismatch);
+  dest.write((byte *)&currentTimeZoneSeconds, sizeof currentTimeZoneSeconds);
+  dest.write((byte *)&resynchStatus, sizeof resynchStatus);
+  dest.write((byte *)&synchMismatch, sizeof synchMismatch);
 }
 
 DigitalPin<DIGPIN_STATUS_LED> pinStatusLED;

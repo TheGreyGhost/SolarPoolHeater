@@ -177,7 +177,7 @@ native byte stream of
   solar sensor status
   temp probe statuses
   pump status
- resynch status of RTC, synch mismatch (# of seconds that the RTC is ahead of the real time)
+ timezone, resynch status of RTC, synch mismatch (# of seconds that the RTC is ahead of the real time)
 
 for parameter:
 native byte stream of all EEPROM settings
