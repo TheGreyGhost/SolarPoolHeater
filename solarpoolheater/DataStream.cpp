@@ -264,8 +264,8 @@ DataStreamError executeDataStreamCommand(const char command[], int commandLength
         break;
       }
       case 't': { // !t{dword unixtime seconds}{long timezone seconds} in LSB first order = set clock time (seconds since unix epoch, in UTC0:00) and the timezone (in seconds eg +9:30 = 9.5*3600)
-        if (commandLength < 2 + 4 + 4) break;
-        const byte *bp = (const byte *)(command + 2);
+        if (commandLength < 3 + 4 + 4) break;
+        const byte *bp = (const byte *)(command + 3);
         unsigned long unixtimeseconds = bp[0] + ((unsigned long)bp[1]<<8) 
                                         + ((unsigned long)bp[2]<<16) + ((unsigned long)bp[3]<<24);
         bp += 4;
