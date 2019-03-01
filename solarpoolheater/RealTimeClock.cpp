@@ -205,11 +205,23 @@ RESYNCHstatus tickResynchronise()
      }
   }
   realTimeClock.adjust(DateTime(nowClock + (timeMismatch < 0 ? 1 : -1)));
+  uint32_t finalClock = realTimeClock.now().unixtime(); //todo remove
+  Serial.print("adjusted time, timeMismatch before:");
+  Serial.println(timeMismatch);
   if (timeMismatch > 0) {
     --timeMismatch; 
   } else {
     ++timeMismatch;
   }
+  Serial.print("adjusted time, timeMismatch after:");
+  Serial.println(timeMismatch);
+  Serial.print("currentClock");
+  Serial.println(currentClock);
+  Serial.print("nowClock:");
+  Serial.println(nowClock);
+  Serial.print("finalClock:");
+  Serial.println(finalClock);
+
   return getResynchStatus();
 }
 

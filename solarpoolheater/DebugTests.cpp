@@ -2,6 +2,7 @@
 #include "Commands.h"
 #include "RealTimeClock.h"
 #include "SystemStatus.h"
+#include "DataStream.h"
 
 // perform some tests on OutputDestinationEthernet
 int runTest1(int variable)
@@ -128,6 +129,38 @@ int runTest2(int variable)
   return 0;
 }
 
+int runTest3(int variable)
+// test synchronisation
+{
+  byte testbuffer[40];
+  byte *bp = testbuffer;
+
+  *bp++ = '!';
+  *bp++ = 't';
+  *bp++ = 'b';
+  unsigned long unixtimeseconds = currentTimeUTC.unixtime();
+  unsigned long resynchtime = unixtimeseconds + 120;
+  bp[0] = resynchtime & 0xff;
+  bp[1] = (resynchtime >> 8) & 0xff;
+  bp[2] = (resynchtime >> 16) & 0xff;
+  bp[3] = (resynchtime >> 24) & 0xff;
+  bp += 4;
+  unsigned long timezone = 10L * 3600 + 1800L;
+  bp[0] = timezone & 0xff;
+  bp[1] = (timezone >> 8) & 0xff;
+  bp[2] = (timezone >> 16) & 0xff;
+  bp[3] = (timezone >> 24) & 0xff;
+  bp += 4;
+
+  DataStreamError response = executeDataStreamCommand(testbuffer, (bp - testbuffer));
+  serialConsole->print("current clock:");
+  serialConsole->println(unixtimeseconds);
+  serialConsole->print("new synch time:");
+  serialConsole->println(resynchtime);
+  serialConsole->print("executeDataStreamCommand response:");
+  serialConsole->println(response);
+}
+
 int runTest(int testnumber)
 {
   switch(testnumber) {
@@ -136,6 +169,9 @@ int runTest(int testnumber)
     }
     case 2: {
       return runTest2(testnumber);
+    }
+    case 3: {
+      return runTest3(testnumber);
     }
     default:
       return -1;

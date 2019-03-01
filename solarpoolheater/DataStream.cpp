@@ -153,7 +153,7 @@ DataStreamError sendCurrentEEPROMSettings(Print &dest)
 !l{dword row nr}{word count} in LSB first order = request entries from log file
 !n = request number of entries in log file
 !c = cancel transmissions (log file)
-!t{dword unixtime seconds}{ulong timezone seconds} = set clock time (seconds since unix epoch, in UTC0:00) and the timezone (in seconds eg +9:30 = 9.5*3600)
+!t{dword unixtime seconds}{ulong timezone seconds} = set clock time (seconds since unix epoch, in UTC+00:00) and the timezone (in seconds eg +9:30 = 9.5*3600)
 
 response:
 !{command letter echoed}{byte version} then:
@@ -202,7 +202,7 @@ DataStreamError executeDataStreamCommand(const char command[], int commandLength
   DataStreamError errorcode = DSE_OK;
   EthernetUDP *connection;
 
-  if (commandLength >= 2 && command[0] == COMMAND_START_CHAR) {
+  if (commandLength >= 3 && command[0] == COMMAND_START_CHAR && command[2] == DATASTREAM_VERSION_BYTE) {
     switch (command[1]) {
       case 's': {  //!s = system status
         commandIsValid = true;
@@ -253,7 +253,7 @@ DataStreamError executeDataStreamCommand(const char command[], int commandLength
         break;
       }
       case 'l': { //!l{dword row nr}{word count} in LSB first order = request entries from log file
-        if (commandLength < 2 + 4 + 2) break;
+        if (commandLength < 3 + 4 + 2) break;
         const byte *bp = (const byte *)(command + 2);
         nextEntryToSend = bp[0] + ((unsigned long)bp[1]<<8) 
                           + ((unsigned long)bp[2]<<16) + ((unsigned long)bp[3]<<24);
@@ -264,8 +264,8 @@ DataStreamError executeDataStreamCommand(const char command[], int commandLength
         break;
       }
       case 't': { // !t{dword unixtime seconds}{long timezone seconds} in LSB first order = set clock time (seconds since unix epoch, in UTC0:00) and the timezone (in seconds eg +9:30 = 9.5*3600)
-        if (commandLength < 2 + 4 + 4) break;
-        const byte *bp = (const byte *)(command + 2);
+        if (commandLength < 3 + 4 + 4) break;
+        const byte *bp = (const byte *)(command + 3);
         unsigned long unixtimeseconds = bp[0] + ((unsigned long)bp[1]<<8) 
                                         + ((unsigned long)bp[2]<<16) + ((unsigned long)bp[3]<<24);
         bp += 4;
@@ -284,11 +284,6 @@ DataStreamError executeDataStreamCommand(const char command[], int commandLength
           }
         }
         sendEndResponse = true;        
-
-// set the correct time, subsequent calls to tickResynchronise will gradually adjust the clock
-//  to match this resynchronisation time
-// returns the current clock error relative to the synch time (+ve --> arduino is ahead of synch time)
-
 
         break;
       }
