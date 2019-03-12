@@ -96,14 +96,13 @@ void tickDataStream()
     if (!sendingLogData) {
       errorcode = startResponse('l', connection);
       if (errorcode == DSE_OK && connection != NULL) {
- 	   connection.write(dataRequestID);
-	   errorcode = endResponse(*connection, successCode & 0xff);
- }
- if (connection == NULL || errorcode != DSE_OK) {
-   datastreamLogError(errorcode, 0);
-   return;
- }
-
+   	   connection.write(dataRequestID);
+  	   errorcode = endResponse(*connection, successCode & 0xff);
+      }
+      if (connection == NULL || errorcode != DSE_OK) {
+        datastreamLogError(errorcode, 0);
+        return;
+      }
     }		
   } while (sendingLogData && (millis() - startmillis) < MAX_MILLIS);
 }
@@ -196,11 +195,11 @@ for parameter:
 native byte stream of all EEPROM settings
 
 for logfile:
-!l -> the byte stream from the log file itself, one entry per packet, with command letter !d (for data)
-  followed by
+!l -> the byte stream from the log file itself, one entry per packet, with 
+  command letter !d (for data) followed by
    !l{byte request ID} when finished
 
-!n -> dword number of entries in log file
+!n -> !l{dword number of entries in log file}
 !c -> !c{byte request ID}
 
 
@@ -280,8 +279,8 @@ DataStreamError executeDataStreamCommand(const char command[], int commandLength
       case 'l': { //!l{byte request ID}{dword row nr}{word count} in LSB first order = request entries from log file
         if (commandLength < 3 + 1 + 4 + 2) break;
         const byte *bp = (const byte *)(command + 2);
-	   dataRequestID = bp[0];
-	   bp += 1;
+	      dataRequestID = bp[0];
+	      bp += 1;
         nextEntryToSend = bp[0] + ((unsigned long)bp[1]<<8) 
                           + ((unsigned long)bp[2]<<16) + ((unsigned long)bp[3]<<24);
         bp += 4;
