@@ -14,6 +14,7 @@
 const char COMMAND_START_CHAR = '!';
 
 bool sendingLogData;
+byte dataRequestID;
 long nextEntryToSend;
 long numberOfEntriesLeftToSend;
 
@@ -71,7 +72,7 @@ void tickDataStream()
 
   do {
     EthernetUDP *connection; 
-    DataStreamError errorcode = startResponse('l', connection);
+    DataStreamError errorcode = startResponse('d', connection);
     if (errorcode != DSE_OK || connection == NULL) {
       datastreamLogError(errorcode, 0);
       return;
@@ -92,6 +93,17 @@ void tickDataStream()
     --numberOfEntriesLeftToSend;
   
     sendingLogData = (numberOfEntriesLeftToSend > 0);
+    if (!sendingLogData) {
+      errorcode = startResponse('l', connection);
+      if (errorcode == DSE_OK && connection != NULL) {
+   	   connection->write(dataRequestID);
+  	   errorcode = endResponse(*connection, successCode & 0xff);
+      }
+      if (connection == NULL || errorcode != DSE_OK) {
+        datastreamLogError(errorcode, 0);
+        return;
+      }
+    }		
   } while (sendingLogData && (millis() - startmillis) < MAX_MILLIS);
 }
 
@@ -150,10 +162,10 @@ DataStreamError sendCurrentEEPROMSettings(Print &dest)
 !r = request current sensor information (readings)
 !s = system status 
 !p = request parameter information
-!l{dword row nr}{word count} in LSB first order = request entries from log file
+!l{byte requestID}{dword row nr}{word count} in LSB first order = request entries from log file
 !n = request number of entries in log file
 !c = cancel transmissions (log file)
-!t{dword unixtime seconds}{ulong timezone seconds} = set clock time (seconds since unix epoch, in UTC+00:00) and the timezone (in seconds eg +9:30 = 9.5*3600)
+!t{dword unixtime seconds}{long timezone seconds} = set clock time (seconds since unix epoch, in UTC+00:00) and the timezone (in seconds eg +9:30 = 9.5*3600)
 
 response:
 !{command letter echoed}{byte version} then:
@@ -183,9 +195,13 @@ for parameter:
 native byte stream of all EEPROM settings
 
 for logfile:
-!l -> the byte stream from the log file itself, one entry per packet
-!n -> dword number of entries in log file
-!c -> no response
+!l -> the byte stream from the log file itself, one entry per packet, with 
+  command letter !d (for data) followed by
+   !l{byte request ID} when finished
+
+!n -> !l{dword number of entries in log file}
+!c -> !c{byte request ID}
+
 
 for time:
 {ulong mismatch (+ve = arduino is fast)}{byte RESYNCH_status code}
@@ -256,11 +272,21 @@ DataStreamError executeDataStreamCommand(const char command[], int commandLength
       case 'c': {  //!c = cancel transmissions (log file)
         commandIsValid = true;
         sendingLogData = false;
+        errorcode = startResponse('c', connection);
+        if (errorcode == DSE_OK && connection != NULL) {
+          int byteswritten = connection->write(dataRequestID);
+          if (byteswritten != sizeof(dataRequestID)) {
+            errorcode = DSE_WRITE_FAILED;
+          }
+        }
+        sendEndResponse = true;        
         break;
       }
-      case 'l': { //!l{dword row nr}{word count} in LSB first order = request entries from log file
-        if (commandLength < 3 + 4 + 2) break;
+      case 'l': { //!l{byte request ID}{dword row nr}{word count} in LSB first order = request entries from log file
+        if (commandLength < 3 + 1 + 4 + 2) break;
         const byte *bp = (const byte *)(command + 2);
+	      dataRequestID = bp[0];
+	      bp += 1;
         nextEntryToSend = bp[0] + ((unsigned long)bp[1]<<8) 
                           + ((unsigned long)bp[2]<<16) + ((unsigned long)bp[3]<<24);
         bp += 4;
