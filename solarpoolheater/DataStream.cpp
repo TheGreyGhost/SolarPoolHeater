@@ -202,6 +202,12 @@ DataStreamError executeDataStreamCommand(const char command[], int commandLength
   DataStreamError errorcode = DSE_OK;
   EthernetUDP *connection;
 
+//  Serial.print("command received:");
+//  Serial.print(command[0], HEX); Serial.print(" ");
+//  Serial.print(command[1], HEX); Serial.print(" ");
+//  Serial.print(command[2], HEX); Serial.print(" ");
+//  Serial.print("expect:"); Serial.println(DATASTREAM_VERSION_BYTE, HEX);
+  
   if (commandLength >= 3 && command[0] == COMMAND_START_CHAR && command[2] == DATASTREAM_VERSION_BYTE) {
     switch (command[1]) {
       case 's': {  //!s = system status
