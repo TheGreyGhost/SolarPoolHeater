@@ -96,7 +96,7 @@ void tickDataStream()
     if (!sendingLogData) {
       errorcode = startResponse('l', connection);
       if (errorcode == DSE_OK && connection != NULL) {
-   	   connection.write(dataRequestID);
+   	   connection->write(dataRequestID);
   	   errorcode = endResponse(*connection, successCode & 0xff);
       }
       if (connection == NULL || errorcode != DSE_OK) {
