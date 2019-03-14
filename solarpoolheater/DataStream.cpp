@@ -77,6 +77,12 @@ void tickDataStream()
       datastreamLogError(errorcode, 0);
       return;
     }
+    int byteswritten = connection->write((byte *)&nextEntryToSend, sizeof(nextEntryToSend));
+    if (byteswritten != sizeof(nextEntryToSend)) {
+      errorcode = DSE_WRITE_FAILED;
+      datastreamLogError(errorcode, 0);
+      return;
+    }
     
     int successCode = dataLogPrintEntryBytes(*connection, nextEntryToSend);
     if (successCode != 0) {
@@ -159,6 +165,9 @@ DataStreamError sendCurrentEEPROMSettings(Print &dest)
 }
 
 /*
+all requests have format:
+!{cmd letter}{byte version}{... extra info if relevant}:
+ 
 !r = request current sensor information (readings)
 !s = system status 
 !p = request parameter information
@@ -195,13 +204,13 @@ for parameter:
 native byte stream of all EEPROM settings
 
 for logfile:
-!l -> the byte stream from the log file itself, one entry per packet, with 
-  command letter !d (for data) followed by
-   !l{byte request ID} when finished
+!l -> the byte stream from the log file itself, one entry per packet, with format:
+    !d{byte version}{dword row number}{raw byte data from this row in the log file}
+  After all packets sent:
+    !l{byte request ID} when finished
 
-!n -> !l{dword number of entries in log file}
+!n -> !n{dword number of entries in log file}
 !c -> !c{byte request ID}
-
 
 for time:
 {ulong mismatch (+ve = arduino is fast)}{byte RESYNCH_status code}
@@ -282,9 +291,9 @@ DataStreamError executeDataStreamCommand(const char command[], int commandLength
         sendEndResponse = true;        
         break;
       }
-      case 'l': { //!l{byte request ID}{dword row nr}{word count} in LSB first order = request entries from log file
+      case 'l': { //!l{byte version}{byte request ID}{dword row nr}{word count} in LSB first order = request entries from log file
         if (commandLength < 3 + 1 + 4 + 2) break;
-        const byte *bp = (const byte *)(command + 2);
+        const byte *bp = (const byte *)(command + 3);
 	      dataRequestID = bp[0];
 	      bp += 1;
         nextEntryToSend = bp[0] + ((unsigned long)bp[1]<<8) 
@@ -295,7 +304,7 @@ DataStreamError executeDataStreamCommand(const char command[], int commandLength
         commandIsValid = true;
         break;
       }
-      case 't': { // !t{dword unixtime seconds}{long timezone seconds} in LSB first order = set clock time (seconds since unix epoch, in UTC0:00) and the timezone (in seconds eg +9:30 = 9.5*3600)
+      case 't': { // !t{byte version}{dword unixtime seconds}{long timezone seconds} in LSB first order = set clock time (seconds since unix epoch, in UTC0:00) and the timezone (in seconds eg +9:30 = 9.5*3600)
         if (commandLength < 3 + 4 + 4) break;
         const byte *bp = (const byte *)(command + 3);
         unsigned long unixtimeseconds = bp[0] + ((unsigned long)bp[1]<<8) 
