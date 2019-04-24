@@ -77,7 +77,14 @@ void tickDataStream()
       datastreamLogError(errorcode, 0);
       return;
     }
-    int byteswritten = connection->write((byte *)&nextEntryToSend, sizeof(nextEntryToSend));
+    int byteswritten = connection->write(dataRequestID);
+    if (byteswritten != sizeof(dataRequestID)) {
+      errorcode = DSE_WRITE_FAILED;
+      datastreamLogError(errorcode, 0);
+      return;
+    }
+
+    byteswritten = connection->write((byte *)&nextEntryToSend, sizeof(nextEntryToSend));
     if (byteswritten != sizeof(nextEntryToSend)) {
       errorcode = DSE_WRITE_FAILED;
       datastreamLogError(errorcode, 0);
