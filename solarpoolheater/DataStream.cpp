@@ -71,7 +71,7 @@ void tickDataStream()
   unsigned long startmillis = millis();
 
   do {
-    Serial.print(nextEntryToSend);  // todo remove
+    //Serial.print(nextEntryToSend);  // todo remove
     EthernetUDP *connection; 
     DataStreamError errorcode = startResponse('d', connection);
     if (errorcode != DSE_OK || connection == NULL) {
@@ -102,7 +102,7 @@ void tickDataStream()
       datastreamLogError(errorcode, 0);
       return;
     }
-    Serial.print(";");
+    //Serial.print(";");  //todo remove
     ++nextEntryToSend;
     --numberOfEntriesLeftToSend;
   
@@ -119,7 +119,7 @@ void tickDataStream()
       }
     }		
   } while (sendingLogData && (millis() - startmillis) < MAX_MILLIS);
-  Serial.println("#");
+  //Serial.println("#");  //todo remove
 }
 
 // set up the datastream (EthernetLink already prepared)
