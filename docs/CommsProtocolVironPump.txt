@@ -1,0 +1,30 @@
+
+https://forums.whirlpool.net.au/archive/2643574
+
+Got this system myself (viron connect 10, pump and chlorinator) and have been pondering trying to interface my home automation to it.
+
+The little information I have dredged up on it is that it is modbus protocol over mutlidrop serial connection (RS485 or 422).
+
+I guess you could use a serial to usb interface device on a laptop/pc (after determining the rj 12 pinout) and run a modbus packet sniffer, by operating the buttons on the LCD interface module you would then see the frames being generated and the response frames. You could then build up the modbus map register as implemented by astral.
+
+Just realized, you didn't mention having the connect 10 so the above method wouldn't be applicable, you would have to just observer the frames and try and intimate from there (be quite difficult to get right though.
+------------
+Hi,
+I have been playing with my Astralpool P320 pump and VX chlorinator for about six months. I also did not want to pay for a connect 10, but wanted some remote control.
+I did purchase the Viron BLDC comms module (about $76) which enables the RJ12 communications between the chlorinator and pump and you can control the pump speed from the chlorinator. I did put a bitscope on the comms and my conclusion is it is not MODBUS or RS485. It looks like some proprietary one wire bus. Fluidra which is the parent company is part of the MODBUS group and their european pumps do say they are MODBUS compatible but it looks like the Australian controllers are not. To investigate the protocol further I would probably need a full connect 10 system, which sort of defeats the purpose.
+Instead I have done a direct low level interface to the VX chlorinator (actually its very easy as the boards are very low tech) and built my own MODBUS slave controller (arduino) to interface to the VX, control my lights and valves and a remote MODBUS master (arduino and nextion display).
+I expect the eQuilibrium chlorinator would be similar to the VX, but you are right it would be easier if Astralpools in Australia started to sell the MODBUS products.
+Next task will be to integrate the solar panels StorEdge which thankfully are MODBUS with published register map.
+--------------------
+RJ12 Pinout as far as I can tell:
+
+Pin 1, 6: 34 VDC (note label on BLDC comms module says 24VDC but my actual value was 34VDC)
+Pin 2,3: GND
+Pin 4: Data bus (silent level approx 7VDC), Baud rate confirmed as 9600.
+Pin 5: GND
+
+I only found data on one pin (ie Pin 4), so have concluded it is not RS485 or MODBUS as this would require 2 pins with the data on one the inverse of the other. (ie a balanced RS485 circuit).
+-----------------------
+I've just looked at the PCB in a my new P320 pump, and I found two optocouplers, indicating galvanic separation for RX & TX.
+I agree that pin 2,3, 5 are GND and 1, 6 also seems to be connected to the same (Have not measured the voltage).
+But it does look like Pin 4 is connected to both optocouplers, indicating the RX/TX to the same pin. I have no idea how to interface to this..
