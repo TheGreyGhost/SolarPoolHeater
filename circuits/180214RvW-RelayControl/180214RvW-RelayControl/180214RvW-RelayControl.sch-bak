@@ -85,7 +85,7 @@ U 1 1 618BFA4E
 P 7100 2550
 F 0 "K1" H 7530 2596 50  0000 L CNN
 F 1 "G6E" H 7530 2505 50  0000 L CNN
-F 2 "Relay_THT:Relay_SPDT_Omron_G6E" H 8230 2520 50  0001 C CNN
+F 2 "Relay_THT:Relay_SPDT_Finder_40.41" H 8230 2520 50  0001 C CNN
 F 3 "https://www.omron.com/ecb/products/pdf/en-g6e.pdf" H 7100 2550 50  0001 C CNN
 	1    7100 2550
 	1    0    0    -1  
