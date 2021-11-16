@@ -1,5 +1,4 @@
 EESchema Schematic File Version 4
-LIBS:180214RvW-RelayControl-cache
 EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
@@ -349,4 +348,6 @@ Wire Wire Line
 	1750 3250 1750 3550
 Wire Wire Line
 	1050 3250 1050 3500
+Text Notes 2450 4850 0    197  ~ 0
+Vout = Vref*(1+R3/R4) \n         = 1.25*(1+1200/220)\n         = 8 V
 $EndSCHEMATC
